@@ -1,0 +1,4 @@
+## Runtime configuration for the sumo application.
+##
+core:
+  logging: WARN
