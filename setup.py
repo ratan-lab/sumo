@@ -13,11 +13,11 @@ _config = {
     "url": "https://github.com/ratan-lab/sumo",
     "author": "Karolina Sienkiewicz",
     "author_email": "sienkiewicz2k@gmail.com",
-    "package_dir": {"": "sumo"},
-    "packages": find_packages("sumo"),
+    "package_dir": {"": "src"},
+    "packages": find_packages("src"),
 
     "entry_points": {
-        "console_scripts": ("sumo = sumo.sumo:main",),
+        "console_scripts": ("sumo = sumo.run:main",),
     },
     "classifiers": [
         'License :: OSI Approved :: MIT License',
@@ -47,7 +47,7 @@ def main() -> int:
 
     def version():
         """ Get the local package version. """
-        return re.search('^__version__\s*=\s*"(.*)"', open('sumo/constants.py').read(), re.M).group(1)
+        return re.search('^__version__\s*=\s*"(.*)"', open('src/sumo/constants.py').read(), re.M).group(1)
 
     _config.update({
         "data_files": list(data_files(*_config["data_files"])),

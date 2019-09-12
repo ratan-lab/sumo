@@ -1,7 +1,7 @@
 
-from .constants import __version__, CLUSTER_METHODS, LOG_LEVELS, SIMILARITY_METHODS, SPARSITY_RANGE, VAR_TYPES, \
+from sumo.constants import __version__, CLUSTER_METHODS, LOG_LEVELS, SIMILARITY_METHODS, SPARSITY_RANGE, VAR_TYPES, \
     CLUSTER_METRICS
-from .modes import SUMO_COMMANDS
+from sumo.modes import SUMO_COMMANDS
 import argparse
 
 

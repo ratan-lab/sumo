@@ -1,7 +1,7 @@
 """"Provides entry point main()."""
 
-from .command_line import parse_args
-from .modes import SUMO_MODES
+from sumo.command_line import parse_args
+from sumo.modes import SUMO_MODES
 import sys
 
 

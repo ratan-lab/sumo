@@ -1,7 +1,6 @@
 """
 "evaluate" mode class and functionality
 """
-from pandas import DataFrame
 from sumo.constants import EVALUATE_ARGS, CLUSTER_METRICS
 from sumo.modes.mode import SumoMode
 from sumo.utils import setup_logger, load_npz, check_accuracy, docstring_formatter
