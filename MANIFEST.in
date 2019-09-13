@@ -1,0 +1,8 @@
+include *.txt
+include LICENSE
+recursive-include doc *.py
+recursive-include doc *.rst
+recursive-include doc *.txt
+recursive-include test *.ini
+recursive-include test *.py
+recursive-include test *.txt
