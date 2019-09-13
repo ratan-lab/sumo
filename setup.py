@@ -15,7 +15,14 @@ _config = {
     "author_email": "sienkiewicz2k@gmail.com",
     "package_dir": {"": "src"},
     "packages": find_packages("src"),
-
+    "install_requires": [
+        "seaborn",
+        "scikit-learn",
+        "scipy",
+        "matplotlib",
+        "numpy",
+        "pandas"
+    ],
     "entry_points": {
         "console_scripts": ("sumo = sumo.run:main",),
     },

@@ -3,9 +3,3 @@
 ##   pyhon -m pip install --requirement=requirements.txt
 ##
 PyYAML>=3.11
-seaborn
-scikit-learn
-scipy
-matplotlib
-numpy
-pandas
