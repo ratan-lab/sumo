@@ -19,7 +19,7 @@ def filter_features_and_samples(data: DataFrame, drop_features: float = 0.1, dro
     Args:
         data (pandas.DataFrame): data frame (with samples in columns and features in rows)
         drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
-        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping)
+        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping) \
             exceeds this value, remove this sample
 
     Returns:
@@ -64,7 +64,7 @@ def load_data_txt(file_path: str, sample_names: int = None, feature_names: int =
         sample_names (int): index of row with sample names
         feature_names (int): index of column with feature names
         drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
-        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping)
+        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping) \
             exceeds this value, remove this sample
 
     Returns:
@@ -88,10 +88,10 @@ def load_data_npz(file_path: str, sample_idx: str = None, drop_features: float =
 
     Args:
         file_path (str): path to the tab delimited .txt file
-        sample_idx (str): key of array containing custom sample names in every .npz file
+        sample_idx (str): key of array containing custom sample names in every .npz file \
             (if not supplied use column indices)
         drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
-        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping)
+        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping) \
             exceeds this value, remove this sample
 
     Returns:
@@ -143,22 +143,22 @@ class SumoPrepare(SumoMode):
     Sumo mode for data pre-processing and creation of multiplex network files.
 
     Constructor args as detailed in 'prepare' subparser:
-        infiles (list): list of paths to input .npz or .txt files (all input files should be structured in following
+        infiles (list): list of paths to input .npz or .txt files (all input files should be structured in following \
             way: consecutive samples in columns, consecutive features in rows
-        vars (list): either one variable type from {var_types} for every data matrix or list of variable types for
+        vars (list): either one variable type from {var_types} for every data matrix or list of variable types for \
             each of them
         outfile (str): path to output .npz file
         method (str): method of sample-sample similarity calculation selected from {sim_methods}
         k (float): fraction of nearest neighbours to use for sample similarity calculation using with RBF method
         alpha (float): hypherparameter of RBF similarity kernel
-        missing (float): acceptable fraction of available (not missing) values for assessment of distance/similarity
+        missing (float): acceptable fraction of available (not missing) values for assessment of distance/similarity \
             between pairs of samples
-        names (str): optional key of array containing custom sample names in every .npz file (if not set ids of samples
+        names (str): optional key of array containing custom sample names in every .npz file (if not set ids of samples \
             are used, which can cause problems when layers have missing samples)
         sn (int): index of row with sample names for .txt input files
         fn (int): index of column with feature names for .txt input files
         df (float): if percentage of missing values for feature exceeds this value, remove feature
-        ds (float): if percentage of missing values for sample (that remains after feature dropping) exceeds this value,
+        ds (float): if percentage of missing values for sample (that remains after feature dropping) exceeds this value, \
             remove sample
         logfile (str): path to save log file, if set to None stdout is used
         log (str): sets the logging level from {log_levels}

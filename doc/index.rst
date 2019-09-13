@@ -6,11 +6,13 @@
 Welcome to sumo's documentation!
 =======================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
 
+   modes
+   network
+   utils
 
 
 Indices and tables

@@ -112,7 +112,7 @@ def plot_heatmap(a, log_scale=False, upper_threshold=None, lower_threshold=None,
 
     Args:
         a (Numpy.ndarray): data array
-        log_scale (bool): sets whether or not to use log scale (recommended with plotting adjacency matrices
+        log_scale (bool): sets whether or not to use log scale (recommended with plotting adjacency matrices \
             of N-features datasets)
         upper_threshold (float): sets upper threshold of color scale (default is maximum value of a)
         lower_threshold (float): sets lower threshold of color scale (default is minimum value of a)
@@ -238,8 +238,8 @@ def extract_spectral(h: np.ndarray, assign_labels: str = "kmeans", n_neighbors: 
     """ Select clusters using spectral clustering of feature matrix H
 
     Args:
-        h (Numpy.ndarray): feature matrix from optimization algorithm run of shape (n,k), where 'n' is a number of nodes
-            and 'k' is a number of clusters
+        h (Numpy.ndarray): feature matrix from optimization algorithm run of shape (n,k), where 'n' is a number of \
+            nodes and 'k' is a number of clusters
         assign_labels : {'kmeans', 'discretize'}, strategy to use to assign labels in the embedding space
         n_neighbors (int): number of neighbors to use when constructing the affinity matrix
         n_clusters (int): number of clusters, if not set use number of columns of 'a'
