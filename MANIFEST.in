@@ -1,5 +1,6 @@
 include *.txt
 include LICENSE
+include *.rst
 recursive-include doc *.py
 recursive-include doc *.rst
 recursive-include doc *.txt

@@ -1,6 +1,14 @@
 SUMO: Subtyping tool for multi-omic data
 ========================================
 
+.. image:: https://travis-ci.org/ratan-lab/sumo.svg?branch=master
+    :target: https://travis-ci.org/ratan-lab/sumo
+.. image:: https://img.shields.io/github/license/ratan-lab/sumo
+    :alt: GitHub
+.. image:: https://readthedocs.org/projects/python-sumo/badge/?version=latest
+    :target: https://python-sumo.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 .. inclusion-start-marker-do-not-remove
 
 **SUMO** is a command-line tool implementing novel algorithm based on
@@ -8,13 +16,19 @@ nonnegative matrix factorization (NMF) to identify molecular subtypes in
 multi-omics datasets and show that identified sub-groups share clinical
 features and prognosis.
 
-Installation
-------------
+Installation from sources
+-------------------------
 To install SUMO clone `git repository <https://github.com/ratan-lab/sumo>`__ and execute command below in its main directory.
 
 .. code:: sh
 
      python setup.py install
+
+or for installing in development mode:
+
+.. code:: sh
+
+    python -m pip install -e .
 
 Dependencies
 ------------
@@ -34,6 +48,10 @@ Optional requirements
 
 -  `pytest <http://pytest.org>`__ (for running the test suite)
 -  `Sphinx <http://sphinx-doc.org>`__ (for generating documentation)
+
+Documentation
+-------------
+The official documentation is available at https://python-sumo.readthedocs.io
 
 License
 -------
@@ -196,5 +214,5 @@ Evaluate clustering results, given set of labels.
 
 .. inclusion-end-marker-do-not-remove
 
-Please refer to documentation for more detailed description of a method,
-example usage cases and suggestions for data pre-preparation.
+.. Please refer to documentation for more detailed description of a method,
+.. example usage cases and suggestions for data pre-preparation.
