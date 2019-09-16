@@ -25,7 +25,7 @@ class SumoRun(SumoMode):
             in following way: "0", "1" ... and index of sample name vector is "samples"
         | k (int): number of clusters
         | outdir (str) path to save output files
-        | sparsity (list): list of sparsity penalty values for H matrix (SUMO will try different values and select \
+        | sparsity (list): list of sparsity penalty values for H matrix (sumo will try different values and select \
             the best results
         | n (int): number of repetitions
         | method (str): method of cluster extraction, selected from {cluster_methods}

@@ -1,4 +1,4 @@
-SUMO: Subtyping tool for multi-omic data
+sumo: subtyping tool for multi-omic data
 ========================================
 
 |badge1| |badge2| |badge3|
@@ -13,24 +13,17 @@ SUMO: Subtyping tool for multi-omic data
 
 .. inclusion-start-marker-do-not-remove
 
-**SUMO** is a command-line tool implementing novel algorithm based on
-nonnegative matrix factorization (NMF) to identify molecular subtypes in
-multi-omics datasets and show that identified sub-groups share clinical
-features and prognosis.
+**sumo** is a command-line tool to identify molecular subtypes in multi-omics datasets.
+It implements a novel nonnegative matrix factorization (NMF) algorithm to identify groups of samples that share
+molecular signatures, and provides tools to evaluate such assignments.
 
-Installation from sources
--------------------------
-To install SUMO clone `git repository <https://github.com/ratan-lab/sumo>`__ and execute command below in its main directory.
-
-.. code:: sh
-
-     python setup.py install
-
-or for installing in development mode:
+Installation
+------------
+You can install **sumo** from PyPI, by executing command below. Please note that we require python 3.6+.
 
 .. code:: sh
 
-    python -m pip install -e .
+    pip install sumo
 
 Dependencies
 ------------
@@ -64,7 +57,7 @@ License
 Usage
 -----
 
-SUMO can be run in three different modes. Typical workflow includes running *prepare* mode for preparation of similarity
+Typical workflow includes running *prepare* mode for preparation of similarity
 matrices from feature matrices, followed by factorization of produced multiplex network (mode *run*).
 Third mode *evaluate* can be used for comparison of created cluster labels against biologically significant labels.
 
@@ -145,7 +138,7 @@ Cluster multiplex network using non-negative matrix tri-factorization to identif
                               adjacency arrays in file are indexed in following way:
                               "0", "1" ... and index of sample name vector is "samples"
         k                     either one value describing number of clusters or
-                              coma-delimited range of values to check (SUMO will
+                              coma-delimited range of values to check (sumo will
                               suggest cluster structure based on cophenetic
                               correlation coefficient)
         outdir                path to save output files
@@ -153,7 +146,7 @@ Cluster multiplex network using non-negative matrix tri-factorization to identif
     Optional arguments:
         -h, --help            show this help message and exit
         -sparsity SPARSITY    either one value or coma-delimited list of sparsity
-                              penalty values for H matrix (SUMO will try different
+                              penalty values for H matrix (sumo will try different
                               values and select the best results; default of
                               [0.0001, 0.001, 0.01, 0.1, 1, 10.0, 100.0])
         -n N                  number of repetitions (default of 50)
@@ -195,7 +188,7 @@ Evaluate clustering results, given set of labels.
         infile.npz            input .npz file containing array indexed as
                               'clusters', with sample names in first column and
                               clustering labels in second column (file created by
-                              running SUMO with mode 'run')
+                              running sumo with mode 'run')
         labels                either .npy file containing array with sample names in
                               first column and true labels in second column or .npz
                               file (requires using '-npz' option)

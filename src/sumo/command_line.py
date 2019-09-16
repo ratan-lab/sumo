@@ -97,7 +97,7 @@ def add_run_command_options(subparsers):
 
     cluster_parser.add_argument('k', metavar="k", type=lambda s: [int(i) for i in s.split(',')],
                                 help='either one value describing number of clusters or coma-delimited range of ' +
-                                     'values to check (SUMO will suggest cluster structure based on cophenetic ' +
+                                     'values to check (sumo will suggest cluster structure based on cophenetic ' +
                                      'correlation coefficient)')
 
     cluster_parser.add_argument('outdir', type=str,
@@ -106,7 +106,7 @@ def add_run_command_options(subparsers):
     cluster_parser.add_argument('-sparsity', type=lambda s: [float(i) for i in s.split(',')], required=False,
                                 default=SPARSITY_RANGE,
                                 help='either one value or coma-delimited list of sparsity penalty values for H matrix' +
-                                     ' (SUMO will try different values and select the best results; ' +
+                                     ' (sumo will try different values and select the best results; ' +
                                      'default of  %(default)s)')
 
     cluster_parser.add_argument('-n', action='store',
@@ -157,7 +157,7 @@ def add_evaluate_command_options(subparsers):
     evaluate_parser.add_argument('infile', metavar='infile.npz', type=str,
                                  help="input .npz file containing array indexed as 'clusters', with sample names " +
                                       "in first column and clustering labels in second column " +
-                                      "(file created by running SUMO with mode 'run')")
+                                      "(file created by running sumo with mode 'run')")
 
     evaluate_parser.add_argument('labels', metavar='labels', type=str,
                                  help="either .npy file containing array with sample names in first column and true " +
@@ -178,7 +178,7 @@ def add_evaluate_command_options(subparsers):
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(
-        description="SUMO: Subtyping tool for multi-omic data")
+        description="sumo: subtyping tool for multi-omic data")
     parser.add_argument('-v', '--version', action='version', version=str(__version__))
 
     subparsers = parser.add_subparsers(help="program mode", dest='command')

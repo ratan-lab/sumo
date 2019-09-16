@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class SumoMode(ABC):
-    """Defines modes of SUMO"""
+    """Defines modes of sumo"""
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():

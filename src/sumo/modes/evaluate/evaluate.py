@@ -12,7 +12,7 @@ class SumoEvaluate(SumoMode):
 
     Args:
         | infile (str): input .npz file containing array indexed as 'clusters', with sample names in first column and \
-            clustering labels in second column (file created by running SUMO with mode 'run')
+            clustering labels in second column (file created by running sumo with mode 'run')
         | labels (str): .npy file containing array with sample names in first column and true labels in second column \
         | metric (str): one of metrics ({metrics}) for accuracy evaluation, if set to None all metrics are calculated \
         | logfile (str): path to save log file, if set to None stdout is used
