@@ -1,11 +1,13 @@
 SUMO: Subtyping tool for multi-omic data
 ========================================
 
-.. image:: https://travis-ci.org/ratan-lab/sumo.svg?branch=master
+|badge1| |badge2| |badge3|
+
+.. |badge1| image:: https://travis-ci.org/ratan-lab/sumo.svg?branch=master
     :target: https://travis-ci.org/ratan-lab/sumo
-.. image:: https://img.shields.io/github/license/ratan-lab/sumo
+.. |badge2| image:: https://img.shields.io/github/license/ratan-lab/sumo
     :alt: GitHub
-.. image:: https://readthedocs.org/projects/python-sumo/badge/?version=latest
+.. |badge3| image:: https://readthedocs.org/projects/python-sumo/badge/?version=latest
     :target: https://python-sumo.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
