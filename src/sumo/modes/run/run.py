@@ -1,6 +1,3 @@
-"""
-"run" mode class and functionality
-"""
 from scipy.cluster.hierarchy import cophenet, linkage
 from scipy.spatial.distance import pdist
 from sumo.constants import RUN_ARGS, CLUSTER_METHODS, LOG_LEVELS
@@ -19,27 +16,28 @@ _sumo_run = None
 @docstring_formatter(cluster_methods=CLUSTER_METHODS, log_levels=LOG_LEVELS)
 class SumoRun(SumoMode):
     """
-    Sumo mode for factorization of multiplex network to identify molecular subtypes.
+    Sumo mode for factorization of multiplex network to identify molecular subtypes. Constructor args are set in \
+    'run' subparser.
 
-    Constructor args as detailed in 'run' subparser:
-        infile (str): input .npz file containing adjacency matrices for every network layer and sample names
-            (file created by running program with mode "prepare") - consecutive adjacency arrays in file are indexed
+    Args:
+        | infile (str): input .npz file containing adjacency matrices for every network layer and sample names \
+            (file created by running program with mode "prepare") - consecutive adjacency arrays in file are indexed \
             in following way: "0", "1" ... and index of sample name vector is "samples"
-        k (int): number of clusters
-        outdir (str) path to save output files
-        sparsity (list): list of sparsity penalty values for H matrix (SUMO will try different values and select
+        | k (int): number of clusters
+        | outdir (str) path to save output files
+        | sparsity (list): list of sparsity penalty values for H matrix (SUMO will try different values and select \
             the best results
-        n (int): number of repetitions
-        method (str): method of cluster extraction, selected from {cluster_methods}
-        max_iter (int): maximum number of iterations for factorization
-        tol (float): if objective cost function value fluctuation (|Δℒ|) is smaller than this value, stop iterations
+        | n (int): number of repetitions
+        | method (str): method of cluster extraction, selected from {cluster_methods}
+        | max_iter (int): maximum number of iterations for factorization
+        | tol (float): if objective cost function value fluctuation (|Δℒ|) is smaller than this value, stop iterations \
             before reaching max_iter
-        calc_cost (int): number of steps between every calculation of objective cost function
-        logfile (str): path to save log file, if set to None stdout is used
-        log (str): sets the logging level from {log_levels}
-        h_init (int): index of adjacency matrix to use for H matrix initialization, if set to None average adjacency
+        | calc_cost (int): number of steps between every calculation of objective cost function
+        | logfile (str): path to save log file, if set to None stdout is used
+        | log (str): sets the logging level from {log_levels}
+        | h_init (int): index of adjacency matrix to use for H matrix initialization, if set to None average adjacency \
             matrix is used
-        t (int): number of threads
+        | t (int): number of threads
 
     """
 

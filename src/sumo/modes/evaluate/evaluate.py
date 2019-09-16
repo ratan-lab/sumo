@@ -1,6 +1,3 @@
-"""
-"evaluate" mode class and functionality
-"""
 from sumo.constants import EVALUATE_ARGS, CLUSTER_METRICS
 from sumo.modes.mode import SumoMode
 from sumo.utils import setup_logger, load_npz, check_accuracy, docstring_formatter
@@ -11,14 +8,14 @@ import os
 @docstring_formatter(metrics=CLUSTER_METRICS)
 class SumoEvaluate(SumoMode):
     """
-    Sumo mode for evaluating accuracy of clustering
+    Sumo mode for evaluating accuracy of clustering. Constructor args are set in 'evaluate' subparser.
 
-    Constructor args as detailed in 'evaluate' subparser:
-        infile (str): input .npz file containing array indexed as 'clusters', with sample names in first column and
+    Args:
+        | infile (str): input .npz file containing array indexed as 'clusters', with sample names in first column and \
             clustering labels in second column (file created by running SUMO with mode 'run')
-        labels (str): .npy file containing array with sample names in first column and true labels in second column
-        metric (str): one of metrics ({metrics}) for accuracy evaluation, if set to None all metrics are calculated
-        logfile (str): path to save log file, if set to None stdout is used
+        | labels (str): .npy file containing array with sample names in first column and true labels in second column \
+        | metric (str): one of metrics ({metrics}) for accuracy evaluation, if set to None all metrics are calculated \
+        | logfile (str): path to save log file, if set to None stdout is used
 
     """
 
@@ -47,7 +44,7 @@ class SumoEvaluate(SumoMode):
         self.common_samples = None
 
     def run(self):
-        """ Evaluate clustering results, given true labels """
+        """ Evaluate clustering results, given set of labels """
 
         self.logger.info("#Loading file: {}".format(self.infile))
         data = load_npz(self.infile)

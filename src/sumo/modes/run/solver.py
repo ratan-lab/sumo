@@ -9,7 +9,7 @@ def svdEM(a: np.ndarray, tol=0.001, max_iter=100, logger_name: str = None):
     """ Approximate SVD on matrix with missing values in matrix using expectation-maximization algorithm
 
     Args:
-        a (Numpy.ndarray): non-negative similarity matrix (n x n) with missing values\
+        a (Numpy.ndarray): non-negative similarity matrix (n x n) with missing values
         tol (float): convergence tolerance threshold (default of 0.001)
         max_iter (int): maximum number of iterations (default of 100)
         logger_name (str): name of existing logger object, if not supplied new main logger is used
@@ -114,7 +114,7 @@ class SumoNMFResults:
         """ Extract cluster labels using selected method
 
         Args:
-            method (str): either "max_value" for extraction based on maximum value in each row of h matrix
+            method (str): either "max_value" for extraction based on maximum value in each row of h matrix \
                 or "spectral" for spectral clustering on h matrix values
 
         Returns:
@@ -136,16 +136,17 @@ class SumoNMFResults:
 
 class SumoNMF:
     """
-    Wrapper class for NMF algorithm
+    Wrapper class for NMF algorithm.
+
+    Args:
+        | graph (MultiplexNet): network object, containing data about connections between nodes in each layer \
+            in form of adjacency matrices
+        | k (int): number of nearest neighbours for data imputation of average adjacency matrix
+
     """
 
     def __init__(self, graph: MultiplexNet):
-        """
-        Args:
-            graph (MultiplexNet): network object, containing data about connections between nodes in each layer
-                in form of adjacency matrices
-            k (int): number of nearest neighbours for data imputation of average adjacency matrix
-        """
+
         if not isinstance(graph, MultiplexNet):
             raise ValueError("Unrecognized graph object")
 
@@ -175,11 +176,11 @@ class SumoNMF:
             sparsity_penalty (float): 'η' value, corresponding to sparsity penalty for H
             k (int): expected number of clusters
             max_iter (int): maximum number of iterations
-            tol (float): if objective cost function value fluctuation (|Δℒ|) is smaller than 'stop_val',
+            tol (float): if objective cost function value fluctuation (|Δℒ|) is smaller than 'stop_val', \
                 stop iterations before reaching max_iter
             calc_cost (int): number of steps between every calculation of objective cost function
-            h_init (int): index of adjacency matrix to use for H matrix initialization or None for initialization using
-                average adjacency
+            h_init (int): index of adjacency matrix to use for H matrix initialization or None for initialization \
+                using average adjacency
             logger_name (str): name of existing logger object, if not supplied new main logger is used
 
         Returns:

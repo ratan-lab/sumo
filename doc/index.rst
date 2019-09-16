@@ -15,10 +15,7 @@ Welcome to sumo's documentation!
    utils
 
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. include:: ../README.rst
+  :start-after: inclusion-start-marker-do-not-remove
+  :end-before: inclusion-end-marker-do-not-remove
 

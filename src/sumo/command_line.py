@@ -42,7 +42,7 @@ def add_prepare_command_options(subparsers):
     prepare_parser.add_argument('-missing', action='store',
                                 type=float, required=False, default=0.1,
                                 help='acceptable fraction of available values for assessment of distance/similarity' +
-                                     ' between pairs of samples (default of %(default)s')
+                                     ' between pairs of samples (default of %(default)s)')
     # TODO: turn this parameter into fraction of missing samples
 
     prepare_parser.add_argument('-names', action='store',
@@ -150,7 +150,7 @@ def add_run_command_options(subparsers):
 def add_evaluate_command_options(subparsers):
     """ Add subparser for 'evaluate' command """
 
-    description = "Evaluate clustering results, given true labels"
+    description = "Evaluate clustering results, given set of labels"
     evaluate_parser = subparsers.add_parser('evaluate', description=description,
                                             help='evaluate clustering results')
 

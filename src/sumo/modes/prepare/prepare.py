@@ -1,6 +1,3 @@
-"""
-"Prepare" mode class and functionality
-"""
 from collections import Counter
 from pandas import DataFrame, isna, read_csv
 from sumo.constants import PREPARE_ARGS, SUPPORTED_EXT, VAR_TYPES, SIMILARITY_METHODS, LOG_LEVELS
@@ -139,30 +136,30 @@ def load_data_npz(file_path: str, sample_idx: str = None, drop_features: float =
 
 @docstring_formatter(var_types=VAR_TYPES, sim_methods=SIMILARITY_METHODS, log_levels=LOG_LEVELS)
 class SumoPrepare(SumoMode):
-    """
-    Sumo mode for data pre-processing and creation of multiplex network files.
+    """ Sumo mode for data pre-processing and creation of multiplex network files. Constructor args are set \
+    in 'prepare' subparser.
 
-    Constructor args as detailed in 'prepare' subparser:
-        infiles (list): list of paths to input .npz or .txt files (all input files should be structured in following \
-            way: consecutive samples in columns, consecutive features in rows
-        vars (list): either one variable type from {var_types} for every data matrix or list of variable types for \
+    Args:
+        | infiles (list): list of paths to input .npz or .txt files (all input files should be structured in following \
+            way: consecutive samples in columns, consecutive features in rows)
+        | vars (list): either one variable type from {var_types} for every data matrix or list of variable types for \
             each of them
-        outfile (str): path to output .npz file
-        method (str): method of sample-sample similarity calculation selected from {sim_methods}
-        k (float): fraction of nearest neighbours to use for sample similarity calculation using with RBF method
-        alpha (float): hypherparameter of RBF similarity kernel
-        missing (float): acceptable fraction of available (not missing) values for assessment of distance/similarity \
+        | outfile (str): path to output .npz file
+        | method (str): method of sample-sample similarity calculation selected from {sim_methods}
+        | k (float): fraction of nearest neighbours to use for sample similarity calculation using with RBF method
+        | alpha (float): hypherparameter of RBF similarity kernel
+        | missing (float): acceptable fraction of available (not missing) values for assessment of distance/similarity \
             between pairs of samples
-        names (str): optional key of array containing custom sample names in every .npz file (if not set ids of samples \
-            are used, which can cause problems when layers have missing samples)
-        sn (int): index of row with sample names for .txt input files
-        fn (int): index of column with feature names for .txt input files
-        df (float): if percentage of missing values for feature exceeds this value, remove feature
-        ds (float): if percentage of missing values for sample (that remains after feature dropping) exceeds this value, \
-            remove sample
-        logfile (str): path to save log file, if set to None stdout is used
-        log (str): sets the logging level from {log_levels}
-        plot (str): path to save adjacency matrix heatmap(s), if set None plots are displayed on screen
+        | names (str): optional key of array containing custom sample names in every .npz file (if not set ids of \
+            samples are used, which can cause problems when layers have missing samples)
+        | sn (int): index of row with sample names for .txt input files
+        | fn (int): index of column with feature names for .txt input files
+        | df (float): if percentage of missing values for feature exceeds this value, remove feature
+        | ds (float): if percentage of missing values for sample (that remains after feature dropping) exceeds \
+            this value, remove sample
+        | logfile (str): path to save log file, if set to None stdout is used
+        | log (str): sets the logging level from {log_levels}
+        | plot (str): path to save adjacency matrix heatmap(s), if set None plots are displayed on screen
 
     """
 

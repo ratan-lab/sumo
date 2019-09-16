@@ -54,7 +54,7 @@ def feature_corr_similarity(f: np.ndarray, missing: float = 0.1, method="pearson
 
         Args:
             f (Numpy.ndarray): Feature matrix (n x k, where 'n' - samples, 'k' - measurements)
-            missing (float): acceptable fraction of values for assessment of distance/similarity between two samples
+            missing (float): acceptable fraction of values for assessment of distance/similarity between two samples \
             (default of 0.1, means that up to 90 % of missing values is acceptable)
             method (str): either "pearson" or "spearman"
         Returns:
@@ -90,12 +90,12 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
 
     Args:
         f (Numpy.ndarray): Feature matrix (n x k, where 'n' - samples, 'k' - measurements)
-        variable_type (str): either 'continuous', 'discrete' or 'binary', value indicating how to calculate distance
-            between two samples ('continuous' - using Euclidean distance, 'discrete' - chi-squared distance,
+        variable_type (str): either 'continuous', 'discrete' or 'binary', value indicating how to calculate distance \
+            between two samples ('continuous' - using Euclidean distance, 'discrete' - chi-squared distance, \
             'binary' - agreement-based measure)
         n (float): fraction of nearest neighbours to use for samples similarity calculation
-        missing (float): acceptable fraction of values for assessment of distance/similarity between two samples
-        (default of 0.1, means that up to 90 % of missing values is acceptable)
+        missing (float): acceptable fraction of values for assessment of distance/similarity between two samples \
+            (default of 0.1, means that up to 90 % of missing values is acceptable)
 
     Returns:
         w (Numpy.ndarray): symmetric matrix describing similarity between samples (n x n)
