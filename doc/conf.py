@@ -22,6 +22,8 @@ import shlex
 sys.path.append(os.path.join(os.path.dirname(__name__), ".."))
 sys.path.append(os.path.join(os.path.dirname(__name__), "..", "src"))
 
+autodoc_mock_imports = ['seaborn', 'numpy', 'pandas', 'sklearn', 'matplotlib', 'scipy']
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
