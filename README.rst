@@ -1,7 +1,7 @@
 sumo: subtyping tool for multi-omic data
 ========================================
 
-|badge1| |badge2| |badge3|
+|badge1| |badge2| |badge3| |badge4|
 
 .. |badge1| image:: https://travis-ci.org/ratan-lab/sumo.svg?branch=master
     :target: https://travis-ci.org/ratan-lab/sumo
@@ -10,6 +10,8 @@ sumo: subtyping tool for multi-omic data
 .. |badge3| image:: https://readthedocs.org/projects/python-sumo/badge/?version=latest
     :target: https://python-sumo.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
+.. |badge4| image:: https://img.shields.io/pypi/v/python-sumo
+    :alt: PyPI
 
 .. inclusion-start-marker-do-not-remove
 
@@ -25,7 +27,7 @@ You can install **sumo** from PyPI, by executing command below. Please note that
 
 .. code:: sh
 
-    pip install sumo
+    pip install python-sumo
 
 Dependencies
 ------------
@@ -63,8 +65,8 @@ Typical workflow includes running *prepare* mode for preparation of similarity
 matrices from feature matrices, followed by factorization of produced multiplex network (mode *run*).
 Third mode *evaluate* can be used for comparison of created cluster labels against biologically significant labels.
 
-Sumo Prepare
-^^^^^^^^^^^^
+prepare
+^^^^^^^
 Generates similarity matrices for samples based on biological data and saves them into multiplex network files.
 
 ::
@@ -120,8 +122,8 @@ Generates similarity matrices for samples based on biological data and saves the
 
     sumo prepare -plot plot.png methylation.txt,expression.txt continuous prepared.data.npz
 
-Sumo Run
-^^^^^^^^
+run
+^^^
 Cluster multiplex network using non-negative matrix tri-factorization to identify molecular subtypes.
 
 ::
@@ -174,8 +176,8 @@ Cluster multiplex network using non-negative matrix tri-factorization to identif
 
     sumo run -t 10 prepared.data.npz 2,5 results_dir
 
-Sumo Evaluate
-^^^^^^^^^^^^^
+evaluate
+^^^^^^^^
 Evaluate clustering results, given set of labels.
 
 ::
