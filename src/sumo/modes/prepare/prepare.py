@@ -7,7 +7,6 @@ from sumo.utils import load_npz, plot_heatmap, save_arrays_to_npz, setup_logger,
 import numpy as np
 import os
 import pathlib
-import sys
 
 
 def filter_features_and_samples(data: DataFrame, drop_features: float = 0.1, drop_samples: float = 0.1):
@@ -72,7 +71,7 @@ def load_data_txt(file_path: str, sample_names: int = None, feature_names: int =
         raise FileNotFoundError("Data file not found")
 
     data = read_csv(file_path, sep="\t", header=sample_names, index_col=feature_names)
-    if data.empty:
+    if data.empty or data.values.shape == (1, 1):
         raise ValueError('File cannot be read correctly, file is not tab delimited or is corrupted')
     elif data.values.dtype == np.object:
         raise ValueError("File contains some non-numerical values other than 'NA'")
@@ -84,7 +83,7 @@ def load_data_npz(file_path: str, sample_idx: str = None, drop_features: float =
     """ Loads data from .npz file into pandas.DataFrame
 
     Args:
-        file_path (str): path to the tab delimited .txt file
+        file_path (str): path to the .npz file
         sample_idx (str): key of array containing custom sample names in every .npz file \
             (if not supplied use column indices)
         drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
@@ -95,10 +94,11 @@ def load_data_npz(file_path: str, sample_idx: str = None, drop_features: float =
         data_frames (list): data frames loaded from file, with missing values removed
 
     """
-    try:
-        data = load_npz(file_path)
-    except OSError:
-        raise ValueError("File {} is empty. Data not found".format(file_path))
+
+    data = load_npz(file_path)
+
+    if len(data.keys()) == 0:
+        raise ValueError("File {} is empty".format(file_path))
 
     logger = get_logger()
     # extract sample names
@@ -122,8 +122,8 @@ def load_data_npz(file_path: str, sample_idx: str = None, drop_features: float =
             raise ValueError("Length of vector with sample names does not corresponds to " +
                              "shapes of other arrays in {} file.".format(file_path))
     except IndexError:
-        print("One dimensional array found in input file, use '-s' option to supply sample names or remove array")
-        sys.exit(1)
+        raise AttributeError(
+            "One dimensional array found in input file, use '-s' option to supply sample names or remove array")
 
     data_frames = []
     for idx in array_idx:
@@ -187,6 +187,9 @@ class SumoPrepare(SumoMode):
 
         if not all([var in VAR_TYPES for var in self.vars]):
             raise ValueError("Unrecognized variable type")
+
+        if len(self.vars) > 1 and len(self.infiles) != len(self.vars):
+            raise ValueError("Number of input files and variable types does not correspond")
 
         self.plot_base = None
         if self.plot:

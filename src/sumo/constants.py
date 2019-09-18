@@ -6,8 +6,12 @@ SUMO_COMMANDS = ["prepare", "run", "evaluate"]
 CORR_METHODS = ["pearson", "spearman"]
 SIMILARITY_METHODS = ["rbf"] + CORR_METHODS
 SUPPORTED_EXT = [".txt", ".npz"]
+
 PREPARE_ARGS = ["infiles", "vars", "outfile", "method", "k", "alpha", "missing", "names", "sn", "fn", "df", "ds",
                 "logfile", "log", "plot"]
+PREPARE_DEFAULT_VALS = ["rbf", 0.1, 0.5, 0.1, None, 0, 0, 0.1, 0.1, None, "INFO", None]
+PREPARE_DEFAULTS = dict(zip(PREPARE_ARGS[3:], PREPARE_DEFAULT_VALS))  # 3 positional args
+
 VAR_TYPES = ["continuous", "binary", "categorical"]
 
 # run

@@ -1,6 +1,5 @@
-
 from sumo.constants import __version__, CLUSTER_METHODS, LOG_LEVELS, SIMILARITY_METHODS, SPARSITY_RANGE, VAR_TYPES, \
-    CLUSTER_METRICS
+    CLUSTER_METRICS, PREPARE_DEFAULTS
 from sumo.modes import SUMO_COMMANDS
 import argparse
 
@@ -27,57 +26,57 @@ def add_prepare_command_options(subparsers):
                                 type=str, help='path to output .npz file')
 
     prepare_parser.add_argument('-method', action='store', choices=SIMILARITY_METHODS,
-                                type=str, required=False, default="rbf",
+                                type=str, required=False, default=PREPARE_DEFAULTS["method"],
                                 help='method of sample-sample similarity calculation (default of "%(default)s")')
 
     prepare_parser.add_argument('-k', action='store',
-                                type=float, required=False, default=0.1,
+                                type=float, required=False, default=PREPARE_DEFAULTS["k"],
                                 help='fraction of nearest neighbours to use for sample similarity calculation using ' +
                                      'RBF method (default of %(default)s)')
 
     prepare_parser.add_argument('-alpha', action='store',
-                                type=float, required=False, default=0.5,
+                                type=float, required=False, default=PREPARE_DEFAULTS["alpha"],
                                 help='hypherparameter of RBF similarity kernel (default of %(default)s)')
 
     prepare_parser.add_argument('-missing', action='store',
-                                type=float, required=False, default=0.1,
+                                type=float, required=False, default=PREPARE_DEFAULTS["missing"],
                                 help='acceptable fraction of available values for assessment of distance/similarity' +
                                      ' between pairs of samples (default of %(default)s)')
     # TODO: turn this parameter into fraction of missing samples
 
     prepare_parser.add_argument('-names', action='store',
-                                type=str, required=False,
+                                type=str, required=False, default=PREPARE_DEFAULTS["names"],
                                 help='optional key of array containing custom sample names in every .npz file ' +
                                      '(if not set ids of samples are used, which can cause problems ' +
                                      'when layers have missing samples)')
 
     prepare_parser.add_argument('-sn', action='store',
-                                type=int, required=False, default=0,
+                                type=int, required=False, default=PREPARE_DEFAULTS["sn"],
                                 help='index of row with sample names for .txt input files (default of %(default)s)')
 
     prepare_parser.add_argument('-fn', action='store',
-                                type=int, required=False, default=0,
+                                type=int, required=False, default=PREPARE_DEFAULTS["fn"],
                                 help='index of column with feature names for .txt input files (default of %(default)s)')
 
     prepare_parser.add_argument('-df', action='store',
-                                type=float, required=False, default=0.1,
+                                type=float, required=False, default=PREPARE_DEFAULTS["df"],
                                 help='if percentage of missing values for feature exceeds this value, remove feature ' +
                                      '(default of %(default)s)')
 
     prepare_parser.add_argument('-ds', action='store',
-                                type=float, required=False, default=0.1,
+                                type=float, required=False, default=PREPARE_DEFAULTS["ds"],
                                 help='if percentage of missing values for sample (that remains after feature ' +
                                      'dropping) exceeds this value, remove sample (default of %(default)s)')
 
     prepare_parser.add_argument('-logfile', action='store',
-                                type=str, required=False, default=None,
+                                type=str, required=False, default=PREPARE_DEFAULTS["logfile"],
                                 help='path to save log file, by default stdout is used')
 
-    prepare_parser.add_argument('-log', default="INFO", choices=LOG_LEVELS,
+    prepare_parser.add_argument('-log', default=PREPARE_DEFAULTS["log"], choices=LOG_LEVELS,
                                 help="Sets the logging level (default of %(default)s)")
 
     prepare_parser.add_argument('-plot', action='store',
-                                type=str, required=False, default=None,
+                                type=str, required=False, default=PREPARE_DEFAULTS["plot"],
                                 help='path to save adjacency matrix heatmap(s), by default plots are displayed on' +
                                      ' screen')
 
