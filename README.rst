@@ -194,7 +194,7 @@ Evaluate clustering results, given set of labels.
                               clustering labels in second column (file created by
                               running sumo with mode 'run')
         labels                either .npy file containing array with sample names in
-                              first column and true labels in second column or .npz
+                              first column and labels in second column or .npz
                               file (requires using '-npz' option)
 
     Optional arguments:

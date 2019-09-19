@@ -4,7 +4,8 @@ from sumo.constants import RUN_ARGS, CLUSTER_METHODS, LOG_LEVELS
 from sumo.modes.mode import SumoMode
 from sumo.modes.run.solver import SumoNMF
 from sumo.network import MultiplexNet
-from sumo.utils import extract_ncut, load_npz, save_arrays_to_npz, setup_logger, docstring_formatter, plot_heatmap_seaborn
+from sumo.utils import extract_ncut, load_npz, save_arrays_to_npz, setup_logger, docstring_formatter, \
+    plot_heatmap_seaborn
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 import numpy as np
@@ -75,7 +76,7 @@ class SumoRun(SumoMode):
             os.mkdir(self.outdir)
             self.logger.info("Directory '{}' created".format(self.outdir))
 
-        if len(self.k) > 2:
+        if len(self.k) > 2 or (len(self.k) == 2 and self.k[0] > self.k[1]):
             raise ValueError("Incorrect range of k values")
         elif len(self.k) == 2:
             self.k = list(range(self.k[0], self.k[1] + 1))

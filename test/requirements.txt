@@ -3,5 +3,6 @@
 ##   python -m pip install --requirement=requirements.txt
 ##
 pytest>4.0
+numpy
 pandas
 scikit-learn

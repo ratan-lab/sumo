@@ -56,13 +56,14 @@ class SumoEvaluate(SumoMode):
             labels_array = np.load(self.labels)
             if isinstance(labels_array, np.lib.npyio.NpzFile):
                 raise ValueError("Attempting to use .npz label file without '-npz' option supplied")
-            if labels_array.shape[1] < 2:
-                raise ValueError("Incorrect structure of label file")
         else:
             label_data = load_npz(self.labels)
             if self.npz not in label_data.keys():
                 raise ValueError("Incorrect structure of label file")
             labels_array = label_data[self.npz]
+
+        if len(labels_array.shape) == 1 or labels_array.shape[1] < 2:
+            raise ValueError("Incorrect structure of label file")
 
         self.common_samples = list(set(clusters_array[:, 0]) & set(labels_array[:, 0]))
         if len(self.common_samples) == 0:

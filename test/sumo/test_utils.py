@@ -59,3 +59,36 @@ def test_load_npz(tmpdir):
     assert all([x in files.keys() for x in ["a1", "a2"]])
     assert np.array_equal(files['a1'], a1)
     assert np.array_equal(files['a2'], a2)
+
+
+def test_extract_ncut():
+    samples = 10
+    a = np.random.random((samples, samples))
+    a = (a * a.T) / 2
+
+    labels = utils.extract_ncut(a, 2)
+    assert labels.size == samples
+    assert np.unique(labels).size == 2
+
+    labels = utils.extract_ncut(a, 4)
+    assert labels.size == samples
+    assert np.unique(labels).size == 4
+
+    with pytest.raises(AssertionError):
+        a[0, 1], a[1, 0] = 2, 1
+        utils.extract_ncut(a, 4)
+
+
+def test_check_accuracy():
+    labels = np.array([0, 1, 2, 3, 0, 1, 2, 3])
+
+    # incorrect method
+    with pytest.raises(ValueError):
+        utils.check_accuracy(labels, labels, method="method")
+
+    # incorrect arrays
+    with pytest.raises(ValueError):
+        utils.check_accuracy(labels, labels[0:-1], method="method")
+
+    ari = utils.check_accuracy(labels, labels, method="ARI")
+    assert ari == 1.0

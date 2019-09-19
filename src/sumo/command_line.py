@@ -1,5 +1,5 @@
-from sumo.constants import __version__, CLUSTER_METHODS, LOG_LEVELS, SIMILARITY_METHODS, SPARSITY_RANGE, VAR_TYPES, \
-    CLUSTER_METRICS, PREPARE_DEFAULTS
+from sumo.constants import __version__, CLUSTER_METHODS, LOG_LEVELS, SIMILARITY_METHODS, VAR_TYPES, CLUSTER_METRICS, \
+    PREPARE_DEFAULTS, EVALUATE_DEFAULTS, RUN_DEFAULTS
 from sumo.modes import SUMO_COMMANDS
 import argparse
 
@@ -103,46 +103,46 @@ def add_run_command_options(subparsers):
                                 help='path to save output files')
 
     cluster_parser.add_argument('-sparsity', type=lambda s: [float(i) for i in s.split(',')], required=False,
-                                default=SPARSITY_RANGE,
+                                default=RUN_DEFAULTS['sparsity'],
                                 help='either one value or coma-delimited list of sparsity penalty values for H matrix' +
                                      ' (sumo will try different values and select the best results; ' +
                                      'default of  %(default)s)')
 
     cluster_parser.add_argument('-n', action='store',
-                                type=int, required=False, default=50,
+                                type=int, required=False, default=RUN_DEFAULTS['n'],
                                 help='number of repetitions (default of %(default)s)')
 
     cluster_parser.add_argument('-method', action='store', choices=CLUSTER_METHODS,
-                                type=str, required=False, default="max_value",
+                                type=str, required=False, default=RUN_DEFAULTS['method'],
                                 help='method of cluster extraction (default of "%(default)s")')
 
     cluster_parser.add_argument('-max_iter', action='store',
-                                type=int, required=False, default=500,
+                                type=int, required=False, default=RUN_DEFAULTS['max_iter'],
                                 help='maximum number of iterations for factorization (default of %(default)s)')
 
     cluster_parser.add_argument('-tol', action='store',
-                                type=float, required=False, default=1e-5,
+                                type=float, required=False, default=RUN_DEFAULTS['tol'],
                                 help='if objective cost function value fluctuation (|Δℒ|) is smaller than this value' +
                                      ', stop iterations before reaching max_iter (default of %(default)s)')
 
     cluster_parser.add_argument('-calc_cost', action='store',
-                                type=int, required=False, default=20,
+                                type=int, required=False, default=RUN_DEFAULTS['calc_cost'],
                                 help='number of steps between every calculation of objective cost function ' +
                                      '(default of %(default)s)')
 
     cluster_parser.add_argument('-logfile', action='store',
-                                type=str, required=False, default=None,
+                                type=str, required=False, default=RUN_DEFAULTS['logfile'],
                                 help='path to save log file (by default printed to stdout)')
 
-    cluster_parser.add_argument('-log', default="INFO", choices=LOG_LEVELS,
+    cluster_parser.add_argument('-log', default=RUN_DEFAULTS['log'], choices=LOG_LEVELS,
                                 help="Set the logging level (default of %(default)s)")
 
     cluster_parser.add_argument('-h_init', action='store',
-                                type=int, required=False, default=None,
+                                type=int, required=False, default=RUN_DEFAULTS['h_init'],
                                 help='index of adjacency matrix to use for H matrix initialization (by default ' +
                                      'using average adjacency)')
 
-    cluster_parser.add_argument('-t', action='store', type=int, default=1, required=False,
+    cluster_parser.add_argument('-t', action='store', type=int, default=RUN_DEFAULTS['t'], required=False,
                                 help='number of threads (default of %(default)s)')
 
 
@@ -159,19 +159,19 @@ def add_evaluate_command_options(subparsers):
                                       "(file created by running sumo with mode 'run')")
 
     evaluate_parser.add_argument('labels', metavar='labels', type=str,
-                                 help="either .npy file containing array with sample names in first column and true " +
+                                 help="either .npy file containing array with sample names in first column and " +
                                       "labels in second column or .npz file (requires using '-npz' option)")
 
     evaluate_parser.add_argument('-npz', action='store',
-                                 type=str, required=False, default=None,
+                                 type=str, required=False, default=EVALUATE_DEFAULTS['npz'],
                                  help="key of array containing labels in .npz file")
 
     evaluate_parser.add_argument('-metric', action='store', choices=CLUSTER_METRICS,
-                                 type=str, required=False, default=None,
+                                 type=str, required=False, default=EVALUATE_DEFAULTS['metric'],
                                  help='metric for accuracy evaluation (by default all metrics are calculated)')
 
     evaluate_parser.add_argument('-logfile', action='store',
-                                 type=str, required=False, default=None,
+                                 type=str, required=False, default=EVALUATE_DEFAULTS['logfile'],
                                  help='path to save log file (by default printed to stdout)')
 
 

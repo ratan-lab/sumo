@@ -205,11 +205,9 @@ def extract_ncut(a: np.ndarray, k: int):
     Returns:
         one dimensional array containing clusters ids for every node
     """
-    assert a.shape[0] == a.shape[1] and np.all(a == a.T)
-    # TODO add test
+    assert check_matrix_symmetry(a)
 
     d = np.diag(np.power(np.sum(a, axis=1) + np.spacing(1), -0.5))
-
     u, s, vh = np.linalg.svd(np.eye(a.shape[0]) - d @ a @ d)
 
     k = min(u.shape[1], k)
@@ -230,7 +228,6 @@ def extract_max_value(h: np.ndarray):
         one dimensional array containing clusters ids for every node
 
     """
-    # TODO add test
     return np.argmax(h, axis=1)
 
 
@@ -248,7 +245,6 @@ def extract_spectral(h: np.ndarray, assign_labels: str = "kmeans", n_neighbors: 
         one dimensional array containing clusters ids for every node
 
     """
-    # TODO add test
     if not n_clusters:
         n_clusters = h.shape[1]
     if not n_neighbors:
