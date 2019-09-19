@@ -114,7 +114,7 @@ def test_run(tmpdir):
     args['sparsity'] = [10]
     args['n'] = 10  # makes test run quicker
     sr = SumoRun(**args)
-    sr.run()  # TODO: seaborn, PendingDepricationWarning
+    sr.run()
 
     assert all([os.path.exists(os.path.join(outdir, x)) for x in ['k2', 'plots',
                                                                   os.path.join('plots', 'consensus_k2.png'),

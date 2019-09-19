@@ -81,7 +81,7 @@ def feature_corr_similarity(f: np.ndarray, missing: float = 0.1, method="pearson
     return sim
 
 
-def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, missing: float = 0.1, alpha=0.5):
+def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, missing: float = 0.1, alpha: float = 0.5):
     """ Generate similarity matrix from genomic assay, partially based on:
 
         Wang, B., Mezlini, A. M., Demir, F., Fiume, M., Tu, Z., Brudno, M., … Goldenberg, A. (2014).
@@ -96,11 +96,15 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
         n (float): fraction of nearest neighbours to use for samples similarity calculation
         missing (float): acceptable fraction of values for assessment of distance/similarity between two samples \
             (default of 0.1, means that up to 90 % of missing values is acceptable)
+        alpha (float): hyperparameter
 
     Returns:
         w (Numpy.ndarray): symmetric matrix describing similarity between samples (n x n)
 
     """
+    if alpha <= 0:
+        raise ValueError("Incorrect value of hyperparameter")
+
     if variable_type not in VAR_TYPES:
         raise ValueError("Incorrect value of 'variable_type'")
     elif variable_type == 'continuous':
@@ -110,6 +114,8 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
     else:
         dist_calc = agreement_dist
     # NOTE: for every method distance is calculated only over features that are not missing for every pair of samples
+
+    eps = np.spacing(1)
 
     # filter missing samples
     samples = np.array([i for i in range(f.shape[0]) if not np.all(np.isnan(f[i, :]))])
@@ -121,7 +127,7 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
 
     for i in [sample for sample in range(f.shape[0]) if sample in samples]:
         for j in [sample for sample in range(i, f.shape[0]) if sample in samples]:
-            dist[i, j] = dist_calc(f[i, :], f[j, :], missing=missing)
+            dist[i, j] = round(dist_calc(f[i, :], f[j, :], missing=missing), 10)  # fixes numerical error
             if i != j:
                 dist[j, i] = dist[i, j]
 
@@ -141,10 +147,15 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
             ni_mean = np.nanmean(neighbours_i) if neighbours_i[0] != np.nan else np.nan
             nj_mean = np.nanmean(neighbours_j) if neighbours_j[0] != np.nan else np.nan
             den = alpha * ni_mean * nj_mean
-            sample_w[i, j] = np.exp(num / den)
+            if den == 0:
+                raise ValueError(
+                    "Average distance between sample and its all nearest neighbours is 0, please increase" +
+                    " fraction of nearest neighbours used for similarity calculation ('-k' parameter)")
+            else:
+                sample_w[i, j] = np.exp(round((num + eps) / (den + eps), 10))  # fixes numerical error
             if i != j:
                 sample_w[j, i] = sample_w[i, j]
 
-    w[samples[:, None], samples] = sample_w  # put missing samples back in
+            w[samples[:, None], samples] = sample_w  # put missing samples back in
 
     return w

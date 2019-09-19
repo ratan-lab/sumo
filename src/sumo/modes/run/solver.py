@@ -1,7 +1,7 @@
 from math import sqrt
 from sumo.constants import CLUSTER_METHODS
 from sumo.network import MultiplexNet
-from sumo.utils import extract_max_value, extract_spectral, get_logger
+from sumo.utils import extract_max_value, extract_spectral, get_logger, check_matrix_symmetry
 import numpy as np
 
 
@@ -56,12 +56,14 @@ def svd_si_init(ai: np.ndarray, k: int):
     """ Initialize S(i) values based on A(i) matrix SVD
 
     Args:
-        ai (Numpy.ndarray): non-negative similarity matrix A(i) (n x n)
+        ai (Numpy.ndarray): symmetric similarity matrix A(i) (n x n)
         k (int): rank of computed factor
 
     Returns:
         si (Numpy.ndarray): non-negative matrix S(i) (k x k)
     """
+    if not check_matrix_symmetry(ai):
+        raise ValueError("Non symmetric A(i) matrix")
 
     _, s_vec, _ = np.linalg.svd(ai)
 
@@ -76,12 +78,15 @@ def svd_h_init(a: np.ndarray, k: int):
     """ Initialize H matrix values based on A matrix SVD
 
         Args:
-            a (Numpy.ndarray): non-negative similarity matrix A (n x n)
+            a (Numpy.ndarray): symmetric similarity matrix A (n x n)
             k (int): rank of computed factor
 
         Returns:
             h (Numpy.ndarray): non-negative matrix H (n x k)
     """
+    if not check_matrix_symmetry(a):
+        raise ValueError("Non symmetric A(i) matrix")
+
     u, _, _ = np.linalg.svd(a)
 
     h = np.zeros((a.shape[0], k))
@@ -116,9 +121,6 @@ class SumoNMFResults:
         Args:
             method (str): either "max_value" for extraction based on maximum value in each row of h matrix \
                 or "spectral" for spectral clustering on h matrix values
-
-        Returns:
-            labels (Numpy.ndarray): vector of cluster labels for every node
 
         """
         if method not in CLUSTER_METHODS:
@@ -211,7 +213,7 @@ class SumoNMF:
         h = svd_h_init(self.graph.adj_matrices[h_init] if h_init is not None else self.avg_adj, k)
 
         # objective function
-        objval = np.zeros((max_iter, self.graph.layers + 2))
+        objval = np.zeros((max_iter + 1, self.graph.layers + 2))
         step = 0
         step_recorded = 0
         stop = np.inf

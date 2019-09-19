@@ -1,44 +1,10 @@
 from sumo.modes.prepare.prepare import SumoPrepare, filter_features_and_samples, load_data_npz, load_data_txt
 from sumo.constants import PREPARE_DEFAULTS
-from sumo.utils import save_arrays_to_npz
+from sumo.utils import save_arrays_to_npz, load_npz
 from pandas import DataFrame
-from sklearn.datasets.samples_generator import make_blobs
 import numpy as np
 import os
 import pytest
-
-
-def _generate_clusters(samples: int, features: int, clusters: int, cluster_std: int = 1.0, random_state: int = None):
-    """ Generate linearly separate clusters of data points
-
-    Args:
-        samples (int): number of points in all clusters
-        features (int): number of features (at least 2)
-        clusters (int): number of clusters
-        cluster_std (int): the standard deviation of the clusters
-        random_state (int): optional, determines random number generation for dataset creation
-
-    Returns:
-        x (Numpy.ndarray): matrix of data point coordinates (samples x 2)
-        y (Numpy.ndarray): vector of data point labels (1 x samples)
-
-    """
-    assert all([x > 0 for x in [samples, features, clusters]])
-
-    # generate classification dataset
-    x, y = make_blobs(n_samples=samples, n_features=features, centers=clusters, cluster_std=cluster_std,
-                      random_state=random_state)
-
-    # points grouped by their labels
-    data = {"x" + str(i): x[:, i] for i in range(x.shape[1])}
-    data["label"] = y
-    df = DataFrame(data)
-    grouped_x, grouped_y = [], []
-    for key, group in df.groupby('label'):
-        grouped_x.append(group.values[:, :-1])
-        grouped_y.append(group.values[:, -1])
-
-    return np.concatenate(tuple(grouped_x)), np.concatenate(tuple(grouped_y))
 
 
 def _get_args(infiles: list, vars: list, outfile):
@@ -63,7 +29,7 @@ def test_init(tmpdir):
         SumoPrepare(**args)
 
     # one npz input file
-    data, _ = _generate_clusters(samples=10, features=20, clusters=2)
+    data = np.random.random((10, 20))
     save_arrays_to_npz({'f': data}, npz_infile)
     SumoPrepare(**args)
 
@@ -101,11 +67,55 @@ def test_init(tmpdir):
         SumoPrepare(**args)
 
 
+def test_run(tmpdir):
+    npz_infile_1 = os.path.join(tmpdir, "indata1.npz")
+    npz_infile_2 = os.path.join(tmpdir, "indata2.npz")
+    fname_outfile = os.path.join(tmpdir, "outdata.npz")
+    logfile = os.path.join(tmpdir, "prepare.log")
+    plots = os.path.join(tmpdir, "plot.png")
+
+    f0 = np.random.random((20, 10))
+    samples1 = ['sample_{}'.format(i) for i in range(10)]
+    save_arrays_to_npz({'f': f0, 'samples': np.array(samples1)}, npz_infile_1)
+    f1 = np.random.random((40, 12))
+    samples2 = ['sample_{}'.format(i) for i in range(12)]
+    save_arrays_to_npz({'f': f1, 'samples': np.array(samples2)}, npz_infile_2)
+
+    args = _get_args([npz_infile_1, npz_infile_2], ['continuous', 'continuous', 'continuous'], fname_outfile)
+    args['names'] = 'samples'
+    args['logfile'] = logfile
+    args['plot'] = plots
+
+    # incorrect number of variable types
+    with pytest.raises(ValueError):
+        sp = SumoPrepare(**args)
+        sp.run()
+
+    args['vars'] = ['continuous', 'continuous']
+    sp = SumoPrepare(**args)
+    sp.run()
+
+    args['vars'] = ['continuous']
+    sp = SumoPrepare(**args)
+    sp.run()
+
+    assert os.path.exists(fname_outfile)
+    assert os.path.exists(logfile)
+
+    d = load_npz(fname_outfile)
+    # file structure
+    assert all([x in d.keys() for x in ['0', '1', 'samples']])
+    # missing samples
+    assert d['0'].shape == (12, 12) and d['1'].shape == (12, 12) and d['samples'].shape[0] == 12
+    assert np.sum(np.sum(np.isnan(d['0']), axis=0) == 12) == 2
+    assert np.sum(np.sum(np.isnan(d['0']), axis=1) == 12) == 2
+
+
 def test_load_all_data(tmpdir):
     txt_infile = os.path.join(tmpdir, "indata.txt")
     args = _get_args([txt_infile], ['continuous'], os.path.join(tmpdir, "outdata.npz"))
 
-    data_vals, _ = _generate_clusters(samples=10, features=20, clusters=2)
+    data_vals = np.random.random((10, 20))
     data = DataFrame(data_vals.T, columns=['sample_{}'.format(i) for i in range(data_vals.shape[0])],
                      index=['feature_{}'.format(i) for i in range(data_vals.shape[1])])
     data.to_csv(txt_infile,
@@ -120,7 +130,7 @@ def test_load_all_data(tmpdir):
 
 
 def test_filter_features_and_samples():
-    data_vals, _ = _generate_clusters(samples=10, features=20, clusters=2)
+    data_vals = np.random.random((10, 20))
     data = DataFrame(data_vals.T, columns=['sample_{}'.format(i) for i in range(data_vals.shape[0])],
                      index=['feature_{}'.format(i) for i in range(data_vals.shape[1])])
 
@@ -168,7 +178,7 @@ def test_load_data_txt(tmpdir):
     with pytest.raises(ValueError):
         load_data_txt(file_path=fname)
 
-    data_vals, _ = _generate_clusters(samples=10, features=20, clusters=2)
+    data_vals = np.random.random((10, 20))
     data = DataFrame(data_vals.T, columns=['sample_{}'.format(i) for i in range(data_vals.shape[0])],
                      index=['feature_{}'.format(i) for i in range(data_vals.shape[1])])
 
@@ -196,7 +206,7 @@ def test_load_data_npz(tmpdir):
         load_data_npz(file_path=fname)
 
     # no sample names
-    data_vals, _ = _generate_clusters(samples=10, features=20, clusters=2)
+    data_vals = np.random.random((10, 20))
     save_arrays_to_npz({'f': data_vals.T}, file_path=fname)
     loaded = load_data_npz(file_path=fname)
     assert len(loaded) == 1
