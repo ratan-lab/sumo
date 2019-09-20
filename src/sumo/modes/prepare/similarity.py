@@ -127,9 +127,11 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
 
     for i in [sample for sample in range(f.shape[0]) if sample in samples]:
         for j in [sample for sample in range(i, f.shape[0]) if sample in samples]:
-            dist[i, j] = round(dist_calc(f[i, :], f[j, :], missing=missing), 10)  # fixes numerical error
             if i != j:
+                dist[i, j] = dist_calc(f[i, :], f[j, :], missing=missing)
                 dist[j, i] = dist[i, j]
+            else:
+                dist[i, j] = 0
 
     # weighted edges matrix
     w = np.zeros((f.shape[0], f.shape[0]))
@@ -147,14 +149,15 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
             ni_mean = np.nanmean(neighbours_i) if neighbours_i[0] != np.nan else np.nan
             nj_mean = np.nanmean(neighbours_j) if neighbours_j[0] != np.nan else np.nan
             den = alpha * ni_mean * nj_mean
-            if den == 0:
+            if np.allclose(den, 0):
                 raise ValueError(
                     "Average distance between sample and its all nearest neighbours is 0, please increase" +
                     " fraction of nearest neighbours used for similarity calculation ('-k' parameter)")
-            else:
-                sample_w[i, j] = np.exp(round((num + eps) / (den + eps), 10))  # fixes numerical error
             if i != j:
+                sample_w[i, j] = np.exp(num / den)
                 sample_w[j, i] = sample_w[i, j]
+            else:
+                sample_w[i, j] = 1.
 
             w[samples[:, None], samples] = sample_w  # put missing samples back in
 
