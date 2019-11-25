@@ -1,3 +1,4 @@
+========================================
 sumo: subtyping tool for multi-omic data
 ========================================
 
@@ -12,6 +13,12 @@ sumo: subtyping tool for multi-omic data
     :alt: Documentation Status
 .. |badge4| image:: https://img.shields.io/pypi/v/python-sumo
     :alt: PyPI
+
+.. |sumo| raw:: html
+
+    <img src="https://raw.githubusercontent.com/ratan-lab/sumo/development/doc/_images/sumo.png" height="200px">
+
+|sumo|
 
 .. inclusion-start-marker-do-not-remove
 
