@@ -282,7 +282,7 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     out_arrays = {
         "clusters": cluster_array,
         "consensus": consensus,
-        "unfiltered_consensus": consensus,
+        "unfiltered_consensus": org_con,
         "quality": np.array(quality),
         "cophenet": np.array([ccc])
     }
