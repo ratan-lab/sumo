@@ -182,7 +182,7 @@ def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray, title: str = None, f
     data = pd.DataFrame(a, columns=labels, index=labels)
     vmax = np.max(a) if np.max(a) > 1 else 1
 
-    p = sns.heatmap(data, vmin=0, vmax=vmax, cmap="Reds", ax=ax)
+    p = sns.heatmap(data, vmin=0, vmax=vmax, cmap="coolwarm", ax=ax)
     if title:
         ax.set_title(title)
 

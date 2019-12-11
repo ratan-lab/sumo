@@ -9,6 +9,7 @@ History
 * Updated calculation of similarity between two samples for binary datasets. Now uninformative positions are ignored.
 * Fixed error preventing loading of pickled object arrays stored in label files in *evaluate* mode, while using *-npz* flag.
 * Changed default sparsity in *run* mode from a range of values to one (0.1), as *sumo* results are very stable towards changes in sparsity parameter (unless the number of clusters is raised to very high values).
+* Changed color palette for the *run* mode heatmaps.
 
 0.1.2 (2019-09-20)
 ------------------
