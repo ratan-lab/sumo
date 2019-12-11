@@ -31,6 +31,10 @@ def agreement_dist(a: np.ndarray, b: np.ndarray, missing=0.1):
     assert a.shape == b.shape
     threshold = a.shape[0] * missing
     eps = np.spacing(1)
+    # ignore uninformative positions
+    indices = [~(a[i] == b[i] and a[i] == 0) for i in range(a.size)]
+    a = a[indices]
+    b = b[indices]
     values = ~np.logical_or(np.isnan(b), np.isnan(a))  # find missing values in either of vectors
     avec = a[values]
     bvec = b[values]

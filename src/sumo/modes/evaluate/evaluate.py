@@ -53,7 +53,7 @@ class SumoEvaluate(SumoMode):
         clusters_array = data['clusters']
 
         if not self.npz:
-            labels_array = np.load(self.labels)
+            labels_array = np.load(self.labels, allow_pickle=True)
             if isinstance(labels_array, np.lib.npyio.NpzFile):
                 raise ValueError("Attempting to use .npz label file without '-npz' option supplied")
         else:
