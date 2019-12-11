@@ -25,9 +25,8 @@ PREPARE_ARGS = ["infiles", "vars", "outfile"] + list(PREPARE_DEFAULTS.keys())  #
 
 # run
 CLUSTER_METHODS = ["max_value", "spectral"]
-SPARSITY_RANGE = [1e-04, 1e-03, 1e-02, 1e-01, 1, 1e01, 1e02]
 RUN_DEFAULTS = {
-    "sparsity": SPARSITY_RANGE,
+    "sparsity": [0.1],
     "n": 50,
     "method": "max_value",
     "max_iter": 500,
