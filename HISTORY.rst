@@ -10,6 +10,8 @@ History
 * Fixed error preventing loading of pickled object arrays stored in label files in *evaluate* mode, while using *-npz* flag.
 * Changed default sparsity in *run* mode from a range of values to one (0.1), as *sumo* results are very stable towards changes in sparsity parameter (unless the number of clusters is raised to very high values).
 * Changed color palette for the *run* mode heatmaps.
+* Update chi-squared and agreement distance implementation and '-missing' parameter in *prepare* mode.
+* Unify variable names to categorical, continuous and binary.
 
 0.1.2 (2019-09-20)
 ------------------

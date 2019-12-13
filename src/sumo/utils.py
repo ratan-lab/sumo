@@ -55,6 +55,11 @@ def check_matrix_symmetry(m: np.ndarray, tol=1e-8, equal_nan=True):
     return np.allclose(filtered, filtered.T, atol=tol, equal_nan=equal_nan)
 
 
+def check_categories(a: np.ndarray):
+    """ Check categories in data"""
+    return list(np.unique(a[~np.isnan(a)]))
+
+
 def load_npz(file_path: str):
     """ Load data from .npz file
 

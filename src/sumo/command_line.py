@@ -39,9 +39,11 @@ def add_prepare_command_options(subparsers):
                                 help='hypherparameter of RBF similarity kernel (default of %(default)s)')
 
     prepare_parser.add_argument('-missing', action='store',
-                                type=float, required=False, default=PREPARE_DEFAULTS["missing"],
+                                type=lambda s: [float(i) for i in s.split(',')], required=False,
+                                default=PREPARE_DEFAULTS["missing"],
                                 help='acceptable fraction of available values for assessment of distance/similarity' +
-                                     ' between pairs of samples (default of %(default)s)')
+                                     ' between pairs of samples - either one value or comma-delimited list for every' +
+                                     ' layer (default of %(default)s)')
     # TODO: turn this parameter into fraction of missing samples
 
     prepare_parser.add_argument('-names', action='store',

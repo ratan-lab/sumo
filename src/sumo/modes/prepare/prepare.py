@@ -3,7 +3,8 @@ from pandas import DataFrame, isna, read_csv
 from sumo.constants import PREPARE_ARGS, SUPPORTED_EXT, VAR_TYPES, SIMILARITY_METHODS, LOG_LEVELS
 from sumo.modes.mode import SumoMode
 from sumo.modes.prepare.similarity import feature_corr_similarity, feature_to_adjacency
-from sumo.utils import load_npz, plot_heatmap, save_arrays_to_npz, setup_logger, get_logger, docstring_formatter
+from sumo.utils import load_npz, plot_heatmap, save_arrays_to_npz, setup_logger, get_logger, docstring_formatter, \
+    check_categories
 import numpy as np
 import os
 import pathlib
@@ -148,8 +149,8 @@ class SumoPrepare(SumoMode):
         | method (str): method of sample-sample similarity calculation selected from {sim_methods}
         | k (float): fraction of nearest neighbours to use for sample similarity calculation using with RBF method
         | alpha (float): hypherparameter of RBF similarity kernel
-        | missing (float): acceptable fraction of available (not missing) values for assessment of distance/similarity \
-            between pairs of samples
+        | missing (list): acceptable fraction of available (not missing) values for assessment of distance/similarity \
+            between pairs of samples, either one value or different values for every layer
         | names (str): optional key of array containing custom sample names in every .npz file (if not set ids of \
             samples are used, which can cause problems when layers have missing samples)
         | sn (int): index of row with sample names for .txt input files
@@ -243,6 +244,14 @@ class SumoPrepare(SumoMode):
             raise ValueError("Number of matrices extracted from input files and number of variable types " +
                              "does not correspond")
 
+        # check missing value parameter
+        if len(self.missing) == 1:
+            self.logger.info("#Setting all 'missing' parameters to {}".format(self.missing[0]))
+            self.missing = [self.missing[0]] * len(layers)
+        elif len(layers) != len(self.missing):
+            raise ValueError("Number of matrices extracted from input files and number of given missing parameters " +
+                             "does not correspond")
+
         # extract sample names
         all_samples = set()
         for layer_data in layers:
@@ -269,12 +278,28 @@ class SumoPrepare(SumoMode):
             f = layer_data.values.T
             self.logger.info("Feature matrix shape: {}".format(f.shape))
 
+            # check if feature matrix values fit to set variable types
+            if self.vars[i] == 'continuous':
+                if not (np.allclose(np.nanmean(f, axis=0), np.zeros(f.shape[1]), atol=1e8) and
+                        np.allclose(np.nanstd(f, axis=0), np.ones(f.shape[1]), atol=1e8)):
+                    self.logger.warning("Data is not standardized!")
+            elif self.vars[i] == 'categorical':
+                ncat = check_categories(f)
+                self.logger.info("Found {} unique categories in data matrix!".format(len(ncat)))
+                self.logger.debug("Categories: {}".format(ncat))
+            else:
+                ncat = check_categories(f)
+                if len(ncat) > 2:
+                    self.logger.warning("Found {} unique categories in data matrix! " +
+                                        "Consider using 'categorical' variable type".format(len(ncat)))
+                self.logger.debug("Categories: {}".format(ncat))
+
             # create adjacency matrix
             if self.method == "rbf":
-                a = feature_to_adjacency(f, variable_type=self.vars[i], n=self.k, missing=self.missing,
+                a = feature_to_adjacency(f, variable_type=self.vars[i], n=self.k, missing=self.missing[i],
                                          alpha=self.alpha)
             else:
-                a = feature_corr_similarity(f, missing=self.missing, method=self.method)
+                a = feature_corr_similarity(f, missing=self.missing[i], method=self.method)
             self.logger.info('Adjacency matrix {} created [variable_type={}]'.format(a.shape, self.vars[i]))
 
             # plot adjacency matrix

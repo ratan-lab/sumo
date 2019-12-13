@@ -11,19 +11,38 @@ def euclidean_dist(a: np.ndarray, b: np.ndarray, missing=0.1):
     eps = np.spacing(1)
     vec = np.power(a - b, 2)
     common = ~np.isnan(vec)  # common / not missing values
-    return (sqrt(np.sum(vec[common])) + eps) / (np.sum(common) + eps) if np.sum(common) >= threshold else np.nan
+    dist = (sqrt(np.sum(vec[common])) + eps) / (np.sum(common) + eps) if np.sum(common) >= threshold else np.nan
+    assert np.isnan(dist) or (1 >= dist >= 0)
+    return dist
 
 
-# TODO update chi_squared_dist and agreement_dist to better deal with missing values
 def chi_squared_dist(a: np.ndarray, b: np.ndarray, missing=0.1):
-    """ Calculate chi-squared distance between two vectors of discrete variables """
+    """ Calculate chi-squared distance between two vectors of categorical variables """
     assert a.shape == b.shape
     threshold = a.shape[0] * missing
-    eps = np.spacing(1)
-    vec1 = np.power(a - b, 2)
-    vec2 = a + b + eps  # add small epsilon to escape division by zero
-    return (np.sum(vec1[~np.isnan(vec1)] / vec2[~np.isnan(vec2)]) + eps) / (np.sum(~np.isnan(vec1)) + eps) if np.sum(
-        ~np.isnan(vec1)) >= threshold else np.nan
+    values = ~np.logical_or(np.isnan(b), np.isnan(a))  # find missing values in either of vectors
+    avec = a[values]
+    bvec = b[values]
+    categories = np.unique(np.concatenate((avec, bvec)))
+    if avec.size < threshold:
+        return np.nan
+    # create profiles of samples
+    counts = np.zeros((2, categories.size))
+    for i in range(categories.size):
+        counts[0, i] = np.sum(avec == categories[i])
+        counts[1, i] = np.sum(bvec == categories[i])
+    profiles = counts / np.sum(counts, axis=1)[:, None]
+
+    total = avec.size + bvec.size
+    barycenter = np.sum(counts, axis=0) / total
+    weights = np.sqrt(1 / barycenter)
+    R = profiles - barycenter  # deviations from barycenter
+    weightedR = R * weights
+
+    cov = weightedR @ weightedR.T
+    dist = (np.diag(cov) - cov) + (np.diag(cov) - cov).T
+    assert 1 >= dist[0, 1] >= 0
+    return dist[0, 1]
 
 
 def agreement_dist(a: np.ndarray, b: np.ndarray, missing=0.1):
@@ -31,14 +50,15 @@ def agreement_dist(a: np.ndarray, b: np.ndarray, missing=0.1):
     assert a.shape == b.shape
     threshold = a.shape[0] * missing
     eps = np.spacing(1)
-    # ignore uninformative positions
-    indices = [~(a[i] == b[i] and a[i] == 0) for i in range(a.size)]
-    a = a[indices]
-    b = b[indices]
-    values = ~np.logical_or(np.isnan(b), np.isnan(a))  # find missing values in either of vectors
-    avec = a[values]
-    bvec = b[values]
-    return 1 - (list(avec == bvec).count(True) + eps) / (avec.size + eps) if avec.size >= threshold else np.nan
+    # ignore uninformative positions and missing values in either of vectors
+    indices = [~(np.isnan(b[i]) or np.isnan(a[i])) and ~(a[i] == b[i] and a[i] == 0) for i in range(a.size)]
+    avec = a[indices]
+    bvec = b[indices]
+    if avec.size < threshold:
+        return np.nan
+    dist = 1 - (list(avec == bvec).count(True) + eps) / (avec.size + eps)
+    assert 1 >= dist >= 0
+    return dist
 
 
 def corr(a: np.ndarray, b: np.ndarray, method="pearson", missing=0.1):
@@ -94,8 +114,8 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
 
     Args:
         f (Numpy.ndarray): Feature matrix (n x k, where 'n' - samples, 'k' - measurements)
-        variable_type (str): either 'continuous', 'discrete' or 'binary', value indicating how to calculate distance \
-            between two samples ('continuous' - using Euclidean distance, 'discrete' - chi-squared distance, \
+        variable_type (str): either 'continuous', 'categorical' or 'binary', value indicating how to calculate distance \
+            between two samples ('continuous' - using Euclidean distance, 'categorical' - chi-squared distance, \
             'binary' - agreement-based measure)
         n (float): fraction of nearest neighbours to use for samples similarity calculation
         missing (float): acceptable fraction of values for assessment of distance/similarity between two samples \
@@ -113,13 +133,11 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
         raise ValueError("Incorrect value of 'variable_type'")
     elif variable_type == 'continuous':
         dist_calc = euclidean_dist
-    elif variable_type == 'discrete':
+    elif variable_type == 'categorical':
         dist_calc = chi_squared_dist
     else:
         dist_calc = agreement_dist
     # NOTE: for every method distance is calculated only over features that are not missing for every pair of samples
-
-    eps = np.spacing(1)
 
     # filter missing samples
     samples = np.array([i for i in range(f.shape[0]) if not np.all(np.isnan(f[i, :]))])

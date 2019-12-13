@@ -11,7 +11,7 @@ PREPARE_DEFAULTS = {
     "method": "rbf",
     "k": 0.1,
     "alpha": 0.5,
-    "missing": 0.1,
+    "missing": [0.1],
     "names": None,
     "sn": 0,
     "fn": 0,
