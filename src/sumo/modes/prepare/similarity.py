@@ -63,6 +63,35 @@ def agreement_dist(a: np.ndarray, b: np.ndarray, missing=0.1):
     return dist
 
 
+def binomial_dist(a: np.ndarray, b: np.ndarray, missing=0.1):
+    """ Calculate agreement-based distance between two vectors of binary variables using binomial distance"""
+    assert a.shape == b.shape
+    threshold = a.shape[0] * missing
+    na_values = ~np.logical_or(np.isnan(b), np.isnan(a))
+    indices = na_values
+    avec = a[indices]
+    bvec = b[indices]
+    if avec.size < threshold:
+        return np.nan
+    categories = np.unique(np.concatenate((avec, bvec), axis=0))
+    # if categories.size == 1:
+    #     return 0
+    # assert categories.size == 2
+    dist = 0
+    for i in categories:
+        ai = np.sum(avec == i)
+        bi = np.sum(bvec == i)
+        ni = ai + bi
+        logni = np.log(ni)
+        t1 = ai * (np.log(ai) - logni) if ai > 0 else 0
+        t2 = bi * (np.log(bi) - logni) if bi > 0 else 0
+        dist += (t1 * t2 - ni * np.log(1 / 2)) / ni
+
+    # assert 1 >= dist >= 0
+
+    return dist
+
+
 def corr(a: np.ndarray, b: np.ndarray, method="pearson", missing=0.1):
     """ Calculate correlation between two vectors"""
     assert a.shape == b.shape
@@ -137,6 +166,8 @@ def feature_to_adjacency(f: np.ndarray, variable_type: str, n: float = 0.1, miss
         dist_calc = euclidean_dist
     elif variable_type == 'categorical':
         dist_calc = chi_squared_dist
+    elif variable_type == 'binomial':
+        dist_calc = binomial_dist
     else:
         dist_calc = agreement_dist
     # NOTE: for every method distance is calculated only over features that are not missing for every pair of samples

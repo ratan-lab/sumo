@@ -6,7 +6,7 @@ SUMO_COMMANDS = ["prepare", "run", "evaluate"]
 CORR_METHODS = ["pearson", "spearman"]
 SIMILARITY_METHODS = ["rbf"] + CORR_METHODS
 SUPPORTED_EXT = [".txt", ".npz"]
-VAR_TYPES = ["continuous", "binary", "categorical"]
+VAR_TYPES = ["continuous", "binary", "categorical", "binomial"]
 PREPARE_DEFAULTS = {
     "method": "rbf",
     "k": 0.1,
