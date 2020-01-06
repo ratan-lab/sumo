@@ -1,3 +1,4 @@
+from matplotlib import rcParams
 from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.metrics import adjusted_rand_score, mutual_info_score
 from sklearn.metrics.cluster import entropy
@@ -127,6 +128,7 @@ def plot_heatmap(a, log_scale=False, upper_threshold=None, lower_threshold=None,
         file_path (str): optional path to output file
 
     """
+    rcParams.update({'figure.autolayout': True})
     fig = plt.figure()
     ax = plt.gca()
 
@@ -181,6 +183,7 @@ def plot_heatmap(a, log_scale=False, upper_threshold=None, lower_threshold=None,
 def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray, title: str = None, file_path: str = None):
     assert a.shape[0] == labels.shape[0] and check_matrix_symmetry(a)
 
+    rcParams.update({'figure.autolayout': True})
     plt.figure()
     ax = plt.axes()
 

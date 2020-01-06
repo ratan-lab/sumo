@@ -178,8 +178,7 @@ class SumoRun(SumoMode):
 
         if len(cophenet_list) > 1:
             plt.figure()
-            axes = plt.gca()
-            axes.set_ylim([0, 1.2])
+            plt.xticks(self.k)
             plt.plot(self.k, cophenet_list)
             plt.xlabel("K")
             plt.ylabel("cophenetic correlation coefficient")
