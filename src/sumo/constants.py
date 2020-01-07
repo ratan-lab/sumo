@@ -3,7 +3,7 @@ __version__ = "0.1.2"
 SUMO_COMMANDS = ["prepare", "run", "evaluate"]
 
 # prepare
-CORR_METHODS = ["pearson", "spearman"]
+CORR_METHODS = ["pearson", "spearman", "cosine"]
 SIMILARITY_METHODS = ["rbf"] + CORR_METHODS
 SUPPORTED_EXT = [".txt", ".npz"]
 VAR_TYPES = ["continuous", "binary", "categorical", "binomial"]

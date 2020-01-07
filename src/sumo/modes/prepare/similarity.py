@@ -97,16 +97,26 @@ def pearson_corr(a: np.ndarray, b: np.ndarray):
     return pcor if pcor[0] >= 0 else (0, np.nan)
 
 
+def cosine_sim(a: np.ndarray, b: np.ndarray):
+    from scipy.spatial.distance import cosine
+    sim = 1 - cosine(a, b)
+    return sim if sim >= 0 else 0
+
+
 def corr(a: np.ndarray, b: np.ndarray, method="pearson", missing=0.1):
-    """ Calculate correlation between two vectors"""
+    """ Calculate similarity between two vectors"""
     assert a.shape == b.shape
     assert method in CORR_METHODS
-    cor_func = pearson_corr if method == "pearson" else spearmanr
     threshold = int(a.shape[0] * missing)
     values = ~np.logical_or(np.isnan(b), np.isnan(a))  # find missing values in either of vectors
     avec = a[values]
     bvec = b[values]
-    return cor_func(avec, bvec)[0] if avec.size >= threshold else np.nan
+
+    if method == "cosine":
+        return cosine_sim(avec, bvec) if avec.size >= threshold else np.nan
+    else:
+        cor_func = pearson_corr if method == "pearson" else spearmanr
+        return cor_func(avec, bvec)[0] if avec.size >= threshold else np.nan
 
 
 def feature_corr_similarity(f: np.ndarray, missing: float = 0.1, method="pearson"):
