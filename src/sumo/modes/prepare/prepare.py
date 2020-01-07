@@ -3,7 +3,8 @@ from pandas import DataFrame, isna, read_csv
 from sumo.constants import PREPARE_ARGS, SUPPORTED_EXT, VAR_TYPES, SIMILARITY_METHODS, LOG_LEVELS
 from sumo.modes.mode import SumoMode
 from sumo.modes.prepare.similarity import feature_corr_similarity, feature_to_adjacency
-from sumo.utils import load_npz, plot_heatmap, save_arrays_to_npz, setup_logger, get_logger, docstring_formatter, \
+from sumo.utils import load_npz, plot_heatmap_seaborn, save_arrays_to_npz, setup_logger, get_logger, \
+    docstring_formatter, \
     check_categories
 import numpy as np
 import os
@@ -124,7 +125,7 @@ def load_data_npz(file_path: str, sample_idx: str = None, drop_features: float =
                              "shapes of other arrays in {} file.".format(file_path))
     except IndexError:
         raise AttributeError(
-            "One dimensional array found in input file, use '-s' option to supply sample names or remove array")
+            "One dimensional array found in input file, use '-names' option to supply sample names or remove array")
 
     data_frames = []
     for idx in array_idx:
@@ -304,8 +305,7 @@ class SumoPrepare(SumoMode):
 
             # plot adjacency matrix
             plot_path = self.plot_base + "_" + str(i) + ".png" if self.plot else self.plot_base
-            plot_heatmap(a, log_scale=True, color_bar=True, title="Layer {} (source:{})".format(i, layers[i][0]),
-                         file_path=plot_path)
+            plot_heatmap_seaborn(a, title="Layer {} (source:{})".format(i, layers[i][0]), file_path=plot_path)
             if self.plot:
                 self.logger.info("Adjacency matrix plot saved to {}".format(plot_path))
 

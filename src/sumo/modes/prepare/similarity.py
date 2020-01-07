@@ -92,11 +92,16 @@ def binomial_dist(a: np.ndarray, b: np.ndarray, missing=0.1):
     return dist
 
 
+def pearson_corr(a: np.ndarray, b: np.ndarray):
+    pcor = pearsonr(a, b)
+    return pcor if pcor[0] >= 0 else (0, np.nan)
+
+
 def corr(a: np.ndarray, b: np.ndarray, method="pearson", missing=0.1):
     """ Calculate correlation between two vectors"""
     assert a.shape == b.shape
     assert method in CORR_METHODS
-    cor_func = pearsonr if method == "pearson" else spearmanr
+    cor_func = pearson_corr if method == "pearson" else spearmanr
     threshold = int(a.shape[0] * missing)
     values = ~np.logical_or(np.isnan(b), np.isnan(a))  # find missing values in either of vectors
     avec = a[values]

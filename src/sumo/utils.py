@@ -112,85 +112,18 @@ def save_arrays_to_npz(data: Union[dict, list], file_path: str):
         np.savez(file=file_path, **args)
 
 
-def plot_heatmap(a, log_scale=False, upper_threshold=None, lower_threshold=None, color_bar: bool = False,
-                 add_lines: list = None, title: str = None, file_path: str = None):
-    """ Create heatmap of matrix
+def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray = None, title: str = None, file_path: str = None):
+    assert check_matrix_symmetry(a)
 
-    Args:
-        a (Numpy.ndarray): data array
-        log_scale (bool): sets whether or not to use log scale (recommended with plotting adjacency matrices \
-            of N-features datasets)
-        upper_threshold (float): sets upper threshold of color scale (default is maximum value of a)
-        lower_threshold (float): sets lower threshold of color scale (default is minimum value of a)
-        color_bar (bool): sets whether or not to plot color bar next to heatmap
-        add_lines: optional list of arguments to plot group separator lines
-        title (str): optional title of plot
-        file_path (str): optional path to output file
-
-    """
-    rcParams.update({'figure.autolayout': True})
-    fig = plt.figure()
-    ax = plt.gca()
-
-    # filter missing samples
-    shape = a.shape
-
-    plot_a = a.copy()
-    a_flat = plot_a.flatten()
-    samples = ~np.isnan(a_flat)
-    a_vals = a_flat[~np.isnan(a_flat)]
-
-    if a_vals.shape[0] == 0:
-        raise ValueError("Plotting a matrix filled only with NaN values")
-
-    args = {"vmin": a_vals.min() if not lower_threshold else lower_threshold,
-            "vmax": a_vals.max() if not upper_threshold else upper_threshold}
-
-    if log_scale:
-        a_vals[a_vals == 0] = 10 ** -18
-        a_vals = np.log(a_vals.copy())
-        vmin = a_vals.min()
-        vmax = a_vals.max()
-        a_vals = (a_vals - vmin + np.spacing(1)) / (vmax - vmin + np.spacing(1))
-
-        log_vals = np.full([shape[0] * shape[1]], np.nan)
-        log_vals[samples] = a_vals
-        plot_a = log_vals.reshape(shape)
-
-    im = ax.imshow(plot_a, **args)
-
-    # create colorbar
-    if color_bar:
-        ax.figure.colorbar(im, ax=ax)
-    # plot separator lines
-    if add_lines:
-        ax.hlines(add_lines, *ax.get_xlim())
-        ax.vlines(add_lines, *ax.get_ylim())
-
-    if title:
-        plt.title(title)
-    plt.xlabel("Node index")
-    plt.ylabel("Node index")
-    if not file_path:
-        plt.show()
-    else:
-        if os.path.dirname(file_path):
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        fig.savefig(file_path)
-        plt.close()
-
-
-def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray, title: str = None, file_path: str = None):
-    assert a.shape[0] == labels.shape[0] and check_matrix_symmetry(a)
-
-    rcParams.update({'figure.autolayout': True})
     plt.figure()
     ax = plt.axes()
 
-    data = pd.DataFrame(a, columns=labels, index=labels)
-    vmax = np.max(a) if np.max(a) > 1 else 1
+    if labels is not None:
+        rcParams.update({'figure.autolayout': True})
+        assert a.shape[0] == labels.shape[0]
+        a = pd.DataFrame(a, columns=labels, index=labels)
+    p = sns.heatmap(a, vmin=np.nanpercentile(a, 1), vmax=np.nanpercentile(a, 99), cmap="coolwarm", ax=ax)
 
-    p = sns.heatmap(data, vmin=0, vmax=vmax, cmap="coolwarm", ax=ax)
     if title:
         ax.set_title(title)
 
@@ -201,6 +134,25 @@ def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray, title: str = None, f
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
         fig = p.get_figure()
         fig.savefig(file_path)
+
+
+def plot_line(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: str = None):
+    """ Create line plot from vectors of x and y values """
+    fig = plt.figure()
+
+    plt.xticks(x)
+    plt.plot(x, y)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+
+    if not file_path:
+        plt.show()
+    else:
+        if os.path.dirname(file_path):
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        fig.savefig(file_path)
+        plt.close()
 
 
 def extract_ncut(a: np.ndarray, k: int):

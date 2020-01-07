@@ -5,7 +5,7 @@ from sumo.modes.mode import SumoMode
 from sumo.modes.run.solver import SumoNMF
 from sumo.network import MultiplexNet
 from sumo.utils import extract_ncut, load_npz, save_arrays_to_npz, setup_logger, docstring_formatter, \
-    plot_heatmap_seaborn
+    plot_heatmap_seaborn, plot_line
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 import numpy as np
@@ -128,6 +128,7 @@ class SumoRun(SumoMode):
 
         # run factorization for every (eta, k)
         cophenet_list = []
+        pac_list = []
         for k in self.k:
             self.logger.debug("#K:{}".format(k))
 
@@ -165,28 +166,30 @@ class SumoRun(SumoMode):
             out_arrays = load_npz(best_result[1])
             out_arrays["summary"] = np.array(quality_output)
             cophenet_list.append(out_arrays["cophenet"][0])
+            pac_list.append(out_arrays["pac"][0])
 
             # save to output file
             outfile = os.path.join(self.outdir, "k{}".format(k), "sumo_results.npz")
             self.logger.info("#Results (k = {}) saved to {}".format(k, outfile))
             save_arrays_to_npz(out_arrays, outfile)
 
-            plot_heatmap_seaborn(out_arrays['consensus'], labels=out_arrays['clusters'][:, 0],
+            plot_heatmap_seaborn(out_arrays['consensus'], labels=np.arange(self.graph.nodes),
                                  title="Consensus matrix (K = {})".format(k),
                                  file_path=os.path.join(self.plot_dir, "consensus_k{}.png".format(k)))
             # TODO: change sample order
 
-        if len(cophenet_list) > 1:
-            plt.figure()
-            plt.xticks(self.k)
-            plt.plot(self.k, cophenet_list)
-            plt.xlabel("K")
-            plt.ylabel("cophenetic correlation coefficient")
-            plt.title("Cluster stability for different K values")
-            plot_path = os.path.join(self.plot_dir, "cophenet.png")
-            plt.savefig(plot_path)
+        if len(cophenet_list) > 1 and len(pac_list) > 1:
+            cophenet_plot_path = os.path.join(self.plot_dir, "cophenet.png")
+            plot_line(x=self.k, y=cophenet_list, xlabel="K", ylabel="cophenetic correlation coefficient",
+                      title="Cluster stability for different K values", file_path=cophenet_plot_path)
             self.logger.info("#Cophentic correlation coefficient plot for different K values has " +
-                             "been saved to {}".format(plot_path))
+                             "been saved to {}".format(cophenet_plot_path))
+
+            pac_plot_path = os.path.join(self.plot_dir, "pac.png")
+            plot_line(x=self.k, y=pac_list, xlabel="K", ylabel="PAC",
+                      title="Proportion of ambiguous clusterings for different K values", file_path=pac_plot_path)
+            self.logger.info("#Proportion of ambiguous clusterings plot for different K values has " +
+                             "been saved to {}".format(pac_plot_path))
 
 
 def run_thread_wrapper(args: tuple):
@@ -261,6 +264,11 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     dist = pdist(org_con, metric="correlation")
     ccc = cophenet(linkage(dist, method="complete", metric="correlation"), dist)[0]
 
+    # calculate proportion of ambiguous clustering
+    den = (sumo_run.graph.nodes ** 2) - sumo_run.graph.nodes
+    num = org_con[(org_con > 0.1) & (org_con < 0.9)].size
+    pac = num * (1. / den)
+
     eta_logger.info("#Extracting final clustering result, using normalized cut")
     consensus_labels = extract_ncut(consensus, k=k)
 
@@ -283,7 +291,8 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
         "consensus": consensus,
         "unfiltered_consensus": org_con,
         "quality": np.array(quality),
-        "cophenet": np.array([ccc])
+        "cophenet": np.array([ccc]),
+        "pac": np.array([pac])
     }
 
     if sumo_run.log == "DEBUG":
