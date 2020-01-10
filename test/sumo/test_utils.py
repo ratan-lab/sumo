@@ -1,3 +1,4 @@
+from sklearn.preprocessing import StandardScaler
 from sumo import utils
 import numpy as np
 import os
@@ -16,6 +17,12 @@ def test_check_matrix_symmetry():
     m[3, 2] = np.nan
     m[2, 3] = np.nan
     assert utils.check_matrix_symmetry(m) is True
+
+
+def test_check_categories():
+    assert utils.check_categories(np.array([1, 2, 3])) == [1, 2, 3]
+    assert utils.check_categories(np.array([1, 2, 1, 2])) == [1, 2]
+    assert utils.check_categories(np.array([1, 2, 1, 2, np.nan, np.nan])) == [1, 2]
 
 
 def test_save_arrays_to_npz(tmpdir):
@@ -92,3 +99,13 @@ def test_check_accuracy():
 
     ari = utils.check_accuracy(labels, labels, method="ARI")
     assert ari == 1.0
+
+
+def test_is_standardized():
+    f = np.random.random((20, 10))
+    assert not utils.is_standardized(f, axis=0)
+
+    sc = StandardScaler()
+    f = sc.fit_transform(f.T).T
+    assert utils.is_standardized(f, axis=1)
+    assert utils.is_standardized(f.T, axis=0)
