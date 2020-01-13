@@ -45,6 +45,13 @@ def add_prepare_command_options(subparsers):
                                      ' layer (default of %(default)s)')
     # TODO: turn this parameter into fraction of missing samples
 
+    prepare_parser.add_argument('-atol', action='store',
+                                type=float, required=False, default=PREPARE_DEFAULTS["atol"],
+                                help='if input files have continuous values, sumo checks if data is standardized ' +
+                                     'feature-wise, meaning all features should have mean close to zero, with ' +
+                                     'standard deviation around one; use this parameter to set tolerance of ' +
+                                     'standardization checks (default of %(default)s)')
+
     prepare_parser.add_argument('-names', action='store',
                                 type=str, required=False, default=PREPARE_DEFAULTS["names"],
                                 help='optional key of array containing custom sample names in every .npz file ' +

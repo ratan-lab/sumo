@@ -18,7 +18,8 @@ PREPARE_DEFAULTS = {
     "ds": 0.1,
     "logfile": None,
     "log": "INFO",
-    "plot": None
+    "plot": None,
+    "atol": 1e-8
 }
 PREPARE_ARGS = ["infiles", "outfile"] + list(PREPARE_DEFAULTS.keys())  # 3 positional args
 
