@@ -103,9 +103,9 @@ def test_check_accuracy():
 
 def test_is_standardized():
     f = np.random.random((20, 10))
-    assert not utils.is_standardized(f, axis=0)
+    assert not utils.is_standardized(f, axis=0)[0]
 
     sc = StandardScaler()
     f = sc.fit_transform(f.T).T
-    assert utils.is_standardized(f, axis=1)
-    assert utils.is_standardized(f.T, axis=0)
+    assert utils.is_standardized(f, axis=1)[0]
+    assert utils.is_standardized(f.T, axis=0)[0]
