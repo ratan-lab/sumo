@@ -1,11 +1,10 @@
 from collections import Counter
 from pandas import DataFrame, isna, read_csv
-from sumo.constants import PREPARE_ARGS, SUPPORTED_EXT, VAR_TYPES, SIMILARITY_METHODS, LOG_LEVELS
+from sumo.constants import PREPARE_ARGS, SUPPORTED_EXT, SIMILARITY_METHODS, LOG_LEVELS
 from sumo.modes.mode import SumoMode
-from sumo.modes.prepare.similarity import feature_corr_similarity, feature_to_adjacency
+from sumo.modes.prepare.similarity import feature_to_adjacency
 from sumo.utils import load_npz, plot_heatmap_seaborn, save_arrays_to_npz, setup_logger, get_logger, \
-    docstring_formatter, \
-    check_categories
+    docstring_formatter, check_categories, is_standardized
 import numpy as np
 import os
 import pathlib
@@ -136,7 +135,7 @@ def load_data_npz(file_path: str, sample_idx: str = None, drop_features: float =
     return data_frames
 
 
-@docstring_formatter(var_types=VAR_TYPES, sim_methods=SIMILARITY_METHODS, log_levels=LOG_LEVELS)
+@docstring_formatter(sim_methods=SIMILARITY_METHODS, log_levels=LOG_LEVELS)
 class SumoPrepare(SumoMode):
     """ Sumo mode for data pre-processing and creation of multiplex network files. Constructor args are set \
     in 'prepare' subparser.
@@ -144,7 +143,7 @@ class SumoPrepare(SumoMode):
     Args:
         | infiles (list): list of paths to input .npz or .txt files (all input files should be structured in following \
             way: consecutive samples in columns, consecutive features in rows)
-        | vars (list): either one variable type from {var_types} for every data matrix or list of variable types for \
+        | vars (list): either one variable type from for every data matrix or list of variable types for \
             each of them
         | outfile (str): path to output .npz file
         | method (str): method of sample-sample similarity calculation selected from {sim_methods}
@@ -187,11 +186,8 @@ class SumoPrepare(SumoMode):
         if not all([ftype in SUPPORTED_EXT for ftype in self.ftypes]):
             raise ValueError("Unrecognized input file type")
 
-        if not all([var in VAR_TYPES for var in self.vars]):
-            raise ValueError("Unrecognized variable type")
-
-        if len(self.vars) > 1 and len(self.infiles) != len(self.vars):
-            raise ValueError("Number of input files and variable types does not correspond")
+        if not all([method in SIMILARITY_METHODS for method in self.method]):
+            raise ValueError("Unrecognized similarity method")
 
         self.plot_base = None
         if self.plot:
@@ -238,11 +234,10 @@ class SumoPrepare(SumoMode):
         layers = self.load_all_data()  # list of tuples (file_name, feature_matrix)
 
         # check variable types
-        if len(self.vars) == 1:
-            self.logger.info("#Setting all variable types to {}".format(self.vars[0]))
-            self.vars = [self.vars[0]] * len(layers)
-        elif len(layers) != len(self.vars):
-            raise ValueError("Number of matrices extracted from input files and number of variable types " +
+        if len(self.method) == 1:
+            self.method = [self.method[0]] * len(layers)
+        elif len(layers) != len(self.method):
+            raise ValueError("Number of matrices extracted from input files and number of similarity methods " +
                              "does not correspond")
 
         # check missing value parameter
@@ -277,31 +272,30 @@ class SumoPrepare(SumoMode):
 
             # extract feature matrices
             f = layer_data.values.T
-            self.logger.info("Feature matrix shape: {}".format(f.shape))
+            self.logger.info("Feature matrix: ({} samples x {} features)".format(f.shape[0], f.shape[1]))
 
-            # check if feature matrix values fit to set variable types
-            if self.vars[i] == 'continuous':
-                if not (np.allclose(np.nanmean(f, axis=0), np.zeros(f.shape[1]), atol=1e8) and
-                        np.allclose(np.nanstd(f, axis=0), np.ones(f.shape[1]), atol=1e8)):
-                    self.logger.warning("Data is not standardized!")
-            elif self.vars[i] == 'categorical':
-                ncat = check_categories(f)
-                self.logger.info("Found {} unique categories in data matrix!".format(len(ncat)))
-                self.logger.debug("Categories: {}".format(ncat))
+            # check if feature matrix values are correct
+            ncat = check_categories(f)
+            if ncat != [0, 1]:
+                standardized = is_standardized(f, axis=0, atol=self.atol)
+                if not standardized[0]:
+                    raise ValueError("Incorrect values in feature matrix (average feature mean: " +
+                                     "{}, average feature std: {}). ".format(standardized[1], standardized[2]) +
+                                     "Please, supply either binary dataset " +
+                                     "(0 or 1 feature values) or continuous values standardized feature-wise. " +
+                                     "Alternatively for almost standardized continuous data, " +
+                                     "decrease '-atol' parameter value.")
+                else:
+                    self.logger.debug("Data is correctly standardized")
             else:
-                ncat = check_categories(f)
-                if len(ncat) > 2:
-                    self.logger.warning("Found {} unique categories in data matrix! " +
-                                        "Consider using 'categorical' variable type".format(len(ncat)))
-                self.logger.debug("Categories: {}".format(ncat))
+                self.logger.debug("Found two unique categories in data: [0, 1]")
+                if self.method[i] != 'cosine':
+                    self.logger.info("Using '{}' similarity for [0, 1] data. ".format(self.method[i]) +
+                                     "Suggested better measure: cosine similarity.")
 
             # create adjacency matrix
-            if self.method == "rbf":
-                a = feature_to_adjacency(f, variable_type=self.vars[i], n=self.k, missing=self.missing[i],
-                                         alpha=self.alpha)
-            else:
-                a = feature_corr_similarity(f, missing=self.missing[i], method=self.method)
-            self.logger.info('Adjacency matrix {} created [variable_type={}]'.format(a.shape, self.vars[i]))
+            a = feature_to_adjacency(f, missing=self.missing[i], method=self.method[i], n=self.k, alpha=self.alpha)
+            self.logger.info('Adjacency matrix {} created [similarity method: {}]'.format(a.shape, self.method[i]))
 
             # plot adjacency matrix
             plot_path = self.plot_base + "_" + str(i) + ".png" if self.plot else self.plot_base

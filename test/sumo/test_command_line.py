@@ -5,10 +5,10 @@ import pytest
 
 def test_parse_args(capsys):
     correct = [
-        "./sumo.py prepare infile type outfile",
-        "./sumo.py prepare infile1,infile2 type outfile",
-        "./sumo.py prepare infile type1,type2 outfile",
+        "./sumo.py prepare infile outfile",
+        "./sumo.py prepare infile1,infile2 outfile",
         "./sumo.py run infile 2 outfile",
+        "./sumo.py run infile 2,10 outfile",
         "./sumo.py"
     ]
 

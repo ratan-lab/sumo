@@ -1,3 +1,4 @@
+from sklearn.preprocessing import StandardScaler
 from sumo.modes.prepare.prepare import SumoPrepare, filter_features_and_samples, load_data_npz, load_data_txt
 from sumo.constants import PREPARE_DEFAULTS
 from sumo.utils import save_arrays_to_npz, load_npz
@@ -7,10 +8,9 @@ import os
 import pytest
 
 
-def _get_args(infiles: list, vars: list, outfile):
+def _get_args(infiles: list, outfile: str):
     args = PREPARE_DEFAULTS.copy()
     args['outfile'] = outfile
-    args['vars'] = vars
     args["infiles"] = infiles
     return args
 
@@ -22,7 +22,7 @@ def test_init(tmpdir):
 
     npz_infile = os.path.join(tmpdir, "indata.npz")
     fname_outfile = os.path.join(tmpdir, "outdata.npz")
-    args = _get_args([npz_infile], ['continuous'], fname_outfile)
+    args = _get_args([npz_infile], fname_outfile)
 
     # no input file
     with pytest.raises(FileNotFoundError):
@@ -38,31 +38,23 @@ def test_init(tmpdir):
     df = DataFrame(data, columns=['sample_{}'.format(i) for i in range(data.shape[1])],
                    index=['feature_{}'.format(i) for i in range(data.shape[0])])
     df.to_csv(txt_infile, sep=" ")
-    args = _get_args([txt_infile], ['continuous'], fname_outfile)
+    args = _get_args([txt_infile], fname_outfile)
     SumoPrepare(**args)
 
     # unsupported file type
     csv_infile = os.path.join(tmpdir, "indata.csv")
     df.to_csv(csv_infile, sep=",")
-    args = _get_args([csv_infile], ['continuous'], fname_outfile)
+    args = _get_args([csv_infile], fname_outfile)
     with pytest.raises(ValueError):
         SumoPrepare(**args)
 
     # two input files
-    args = _get_args([npz_infile, npz_infile], ['continuous'], fname_outfile)
+    args = _get_args([npz_infile, npz_infile], fname_outfile)
     SumoPrepare(**args)
 
-    # two different variable types
-    args = _get_args([npz_infile, npz_infile], ["continuous", "categorical"], fname_outfile)
-    SumoPrepare(**args)
-
-    # more variable types than input files
-    args = _get_args([npz_infile], ["continuous", "categorical"], fname_outfile)
-    with pytest.raises(ValueError):
-        SumoPrepare(**args)
-
-    # unsupported variable type
-    args = _get_args([npz_infile], ['random'], fname_outfile)
+    # unsupported similarity method
+    args = _get_args([npz_infile], fname_outfile)
+    args['method'] = ['random']
     with pytest.raises(ValueError):
         SumoPrepare(**args)
 
@@ -74,28 +66,35 @@ def test_run(tmpdir):
     logfile = os.path.join(tmpdir, "prepare.log")
     plots = os.path.join(tmpdir, "plot.png")
 
+    sc = StandardScaler()
+
     f0 = np.random.random((20, 10))
+    f0 = sc.fit_transform(f0.T).T
     samples1 = ['sample_{}'.format(i) for i in range(10)]
     save_arrays_to_npz({'f': f0, 'samples': np.array(samples1)}, npz_infile_1)
+
     f1 = np.random.random((40, 12))
+    f1 = sc.fit_transform(f1.T).T
     samples2 = ['sample_{}'.format(i) for i in range(12)]
     save_arrays_to_npz({'f': f1, 'samples': np.array(samples2)}, npz_infile_2)
 
-    args = _get_args([npz_infile_1, npz_infile_2], ['continuous', 'continuous', 'continuous'], fname_outfile)
+    # incorrect number of similarity methods
+    args = _get_args([npz_infile_1, npz_infile_2], fname_outfile)
     args['names'] = 'samples'
     args['logfile'] = logfile
     args['plot'] = plots
+    args['method'] = ['euclidean', 'cosine', 'pearson']
 
     # incorrect number of variable types
     with pytest.raises(ValueError):
         sp = SumoPrepare(**args)
         sp.run()
 
-    args['vars'] = ['continuous', 'continuous']
+    args['method'] = ['euclidean', 'cosine']
     sp = SumoPrepare(**args)
     sp.run()
 
-    args['vars'] = ['continuous']
+    args['method'] = ['euclidean']
     sp = SumoPrepare(**args)
     sp.run()
 
@@ -113,7 +112,7 @@ def test_run(tmpdir):
 
 def test_load_all_data(tmpdir):
     txt_infile = os.path.join(tmpdir, "indata.txt")
-    args = _get_args([txt_infile], ['continuous'], os.path.join(tmpdir, "outdata.npz"))
+    args = _get_args([txt_infile], os.path.join(tmpdir, "outdata.npz"))
 
     data_vals = np.random.random((10, 20))
     data = DataFrame(data_vals.T, columns=['sample_{}'.format(i) for i in range(data_vals.shape[0])],

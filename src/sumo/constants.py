@@ -4,11 +4,10 @@ SUMO_COMMANDS = ["prepare", "run", "evaluate"]
 
 # prepare
 CORR_METHODS = ["pearson", "spearman"]
-SIMILARITY_METHODS = ["rbf"] + CORR_METHODS
+SIMILARITY_METHODS = ["euclidean", "cosine"] + CORR_METHODS
 SUPPORTED_EXT = [".txt", ".npz"]
-VAR_TYPES = ["continuous", "binary", "categorical", "binomial"]
 PREPARE_DEFAULTS = {
-    "method": "rbf",
+    "method": ["euclidean"],
     "k": 0.1,
     "alpha": 0.5,
     "missing": [0.1],
@@ -19,9 +18,10 @@ PREPARE_DEFAULTS = {
     "ds": 0.1,
     "logfile": None,
     "log": "INFO",
-    "plot": None
+    "plot": None,
+    "atol": 1e-3
 }
-PREPARE_ARGS = ["infiles", "vars", "outfile"] + list(PREPARE_DEFAULTS.keys())  # 3 positional args
+PREPARE_ARGS = ["infiles", "outfile"] + list(PREPARE_DEFAULTS.keys())  # 3 positional args
 
 # run
 CLUSTER_METHODS = ["max_value", "spectral"]

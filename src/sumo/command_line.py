@@ -1,4 +1,4 @@
-from sumo.constants import __version__, CLUSTER_METHODS, LOG_LEVELS, SIMILARITY_METHODS, VAR_TYPES, CLUSTER_METRICS, \
+from sumo.constants import __version__, CLUSTER_METHODS, LOG_LEVELS, SIMILARITY_METHODS, CLUSTER_METRICS, \
     PREPARE_DEFAULTS, EVALUATE_DEFAULTS, RUN_DEFAULTS
 from sumo.modes import SUMO_COMMANDS
 import argparse
@@ -17,26 +17,25 @@ def add_prepare_command_options(subparsers):
                                      'should be structured in following way: consecutive samples in columns, ' +
                                      'consecutive features in rows")')
 
-    prepare_parser.add_argument('vars', metavar='var1(,var2,...)',
-                                type=lambda s: [i for i in s.split(',')],
-                                help="either one variable type for every data matrix in input file(s) or " +
-                                     "comma-delimited list of variable types {}".format(VAR_TYPES))
-
     prepare_parser.add_argument('outfile', metavar='outfile.npz',
                                 type=str, help='path to output .npz file')
 
-    prepare_parser.add_argument('-method', action='store', choices=SIMILARITY_METHODS,
-                                type=str, required=False, default=PREPARE_DEFAULTS["method"],
-                                help='method of sample-sample similarity calculation (default of "%(default)s")')
+    method_str = 'either one method of sample-sample similarity calculation, or comma-separated list of methods ' + \
+                 'for every layer (available methods: {}, default of {})'.format(SIMILARITY_METHODS,
+                                                                                 PREPARE_DEFAULTS["method"][0])
+
+    prepare_parser.add_argument('-method', action='store', type=lambda s: [i for i in s.split(',')], required=False,
+                                default=PREPARE_DEFAULTS["method"], help=method_str)
 
     prepare_parser.add_argument('-k', action='store',
                                 type=float, required=False, default=PREPARE_DEFAULTS["k"],
                                 help='fraction of nearest neighbours to use for sample similarity calculation using ' +
-                                     'RBF method (default of %(default)s)')
+                                     'Euclidean distance similarity (default of %(default)s)')
 
     prepare_parser.add_argument('-alpha', action='store',
                                 type=float, required=False, default=PREPARE_DEFAULTS["alpha"],
-                                help='hypherparameter of RBF similarity kernel (default of %(default)s)')
+                                help='hypherparameter of RBF similarity kernel, for Euclidean distance similarity ' +
+                                     '(default of %(default)s)')
 
     prepare_parser.add_argument('-missing', action='store',
                                 type=lambda s: [float(i) for i in s.split(',')], required=False,
@@ -45,6 +44,13 @@ def add_prepare_command_options(subparsers):
                                      ' between pairs of samples - either one value or comma-delimited list for every' +
                                      ' layer (default of %(default)s)')
     # TODO: turn this parameter into fraction of missing samples
+
+    prepare_parser.add_argument('-atol', action='store',
+                                type=float, required=False, default=PREPARE_DEFAULTS["atol"],
+                                help='if input files have continuous values, sumo checks if data is standardized ' +
+                                     'feature-wise, meaning all features should have mean close to zero, with ' +
+                                     'standard deviation around one; use this parameter to set tolerance of ' +
+                                     'standardization checks (default of %(default)s)')
 
     prepare_parser.add_argument('-names', action='store',
                                 type=str, required=False, default=PREPARE_DEFAULTS["names"],
