@@ -282,7 +282,7 @@ def check_accuracy(cl: np.ndarray, org: np.ndarray, method="purity"):
     return methods[method](cl, org)
 
 
-def is_standardized(a: np.ndarray, axis: int = 1, atol: float = 1e-8):
+def is_standardized(a: np.ndarray, axis: int = 1, atol: float = 1e-3):
     """ Check if matrix values are standardized (have mean equal 0 and standard deviation equal 1)
 
     Args:
@@ -291,9 +291,14 @@ def is_standardized(a: np.ndarray, axis: int = 1, atol: float = 1e-8):
         atol (float): absolute tolerance
 
     Returns:
+        is_standard (bool): True if data is standardized
+        mean (float): average mean of columns/rows
+        std (float): average standard deviation of columns/rows
 
     """
     if axis not in [0, 1]:
         raise ValueError("Incorrect value of axis, expected either 0 or 1, got {} instead".format(axis))
 
-    return np.allclose(np.nanmean(a, axis=axis), 0, atol=atol) and np.allclose(np.nanstd(a, axis=axis), 1, atol=atol)
+    mean = np.nanmean(a, axis=axis)
+    std = np.nanstd(a, axis=axis)
+    return np.allclose(mean, 0, atol=atol) and np.allclose(std, 1, atol=atol), np.nanmean(mean), np.nanmean(std)

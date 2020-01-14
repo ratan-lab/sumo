@@ -277,8 +277,11 @@ class SumoPrepare(SumoMode):
             # check if feature matrix values are correct
             ncat = check_categories(f)
             if ncat != [0, 1]:
-                if not is_standardized(f, axis=0, atol=self.atol):
-                    raise ValueError("Incorrect values in feature matrix. Please, supply either binary dataset " +
+                standardized = is_standardized(f, axis=0, atol=self.atol)
+                if not standardized[0]:
+                    raise ValueError("Incorrect values in feature matrix (average feature mean: " +
+                                     "{}, average feature std: {}). ".format(standardized[1], standardized[2]) +
+                                     "Please, supply either binary dataset " +
                                      "(0 or 1 feature values) or continuous values standardized feature-wise. " +
                                      "Alternatively for almost standardized continuous data, " +
                                      "decrease '-atol' parameter value.")
