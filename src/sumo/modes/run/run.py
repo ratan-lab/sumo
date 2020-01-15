@@ -109,7 +109,7 @@ class SumoRun(SumoMode):
             else:
                 break
 
-        self.logger.info("Number of found graph layers: {}".format(len(adj_matrices)))
+        self.logger.info("#Number of found graph layers: {}".format(len(adj_matrices)))
         if len(adj_matrices) == 0:
             raise ValueError("No adjacency matrices found in input file")
 
@@ -162,16 +162,32 @@ class SumoRun(SumoMode):
 
             # summarize results
             assert best_eta is not None
-            self.logger.info("#Selected eta: {}".format(best_eta))
+            self.logger.info("Selected eta: {}".format(best_eta))
             out_arrays = load_npz(best_result[1])
-            out_arrays["summary"] = np.array(quality_output)
+
             cophenet_list.append(out_arrays["cophenet"][0])
             pac_list.append(out_arrays["pac"][0])
 
-            # save to output file
-            outfile = os.path.join(self.outdir, "k{}".format(k), "sumo_results.npz")
-            self.logger.info("#Results (k = {}) saved to {}".format(k, outfile))
-            save_arrays_to_npz(out_arrays, outfile)
+            # create text file with cluster labels
+            clusters = out_arrays['clusters']
+            with open(os.path.join(self.outdir, "k{}".format(k), "clusters.tsv"), 'w') as cl_file:
+                cl_file.write("sample\tlabel\n")
+                for row_idx in range(clusters.shape[0]):
+                    cl_file.write("{}\t{}\n".format(clusters[row_idx, 0], clusters[row_idx, 1]))
+
+            # create symlink to the selected best result
+            summary_outfile = os.path.join(self.outdir, "k{}".format(k), "sumo_results.npz")
+            if os.path.lexists(summary_outfile):
+                # overwriting symlink
+                os.remove(summary_outfile)
+
+            workdir = os.getcwd()
+            os.chdir(os.path.dirname(best_result[1]))
+            os.symlink(os.path.basename(best_result[1]), os.path.basename(summary_outfile))
+            os.chdir(workdir)
+            assert os.getcwd() == workdir
+
+            self.logger.info("#Results (k = {}) saved to {}".format(k, summary_outfile))
 
             plot_heatmap_seaborn(out_arrays['consensus'], labels=np.arange(self.graph.nodes),
                                  title="Consensus matrix (K = {})".format(k),

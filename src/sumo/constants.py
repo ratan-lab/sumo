@@ -5,7 +5,11 @@ SUMO_COMMANDS = ["prepare", "run", "evaluate"]
 # prepare
 CORR_METHODS = ["pearson", "spearman"]
 SIMILARITY_METHODS = ["euclidean", "cosine"] + CORR_METHODS
-SUPPORTED_EXT = [".txt", ".npz"]
+TXT_EXT = [".txt", '.txt.gz', '.txt.bz2']
+TSV_EXT = [".tsv", '.tsv.gz', '.tsv.bz2']
+TEXT_EXT = TXT_EXT + TSV_EXT
+SUPPORTED_EXT = [".npz"] + TEXT_EXT
+
 PREPARE_DEFAULTS = {
     "method": ["euclidean"],
     "k": 0.1,

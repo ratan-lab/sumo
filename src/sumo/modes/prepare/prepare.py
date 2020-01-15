@@ -1,6 +1,6 @@
 from collections import Counter
 from pandas import DataFrame, isna, read_csv
-from sumo.constants import PREPARE_ARGS, SUPPORTED_EXT, SIMILARITY_METHODS, LOG_LEVELS
+from sumo.constants import PREPARE_ARGS, SUPPORTED_EXT, SIMILARITY_METHODS, LOG_LEVELS, TEXT_EXT
 from sumo.modes.mode import SumoMode
 from sumo.modes.prepare.similarity import feature_to_adjacency
 from sumo.utils import load_npz, plot_heatmap_seaborn, save_arrays_to_npz, setup_logger, get_logger, \
@@ -52,9 +52,9 @@ def filter_features_and_samples(data: DataFrame, drop_features: float = 0.1, dro
     return data
 
 
-def load_data_txt(file_path: str, sample_names: int = None, feature_names: int = None, drop_features: float = 0.1,
-                  drop_samples: float = 0.1):
-    """ Loads data from tab delimited .txt file (with samples in columns and features in rows) into pandas.DataFrame
+def load_data_text(file_path: str, sample_names: int = None, feature_names: int = None, drop_features: float = 0.1,
+                   drop_samples: float = 0.1):
+    """ Loads data from text file (with samples in columns and features in rows) into pandas.DataFrame
 
     Args:
         file_path (str): path to the tab delimited .txt file
@@ -63,7 +63,6 @@ def load_data_txt(file_path: str, sample_names: int = None, feature_names: int =
         drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
         drop_samples (float): if percentage of missing values for sample (that remains after feature dropping) \
             exceeds this value, remove this sample
-
     Returns:
         data (pandas.DataFrame): data frame loaded from file, with missing values removed
 
@@ -71,7 +70,7 @@ def load_data_txt(file_path: str, sample_names: int = None, feature_names: int =
     if not os.path.exists(file_path):
         raise FileNotFoundError("Data file not found")
 
-    data = read_csv(file_path, sep="\t", header=sample_names, index_col=feature_names)
+    data = read_csv(file_path, delimiter=r'\s+', header=sample_names, index_col=feature_names)
     if data.empty or data.values.shape == (1, 1):
         raise ValueError('File cannot be read correctly, file is not tab delimited or is corrupted')
     elif data.values.dtype == np.object:
@@ -181,10 +180,12 @@ class SumoPrepare(SumoMode):
         if not all([os.path.exists(fname) for fname in self.infiles]):
             raise FileNotFoundError("Input file not found")
 
-        self.ftypes = [pathlib.Path(fname).suffix if pathlib.Path(fname).suffix != "" else ".txt" for fname in
-                       self.infiles]
-        if not all([ftype in SUPPORTED_EXT for ftype in self.ftypes]):
-            raise ValueError("Unrecognized input file type")
+        self.ftypes = []
+        for fname in self.infiles:
+            suff = ''.join(pathlib.Path(fname).suffixes)
+            if suff not in SUPPORTED_EXT:
+                raise ValueError("Unrecognized input file type '{}'".format(suff))
+            self.ftypes.append(suff if suff != "" else ".txt")
 
         if not all([method in SIMILARITY_METHODS for method in self.method]):
             raise ValueError("Unrecognized similarity method")
@@ -211,10 +212,10 @@ class SumoPrepare(SumoMode):
             self.logger.info(
                 "#Loading file: {} {}".format(fname, "(text file)" if pathlib.Path(fname).suffix == "" else ""))
 
-            if self.ftypes[i] == ".txt":
-                # load .txt file
-                data = load_data_txt(file_path=fname, sample_names=self.sn, feature_names=self.fn,
-                                     drop_features=self.df, drop_samples=self.ds)
+            if self.ftypes[i] in TEXT_EXT:
+                # load text file
+                data = load_data_text(file_path=fname, sample_names=self.sn, feature_names=self.fn,
+                                      drop_features=self.df, drop_samples=self.ds)
                 layers.append(data)
                 layers_fnames.append(fname)
 
