@@ -9,6 +9,7 @@ def test_parse_args(capsys):
         "./sumo.py prepare infile1,infile2 outfile",
         "./sumo.py run infile 2 outfile",
         "./sumo.py run infile 2,10 outfile",
+        "./sumo.py evaluate infile labels",
         "./sumo.py"
     ]
 
@@ -26,6 +27,7 @@ def test_parse_args(capsys):
         "./sumo.py run infile outfile",
         "./sumo.py run infile two outfile",
         "./sumo.py run infile 2.5 outfile",
+        "./sumo.py evaluate infile",
         "./sumo.py not_a_command"
     ]
 

@@ -61,11 +61,11 @@ class SumoEvaluate(SumoMode):
         self.logger.info(
             "#Loading labels file: {} [{} x {}]".format(self.labels_file, labels.shape[0], labels.shape[1]))
 
-        self.common_samples = list(set(data.values[:, 0]) & set(labels.values[:, 0]))
+        self.common_samples = list(set(data['sample']) & set(labels['sample']))
         if len(self.common_samples) == 0:
             raise ValueError("Sample labels in both files does not correspond.")
         elif len(self.common_samples) != data.shape[0]:
-            all_samples = list(set(data[:, 0]) | set(labels[:, 0]))
+            all_samples = list(set(data['sample']) | set(labels['sample']))
             self.logger.warning(
                 "Found {} common labels [{} unique labels supplied in both files]".format(len(self.common_samples),
                                                                                           len(all_samples)))
@@ -76,7 +76,7 @@ class SumoEvaluate(SumoMode):
         labels_common = labels.loc[labels['sample'].isin(self.common_samples)].sort_values(by=['sample'])
         self.labels = labels_common.sort_values(by=['sample'])
 
-        assert list(data['sample']) == list(labels['sample'])
+        assert list(self.data['sample']) == list(self.labels['sample'])
         self._evaluate(metric=self.metric)
 
     def _evaluate(self, metric: str = None):
@@ -85,5 +85,5 @@ class SumoEvaluate(SumoMode):
         methods = [metric] if metric else CLUSTER_METRICS
         for method in methods:
             self.logger.info(
-                "{}:\t{}".format(method, round(check_accuracy(self.data.values[:, 1], self.labels.values[:, 1],
+                "{}:\t{}".format(method, round(check_accuracy(self.data['label'].values, self.labels['label'].values,
                                                               method=method), 5)))

@@ -1,8 +1,7 @@
-from sumo.modes.run.solver import svd_h_init, svd_si_init, SumoNMF, SumoNMFResults
+from sumo.modes.run.solver import svd_h_init, svd_si_init, SumoNMF
 from sumo.network import MultiplexNet
 from sumo.utils import check_matrix_symmetry
 import numpy as np
-import os
 import pytest
 
 

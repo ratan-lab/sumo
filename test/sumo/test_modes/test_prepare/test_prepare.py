@@ -1,5 +1,5 @@
 from sklearn.preprocessing import StandardScaler
-from sumo.modes.prepare.prepare import SumoPrepare, filter_features_and_samples, load_data_npz, load_data_txt
+from sumo.modes.prepare.prepare import SumoPrepare, filter_features_and_samples, load_data_npz, load_data_text
 from sumo.constants import PREPARE_DEFAULTS
 from sumo.utils import save_arrays_to_npz, load_npz
 from pandas import DataFrame
@@ -166,16 +166,16 @@ def test_filter_features_and_samples():
     assert 'feature_0' not in filtered.index
 
 
-def test_load_data_txt(tmpdir):
-    fname = os.path.join(tmpdir, "data.npz")
+def test_load_data_text(tmpdir):
+    fname = os.path.join(tmpdir, "data.tsv")
     with pytest.raises(FileNotFoundError):
-        load_data_txt(file_path=fname)
+        load_data_text(file_path=fname)
 
     # empty data
     empty_data = DataFrame()
     empty_data.to_csv(fname, sep="\t")
     with pytest.raises(ValueError):
-        load_data_txt(file_path=fname)
+        load_data_text(file_path=fname)
 
     data_vals = np.random.random((10, 20))
     data = DataFrame(data_vals.T, columns=['sample_{}'.format(i) for i in range(data_vals.shape[0])],
@@ -184,14 +184,27 @@ def test_load_data_txt(tmpdir):
     # incorrectly formatted data
     data.to_csv(fname, sep=",")
     with pytest.raises(ValueError):
-        load_data_txt(file_path=fname)
+        load_data_text(file_path=fname)
 
     # non-nummerical values
     data.to_csv(fname, sep="\t")
     with pytest.raises(ValueError):
-        load_data_txt(file_path=fname)
+        load_data_text(file_path=fname)
 
-    load_data_txt(file_path=fname, sample_names=0, feature_names=0)
+    # tab delimited file
+    load_data_text(file_path=fname, sample_names=0, feature_names=0)
+
+    # space delimited file
+    data.to_csv(fname, sep=" ")
+    load_data_text(file_path=fname, sample_names=0, feature_names=0)
+
+    # .gz file
+    data.to_csv(fname + ".gz", sep=" ", compression='gzip')
+    load_data_text(file_path=fname, sample_names=0, feature_names=0)
+
+    # .bz2 file
+    data.to_csv(fname + ".bz2", sep=" ", compression='bz2')
+    load_data_text(file_path=fname, sample_names=0, feature_names=0)
 
 
 def test_load_data_npz(tmpdir):
