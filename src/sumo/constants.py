@@ -46,10 +46,9 @@ RUN_ARGS = ["infile", "k", "outdir"] + list(RUN_DEFAULTS.keys())  # 3 positional
 # evaluate args
 EVALUATE_DEFAULTS = {
     "metric": None,
-    "logfile": None,
-    "npz": None
+    "logfile": None
 }
-EVALUATE_ARGS = ["infile", "labels"] + list(EVALUATE_DEFAULTS.keys())  # 2 positional args
+EVALUATE_ARGS = ["infile", "labels_file"] + list(EVALUATE_DEFAULTS.keys())  # 2 positional args
 
 # utils
 LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING']

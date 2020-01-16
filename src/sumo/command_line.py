@@ -162,17 +162,11 @@ def add_evaluate_command_options(subparsers):
                                             help='evaluate clustering results')
 
     evaluate_parser.add_argument('infile', metavar='infile.npz', type=str,
-                                 help="input .npz file containing array indexed as 'clusters', with sample names " +
-                                      "in first column and clustering labels in second column " +
-                                      "(file created by running sumo with mode 'run')")
+                                 help="input .tsv file containing sample names in 'sample' and clustering labels" +
+                                      " in 'label' column (clusters.tsv file created by running sumo with mode 'run')")
 
-    evaluate_parser.add_argument('labels', metavar='labels', type=str,
-                                 help="either .npy file containing array with sample names in first column and " +
-                                      "labels in second column or .npz file (requires using '-npz' option)")
-
-    evaluate_parser.add_argument('-npz', action='store',
-                                 type=str, required=False, default=EVALUATE_DEFAULTS['npz'],
-                                 help="key of array containing labels in .npz file")
+    evaluate_parser.add_argument('labels_file', metavar='labels', type=str,
+                                 help=".tsv of the same structure as input file")
 
     evaluate_parser.add_argument('-metric', action='store', choices=CLUSTER_METRICS,
                                  type=str, required=False, default=EVALUATE_DEFAULTS['metric'],

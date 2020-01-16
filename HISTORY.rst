@@ -27,7 +27,7 @@ History
 
 [*evaluate*]
 
-* Fixed error preventing loading of pickled object arrays stored in label files, while using *-npz* flag.
+* Change mode to support .tsv files as both input and labels file.
 
 0.1.2 (2019-09-20)
 ------------------
