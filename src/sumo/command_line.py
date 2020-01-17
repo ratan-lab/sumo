@@ -192,12 +192,25 @@ def add_interpret_command_options(subparsers):
                                   help='output file from this analysis, containing matrix (features x clusters), ' +
                                        'where the value in each cell is the importance of the feature in that cluster')
 
-    interpret_parser.add_argument('--cv', dest='do_cv', action='store_true',
-                                  help='use cross-validation to find the best model')
-
     interpret_parser.add_argument('-logfile', action='store',
                                   type=str, required=False, default=INTERPRET_DEFAULTS['logfile'],
                                   help='path to save log file (by default printed to stdout)')
+
+    interpret_parser.add_argument('-max_iter', action='store',
+                                  type=int, required=False, default=INTERPRET_DEFAULTS["max_iter"],
+                                  help='maximum number of iterations, while searching through hyperparameter space')
+
+    interpret_parser.add_argument('-n_folds', action='store',
+                                  type=int, required=False, default=INTERPRET_DEFAULTS["n_folds"],
+                                  help='number of folds for model cross validation (default of %(default)s)')
+
+    interpret_parser.add_argument('-t', action='store',
+                                  type=int, required=False, default=INTERPRET_DEFAULTS["t"],
+                                  help='number of threads (default of %(default)s)')
+
+    interpret_parser.add_argument('-seed', action='store',
+                                  type=int, required=False, default=INTERPRET_DEFAULTS["seed"],
+                                  help='random state (default of %(default)s)')
 
     interpret_parser.add_argument('-sn', action='store',
                                   type=int, required=False, default=INTERPRET_DEFAULTS["sn"],

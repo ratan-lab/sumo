@@ -221,7 +221,8 @@ Find features that drive clusters separation.
 
 ::
 
-    usage: sumo interpret [-h] [--cv] [-logfile LOGFILE] [-sn SN] [-fn FN]
+    usage: sumo interpret [-h] [-logfile LOGFILE] [-max_iter MAX_ITER]
+                          [-n_folds N_FOLDS] [-t T] [-seed SEED] [-sn SN] [-fn FN]
                           [-df DF] [-ds DS]
                           sumo_results.npz infile1,infile2,... outfile.tsv
 
@@ -239,8 +240,13 @@ Find features that drive clusters separation.
 
     optional arguments:
       -h, --help           show this help message and exit
-      --cv                 use cross-validation to find the best model
       -logfile LOGFILE     path to save log file (by default printed to stdout)
+      -max_iter MAX_ITER   maximum number of iterations, while searching through
+                           hyperparameter space
+      -n_folds N_FOLDS     number of folds for model cross validation (default of
+                           5)
+      -t T                 number of threads (default of 1)
+      -seed SEED           random state (default of 1)
       -sn SN               index of row with sample names for input files (default
                            of 0)
       -fn FN               index of column with feature names for input files

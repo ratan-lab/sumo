@@ -5,9 +5,10 @@ import os
 import numpy as np
 import pandas as pd
 import pathlib
+from timeit import default_timer as timer
 from sklearn.metrics import roc_auc_score
 from lightgbm import LGBMClassifier, cv, Dataset
-from hyperopt import hp, tpe, fmin, STATUS_OK
+from hyperopt import STATUS_OK, hp, fmin, tpe, Trials
 import shap
 
 
@@ -22,13 +23,17 @@ class SumoInterpret(SumoMode):
             with samples in columns and features in rows(supported types of files: {supported})
         | outfile (str): output file from this analysis, containing matrix (features x clusters), \
             where the value in each cell is the importance of the feature in that cluster
-        | do_cv (bool): use cross-validation to find the best model (default of False)
+        | max_iter (int): maximum number of iterations, while searching through hyperparameter space
+        | n_folds (int): number of folds for model cross validation
+        | t (int): number of threads
+        | seed (int): random state
         | sn (int): index of row with sample names for .txt input files
         | fn (int): index of column with feature names for .txt input files
         | df (float): if percentage of missing values for feature exceeds this value, remove feature
         | ds (float): if percentage of missing values for sample (that remains after feature dropping) exceeds \
             this value, remove sample
         | logfile (str): path to save log file, if set to None stdout is used
+
     """
 
     def __init__(self, **kwargs):
@@ -43,9 +48,9 @@ class SumoInterpret(SumoMode):
         if not all([hasattr(self, arg) for arg in INTERPRET_ARGS]):
             # this should never happened due to object creation with parse_args in sumo/__init__.py
             raise AttributeError("Cannot create SumoInterpret object")
-        assert hasattr(self, 'do_cv')
 
         self.logger = setup_logger("main", log_file=self.logfile)
+        self.iteration = 0
 
         # check positional arguments
         if not os.path.exists(self.sumo_results):
@@ -54,6 +59,9 @@ class SumoInterpret(SumoMode):
             raise FileNotFoundError("Input file not found")
         if os.path.exists(self.outfile):
             self.logger.warning("File '{}' already exist and will be overwritten.".format(self.outfile))
+
+        if self.t <= 0:
+            raise ValueError("Incorrect number of threads set with parameter '-t'")
 
     def run(self):
         """ Find features that drive clusters separation """
@@ -117,38 +125,80 @@ class SumoInterpret(SumoMode):
         x_test = x[test_index]
 
         # lets use a LGBM classifier
-        model = LGBMClassifier()
+        model = LGBMClassifier(n_jobs=self.t)
         model.fit(x_train, y_train)
         predictions = model.predict_proba(x_test)
+        if np.unique(y_test).shape[0] == 2:
+            # special 'binary' case
+            predictions = np.argmax(predictions, axis=1)
         auc = roc_auc_score(y_test, predictions, multi_class='ovr')
-        self.logger.info('The baseline score on the test set is {:.4f}.'.format(auc))
+        self.logger.debug('The baseline score on the test set is {:.4f}.'.format(auc))
 
-        if self.do_cv:
+        space = {
+            'class_weight': hp.choice('class_weight', [None, 'balanced']),
+            'boosting_type': hp.choice('boosting_type', [{'boosting_type': 'gbdt',
+                                                          'subsample': hp.uniform('gdbt_subsample', 0.5, 1)},
+                                                         {'boosting_type': 'goss', 'subsample': 1.0}]),
+            'num_leaves': hp.quniform('num_leaves', 30, 150, 1),
+            'learning_rate': hp.loguniform('learning_rate', np.log(0.01), np.log(0.2)),
+            'subsample_for_bin': hp.quniform('subsample_for_bin', 20000, 300000, 20000),
+            'min_child_samples': hp.quniform('min_child_samples', 20, 500, 5),
+            'reg_alpha': hp.uniform('reg_alpha', 0.0, 1.0),
+            'reg_lambda': hp.uniform('reg_lambda', 0.0, 1.0),
+            'colsample_bytree': hp.uniform('colsample_by_tree', 0.6, 1.0)
+        }
+
+        def objective(params, n_folds=self.n_folds):
+            self.iteration += 1
+
+            subsample = params['boosting_type'].get('subsample', 1.0)
+            params['boosting_type'] = params['boosting_type']['boosting_type']
+            params['subsample'] = subsample
+            params['verbose'] = -1
+            for p in ['num_leaves', 'subsample_for_bin', 'min_child_samples']:
+                params[p] = int(params[p])
+
+            start = timer()
             train_set = Dataset(x_train, label=y_train)
 
-            def objective(params, n_folds=10):
-                params['num_leaves'] = int(params['num_leaves'])
-                params['verbose'] = -1
+            # Perform n_folds cross validation
+            cv_results = cv(params, train_set, num_boost_round=10000,
+                            nfold=n_folds, early_stopping_rounds=100,
+                            metrics='auc', seed=self.seed)
+            run_time = timer() - start
 
-                # Perform n_fold cross validation with hyperparameters
-                # Use early stopping and evalute based on ROC AUC
-                cv_results = cv(params, train_set, nfold=n_folds,
-                                num_boost_round=10000,
-                                early_stopping_rounds=100, metrics='auc',
-                                seed=50)
+            # Loss must be minimized
+            best_score = np.max(cv_results['auc-mean'])
+            loss = 1 - best_score
 
-                # Extract the best score
-                best_score = max(cv_results['auc-mean'])
+            # Boosting rounds that returned the highest cv score
+            n_estimators = int(np.argmax(cv_results['auc-mean']) + 1)
 
-                # minimize loss
-                loss = 1 - best_score
+            return {'loss': loss, 'params': params, 'iteration': self.iteration,
+                    'estimators': n_estimators,
+                    'train_time': run_time, 'status': STATUS_OK}
 
-                return {'loss': loss, 'params': params, 'status': STATUS_OK}
+        bayes_trials = Trials()
 
-            space = {'num_leaves': hp.quniform('num_leaves', 30, 150, 1)}
-            best_params = fmin(fn=objective, space=space, algo=tpe.suggest,
-                               max_evals=50, rstate=np.random.RandomState(50))
-            self.logger.info(best_params)
-            return LGBMClassifier(**best_params)
+        # find best parameters
+        _ = fmin(fn=objective, space=space, algo=tpe.suggest,
+                 max_evals=self.max_iter, trials=bayes_trials,
+                 rstate=np.random.RandomState(self.seed))
+        assert len(list(bayes_trials)) == self.max_iter
 
-        return model
+        bayes_trials_results = sorted(bayes_trials.results, key=lambda z: z['loss'])
+        best_bayes_params = bayes_trials_results[0]['params']
+        best_bayes_estimators = bayes_trials_results[0]['estimators']
+        best = LGBMClassifier(n_estimators=best_bayes_estimators,
+                              random_state=self.seed, **best_bayes_params,
+                              n_jobs=self.t)
+
+        best.fit(x_train, y_train)
+        predictions = best.predict_proba(x_test)
+        if np.unique(y_test).shape[0] == 2:
+            # special 'binary' case
+            predictions = np.argmax(predictions, axis=1)
+        auc = roc_auc_score(y_test, predictions, multi_class='ovr')
+        self.logger.info('The score on the test set after CV is {:.4f}.'.format(auc))
+
+        return best

@@ -51,10 +51,14 @@ EVALUATE_ARGS = ["infile", "labels_file"] + list(EVALUATE_DEFAULTS.keys())  # 2 
 # interpret
 INTERPRET_DEFAULTS = {
     "logfile": None,
+    "max_iter": 50,
+    "n_folds": 5,
     "sn": 0,
     "fn": 0,
     "df": 0.1,
-    "ds": 0.1
+    "ds": 0.1,
+    "t": 1,
+    "seed": 1
 }
 INTERPRET_ARGS = ['sumo_results', 'infiles', 'outfile'] + list(INTERPRET_DEFAULTS.keys())  # 3 positional args
 

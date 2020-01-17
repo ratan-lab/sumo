@@ -12,7 +12,6 @@ def _get_args(sumo_results: str, labels_file: list, outfile: str):
     args["sumo_results"] = sumo_results
     args["infiles"] = labels_file
     args["outfile"] = outfile
-    args['do_cv'] = False
     return args
 
 
@@ -53,6 +52,11 @@ def test_init(tmpdir):
     tmp.to_csv(outfile)
     SumoInterpret(**args)
 
+    # incorrect number of threads
+    args['t'] = 0
+    with pytest.raises(ValueError):
+        SumoInterpret(**args)
+
 
 def test_run(tmpdir):
     fname = os.path.join(tmpdir, "indata.npz")
@@ -60,13 +64,13 @@ def test_run(tmpdir):
     outfile = os.path.join(tmpdir, "outfile.tsv")
     args = _get_args(fname, [features], outfile)
 
-    n_samples, n_features = 10, 20
+    n_samples, n_features = 100, 20
     f = pd.DataFrame(np.random.normal(size=(n_features, n_samples)),
                      columns=['sample_' + str(i) for i in range(n_samples)],
                      index=['feature_' + str(i) for i in range(n_features)])
     f.to_csv(features, sep="\t")
 
-    labels = list(range(n_samples))
+    labels = [0] * int(n_samples / 2) + [1] * int(n_samples / 2)
     data_array = np.array([['sample_{}'.format(i) for i in range(n_samples)], labels]).T
     data = pd.DataFrame(data_array, columns=['sample', 'label'])
 
@@ -75,10 +79,15 @@ def test_run(tmpdir):
         si = SumoInterpret(**args)
         si.run()
 
+    # two classes (special binary case)
     save_arrays_to_npz({'clusters': data.values}, file_path=fname)
     si = SumoInterpret(**args)
-    # si.run() #TODO: does not work (why 'predictions' have wrong dimensions?)
+    si.run()
 
-    # args['do_cv'] = True #TODO cross validation param
-    # si = SumoInterpret(**args)
-    # si.run()
+    # three classes
+    labels[-10:] = [2] * len(labels[-10:])
+    data_array = np.array([['sample_{}'.format(i) for i in range(n_samples)], labels]).T
+    data = pd.DataFrame(data_array, columns=['sample', 'label'])
+    save_arrays_to_npz({'clusters': data.values}, file_path=fname)
+    si = SumoInterpret(**args)
+    si.run()
