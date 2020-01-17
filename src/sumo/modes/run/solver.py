@@ -178,7 +178,7 @@ class SumoNMF:
             sparsity_penalty (float): 'η' value, corresponding to sparsity penalty for H
             k (int): expected number of clusters
             max_iter (int): maximum number of iterations
-            tol (float): if objective cost function value fluctuation (|Δℒ|) is smaller than 'stop_val', \
+            tol (float): if objective cost function value fluctuation is smaller than 'stop_val', \
                 stop iterations before reaching max_iter
             calc_cost (int): number of steps between every calculation of objective cost function
             h_init (int): index of adjacency matrix to use for H matrix initialization or None for initialization \

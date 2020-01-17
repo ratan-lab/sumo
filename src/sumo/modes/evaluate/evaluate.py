@@ -11,9 +11,9 @@ class SumoEvaluate(SumoMode):
     Sumo mode for evaluating accuracy of clustering. Constructor args are set in 'evaluate' subparser.
 
     Args:
-        | infile (str): input .npz file containing array indexed as 'clusters', with sample names in first column and \
-            clustering labels in second column (file created by running sumo with mode 'run')
-        | labels (str): .npy file containing array with sample names in first column and true labels in second column
+        | infile (str): input .tsv file containing sample names in 'sample' and clustering labels in 'label' column \
+            (clusters.tsv file created by running sumo with mode 'run')
+        | labels (str): .tsv of the same structure as input file
         | metric (str): one of metrics ({metrics}) for accuracy evaluation, if set to None all metrics are calculated
         | logfile (str): path to save log file, if set to None stdout is used
 

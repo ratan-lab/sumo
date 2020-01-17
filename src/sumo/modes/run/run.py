@@ -26,12 +26,12 @@ class SumoRun(SumoMode):
             in following way: "0", "1" ... and index of sample name vector is "samples"
         | k (int): number of clusters
         | outdir (str) path to save output files
-        | sparsity (list): list of sparsity penalty values for H matrix (sumo will try different values and select \
-            the best results
+        | sparsity (list): list of sparsity penalty values for H matrix (if multiple values sumo will try all \
+            and select the best results
         | n (int): number of repetitions
         | method (str): method of cluster extraction, selected from {cluster_methods}
         | max_iter (int): maximum number of iterations for factorization
-        | tol (float): if objective cost function value fluctuation (|Δℒ|) is smaller than this value, stop iterations \
+        | tol (float): if objective cost function value fluctuation is smaller than this value, stop iterations \
             before reaching max_iter
         | calc_cost (int): number of steps between every calculation of objective cost function
         | logfile (str): path to save log file, if set to None stdout is used

@@ -9,22 +9,24 @@ import os
 import pathlib
 
 
-@docstring_formatter(sim_methods=SIMILARITY_METHODS, log_levels=LOG_LEVELS)
+@docstring_formatter(sim_methods=SIMILARITY_METHODS, log_levels=LOG_LEVELS, supported=SUPPORTED_EXT)
 class SumoPrepare(SumoMode):
     """ Sumo mode for data pre-processing and creation of multiplex network files. Constructor args are set \
     in 'prepare' subparser.
 
     Args:
-        | infiles (list): list of paths to input files (all input files should be structured in following \
-            way: consecutive samples in columns, consecutive features in rows)
-        | vars (list): either one variable type from for every data matrix or list of variable types for \
-            each of them
+        | infiles (list): comma-delimited list of paths to input files, containing standardized feature matrices, \
+            with samples in columns and features in rows (supported types of files: {supported})
         | outfile (str): path to output .npz file
-        | method (str): method of sample-sample similarity calculation selected from {sim_methods}
-        | k (float): fraction of nearest neighbours to use for sample similarity calculation using with RBF method
-        | alpha (float): hypherparameter of RBF similarity kernel
+        | method (list): comma-separated list of methods for every layer (available methods: {sim_methods})
+        | k (float): fraction of nearest neighbours to use for sample similarity calculation using Euclidean distance \
+            similarity
+        | alpha (float): hypherparameter of RBF similarity kernel, for Euclidean distance similarity
         | missing (list): acceptable fraction of available (not missing) values for assessment of distance/similarity \
             between pairs of samples, either one value or different values for every layer
+        | atol (float): if input files have continuous values, sumo checks if data is standardized feature-wise, \
+            meaning all features should have mean close to zero, with standard deviation around one; use this \
+            parameter to set tolerance of standardization checks
         | sn (int): index of row with sample names for .txt input files
         | fn (int): index of column with feature names for .txt input files
         | df (float): if percentage of missing values for feature exceeds this value, remove feature
