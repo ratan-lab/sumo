@@ -18,9 +18,9 @@ class SumoInterpret(SumoMode):
 
     Args:
         | sumo_results (str): path to sumo_results.npz (created by running program with mode "run")
-        | infiles (list): comma-delimited list of paths to input files, containing standardized feature matrices,
+        | infiles (list): comma-delimited list of paths to input files, containing standardized feature matrices, \
             with samples in columns and features in rows(supported types of files: {supported})
-        | outfile (str): output file from this analysis, containing matrix (features x clusters),
+        | outfile (str): output file from this analysis, containing matrix (features x clusters), \
             where the value in each cell is the importance of the feature in that cluster
         | do_cv (bool): use cross-validation to find the best model (default of False)
         | sn (int): index of row with sample names for .txt input files

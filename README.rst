@@ -78,56 +78,61 @@ Generates similarity matrices for samples based on biological data and saves the
 
 ::
 
-    Usage:
-        sumo prepare [-h] [-method {rbf,pearson,spearman}] [-k K]
-                     [-alpha ALPHA] [-missing MISSING] [-names NAMES] [-sn SN]
-                     [-fn FN] [-df DF] [-ds DS] [-logfile LOGFILE]
-                     [-log {DEBUG,INFO,WARNING}] [-plot PLOT]
-                     infile1,infile2,... var1,var2,... outfile.npz
+    usage: sumo prepare [-h] [-method METHOD] [-k K] [-alpha ALPHA]
+                        [-missing MISSING] [-atol ATOL] [-sn SN] [-fn FN] [-df DF]
+                        [-ds DS] [-logfile LOGFILE] [-log {DEBUG,INFO,WARNING}]
+                        [-plot PLOT]
+                        infile1,infile2,... outfile.npz
 
-    Positional arguments:
-        infile1,infile2,...   comma-delimited list of paths to input .npz or .txt
-                              files (all input files should be structured in
-                              following way: consecutive samples in columns,
-                              consecutive features in rows")
-        var1(,var2,...)       either one variable type for every data matrix in
-                              input file(s) or comma-delimited list of variable
-                              types ['continuous', 'binary', 'categorical']
-        outfile.npz           path to output .npz file
+    positional arguments:
+      infile1,infile2,...   comma-delimited list of paths to input files,
+                            containing standardized feature matrices, with samples
+                            in columns and features in rows (supported types of
+                            files: ['.txt', '.txt.gz', '.txt.bz2', '.tsv',
+                            '.tsv.gz', '.tsv.bz2'])
+      outfile.npz           path to output .npz file
 
-    Optional arguments:
-        -h, --help            show this help message and exit
-        -method {rbf,pearson,spearman}
-                              method of sample-sample similarity calculation
-                              (default of "rbf")
-        -k K                  fraction of nearest neighbours to use for sample
-                              similarity calculation using RBF method (default of 0.1)
-        -alpha ALPHA          hypherparameter of RBF similarity kernel (default of 0.5)
-        -missing MISSING      acceptable fraction of available values for assessment
-                              of distance/similarity between pairs of samples (default of 0.1)
-        -names NAMES          optional key of array containing custom sample names
-                              in every .npz file (if not set ids of samples are used,
-                              which can cause problems when layers have missing samples)
-        -sn SN                index of row with sample names for .txt input files
-                              (default of 0)
-        -fn FN                index of column with feature names for .txt input files
-                              (default of 0)
-        -df DF                if percentage of missing values for feature exceeds
-                              this value, remove feature (default of 0.1)
-        -ds DS                if percentage of missing values for sample (that
-                              remains after feature dropping) exceeds this value,
-                              remove sample (default of 0.1)
-        -logfile LOGFILE      path to save log file, by default stdout is used
-        -log {DEBUG,INFO,WARNING}
-                              Sets the logging level (default of INFO)
-        -plot PLOT            path to save adjacency matrix heatmap(s),
-                              by default plots are displayed on screen
+    optional arguments:
+      -h, --help            show this help message and exit
+      -method METHOD        either one method of sample-sample similarity
+                            calculation, or comma-separated list of methods for
+                            every layer (available methods: ['euclidean',
+                            'cosine', 'pearson', 'spearman'], default of
+                            euclidean)
+      -k K                  fraction of nearest neighbours to use for sample
+                            similarity calculation using Euclidean distance
+                            similarity (default of 0.1)
+      -alpha ALPHA          hypherparameter of RBF similarity kernel, for
+                            Euclidean distance similarity (default of 0.5)
+      -missing MISSING      acceptable fraction of available values for assessment
+                            of distance/similarity between pairs of samples -
+                            either one value or comma-delimited list for every
+                            layer (default of [0.1])
+      -atol ATOL            if input files have continuous values, sumo checks if
+                            data is standardized feature-wise, meaning all
+                            features should have mean close to zero, with standard
+                            deviation around one; use this parameter to set
+                            tolerance of standardization checks (default of 0.01)
+      -sn SN                index of row with sample names for input files
+                            (default of 0)
+      -fn FN                index of column with feature names for input files
+                            (default of 0)
+      -df DF                if percentage of missing values for feature exceeds
+                            this value, remove feature (default of 0.1)
+      -ds DS                if percentage of missing values for sample (that
+                            remains after feature dropping) exceeds this value,
+                            remove sample (default of 0.1)
+      -logfile LOGFILE      path to save log file, by default stdout is used
+      -log {DEBUG,INFO,WARNING}
+                            sets the logging level (default of INFO)
+      -plot PLOT            path to save adjacency matrix heatmap(s), by default
+                            plots are displayed on screen
 
 **Example**
 
 .. code:: sh
 
-    sumo prepare -plot plot.png methylation.txt,expression.txt continuous prepared.data.npz
+    sumo prepare -plot plot.png methylation.txt,expression.txt prepared.data.npz
 
 run
 ^^^
@@ -135,47 +140,46 @@ Cluster multiplex network using non-negative matrix tri-factorization to identif
 
 ::
 
-    Usage:
-        sumo run [-h] [-sparsity SPARSITY] [-n N]
-                 [-method {max_value,spectral}] [-max_iter MAX_ITER] [-tol TOL]
-                 [-calc_cost CALC_COST] [-logfile LOGFILE]
-                 [-log {DEBUG,INFO,WARNING}] [-h_init H_INIT] [-t T]
-                 infile.npz k outdir
+    usage: sumo run [-h] [-sparsity SPARSITY] [-n N]
+                    [-method {max_value,spectral}] [-max_iter MAX_ITER] [-tol TOL]
+                    [-calc_cost CALC_COST] [-logfile LOGFILE]
+                    [-log {DEBUG,INFO,WARNING}] [-h_init H_INIT] [-t T]
+                    infile.npz k outdir
 
-    Positional arguments:
-        infile.npz            input .npz file containing adjacency matrices for
-                              every network layer and sample names (file created by
-                              running program with mode "run") - consecutive
-                              adjacency arrays in file are indexed in following way:
-                              "0", "1" ... and index of sample name vector is "samples"
-        k                     either one value describing number of clusters or
-                              coma-delimited range of values to check (sumo will
-                              suggest cluster structure based on cophenetic
-                              correlation coefficient)
-        outdir                path to save output files
+    positional arguments:
+      infile.npz            input .npz file containing adjacency matrices for
+                            every network layer and sample names (file created by
+                            running program with mode "run") - consecutive
+                            adjacency arrays in file are indexed in following way:
+                            "0", "1" ... and index of sample name vector is
+                            "samples"
+      k                     either one value describing number of clusters or
+                            coma-delimited range of values to check (sumo will
+                            suggest cluster structure based on cophenetic
+                            correlation coefficient)
+      outdir                path to save output files
 
-    Optional arguments:
-        -h, --help            show this help message and exit
-        -sparsity SPARSITY    either one value or coma-delimited list of sparsity
-                              penalty values for H matrix (sumo will try different
-                              values and select the best results; default of
-                              [0.0001, 0.001, 0.01, 0.1, 1, 10.0, 100.0])
-        -n N                  number of repetitions (default of 50)
-        -method {max_value,spectral}
-                              method of cluster extraction (default of "max_value")
-        -max_iter MAX_ITER    maximum number of iterations for factorization
-                              (default of 500)
-        -tol TOL              if objective cost function value fluctuation (|Δℒ|) is
-                              smaller than this value, stop iterations before
-                              reaching max_iter (default of 1e-05)
-        -calc_cost CALC_COST  number of steps between every calculation of objective
-                              cost function (default of 20)
-        -logfile LOGFILE      path to save log file (by default printed to stdout)
-        -log {DEBUG,INFO,WARNING}
-                              Set the logging level (default of INFO)
-        -h_init H_INIT        index of adjacency matrix to use for H matrix
-                              initialization (by default using average adjacency)
-        -t T                  number of threads (default of 1)
+    optional arguments:
+      -h, --help            show this help message and exit
+      -sparsity SPARSITY    either one value or coma-delimited list of sparsity
+                            penalty values for H matrix (sumo will try different
+                            values and select the best results; default of [0.1])
+      -n N                  number of repetitions (default of 50)
+      -method {max_value,spectral}
+                            method of cluster extraction (default of "max_value")
+      -max_iter MAX_ITER    maximum number of iterations for factorization
+                            (default of 500)
+      -tol TOL              if objective cost function value fluctuation (|Δℒ|) is
+                            smaller than this value, stop iterations before
+                            reaching max_iter (default of 1e-05)
+      -calc_cost CALC_COST  number of steps between every calculation of objective
+                            cost function (default of 20)
+      -logfile LOGFILE      path to save log file (by default printed to stdout)
+      -log {DEBUG,INFO,WARNING}
+                            set the logging level (default of INFO)
+      -h_init H_INIT        index of adjacency matrix to use for H matrix
+                            initialization (by default using average adjacency)
+      -t T                  number of threads (default of 1)
 
 **Example**
 
@@ -189,34 +193,69 @@ Evaluate clustering results, given set of labels.
 
 ::
 
-    Usage:
-        sumo evaluate [-h] [-npz NPZ] [-metric {NMI,purity,ARI}]
-                      [-logfile LOGFILE]
-                      infile.npz labels
+    usage: sumo evaluate [-h] [-metric {NMI,purity,ARI}] [-logfile LOGFILE]
+                         infile.npz labels
 
+    positional arguments:
+      infile.npz            input .tsv file containing sample names in 'sample'
+                            and clustering labels in 'label' column (clusters.tsv
+                            file created by running sumo with mode 'run')
+      labels                .tsv of the same structure as input file
 
-    Positional arguments:
-        infile.npz            input .npz file containing array indexed as
-                              'clusters', with sample names in first column and
-                              clustering labels in second column (file created by
-                              running sumo with mode 'run')
-        labels                either .npy file containing array with sample names in
-                              first column and labels in second column or .npz
-                              file (requires using '-npz' option)
-
-    Optional arguments:
-        -h, --help            show this help message and exit
-        -npz NPZ              key of array containing labels in .npz file
-        -metric {NMI,purity,ARI}
-                              metric for accuracy evaluation (by default all metrics
-                              are calculated)
-        -logfile LOGFILE      path to save log file (by default printed to stdout)
+    optional arguments:
+      -h, --help            show this help message and exit
+      -metric {NMI,purity,ARI}
+                            metric for accuracy evaluation (by default all metrics
+                            are calculated)
+      -logfile LOGFILE      path to save log file (by default printed to stdout)
 
 **Example**
 
 .. code:: sh
 
-    sumo evaluate -npz subtypes results_dir/k3/sumo_results.npz labels.npz
+    sumo evaluate results_dir/k3/clusters.tsv labels.tsv
+
+interpret
+^^^^^^^^^
+Find features that drive clusters separation.
+
+::
+
+    usage: sumo interpret [-h] [--cv] [-logfile LOGFILE] [-sn SN] [-fn FN]
+                          [-df DF] [-ds DS]
+                          sumo_results.npz infile1,infile2,... outfile.tsv
+
+    positional arguments:
+      sumo_results.npz     path to sumo_results.npz (created by running program
+                           with mode "run")
+      infile1,infile2,...  comma-delimited list of paths to input files,
+                           containing standardized feature matrices, with samples
+                           in columns and features in rows(supported types of
+                           files: ['.txt', '.txt.gz', '.txt.bz2', '.tsv',
+                           '.tsv.gz', '.tsv.bz2'])
+      outfile.tsv          output file from this analysis, containing matrix
+                           (features x clusters), where the value in each cell is
+                           the importance of the feature in that cluster
+
+    optional arguments:
+      -h, --help           show this help message and exit
+      --cv                 use cross-validation to find the best model
+      -logfile LOGFILE     path to save log file (by default printed to stdout)
+      -sn SN               index of row with sample names for input files (default
+                           of 0)
+      -fn FN               index of column with feature names for input files
+                           (default of 0)
+      -df DF               if percentage of missing values for feature exceeds
+                           this value, remove feature (default of 0.1)
+      -ds DS               if percentage of missing values for sample (that
+                           remains after feature dropping) exceeds this value,
+                           remove sample (default of 0.1)
+
+**Example**
+
+.. code:: sh
+
+    sumo interpret results_dir/k3/sumo_results.npz methylation.txt,expression.txt results.tsv
 
 .. inclusion-end-marker-do-not-remove
 
