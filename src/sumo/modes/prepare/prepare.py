@@ -1,137 +1,12 @@
 from collections import Counter
-from pandas import DataFrame, isna, read_csv
-from sumo.constants import PREPARE_ARGS, SUPPORTED_EXT, SIMILARITY_METHODS, LOG_LEVELS, TEXT_EXT
+from sumo.constants import PREPARE_ARGS, SUPPORTED_EXT, SIMILARITY_METHODS, LOG_LEVELS
 from sumo.modes.mode import SumoMode
 from sumo.modes.prepare.similarity import feature_to_adjacency
-from sumo.utils import load_npz, plot_heatmap_seaborn, save_arrays_to_npz, setup_logger, get_logger, \
-    docstring_formatter, check_categories, is_standardized
+from sumo.utils import plot_heatmap_seaborn, save_arrays_to_npz, setup_logger, docstring_formatter, check_categories, \
+    is_standardized, load_data_text
 import numpy as np
 import os
 import pathlib
-
-
-def filter_features_and_samples(data: DataFrame, drop_features: float = 0.1, drop_samples: float = 0.1):
-    """ Filter data frame features and samples
-
-    Args:
-        data (pandas.DataFrame): data frame (with samples in columns and features in rows)
-        drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
-        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping) \
-            exceeds this value, remove this sample
-
-    Returns:
-        filtered data frame
-    """
-    logger = get_logger()
-    # check arguments
-    if drop_features < 0 or drop_features >= 1:
-        raise ValueError("Incorrect value od 'drop_feature', expected value in range [0,1)")
-    if drop_samples < 0 or drop_samples >= 1:
-        raise ValueError("Incorrect value od 'drop_samples', expected value in range [0,1)")
-
-    # drop features if needed
-    nans = isna(data).values
-    remove_feature = []
-    for i in range(nans.shape[0]):
-        if list(nans[i, :]).count(True) / nans.shape[1] > drop_features:
-            remove_feature.append(i)
-    data.drop(data.index[remove_feature], axis=0, inplace=True)
-
-    # drop samples if needed
-    nans = isna(data).values
-    remove_sample = []
-    for i in range(nans.shape[1]):
-        if list(nans[:, i]).count(True) / nans.shape[0] > drop_samples:
-            remove_sample.append(i)
-    data.drop(data.columns[remove_sample], axis=1, inplace=True)
-
-    logger.info("Number of dropped rows/features: {}".format(len(remove_feature)))
-    logger.info("Number of dropped columns/samples: {}".format(len(remove_sample)))
-    logger.info("Data shape: {}".format(data.values.shape))
-
-    return data
-
-
-def load_data_text(file_path: str, sample_names: int = None, feature_names: int = None, drop_features: float = 0.1,
-                   drop_samples: float = 0.1):
-    """ Loads data from text file (with samples in columns and features in rows) into pandas.DataFrame
-
-    Args:
-        file_path (str): path to the tab delimited .txt file
-        sample_names (int): index of row with sample names
-        feature_names (int): index of column with feature names
-        drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
-        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping) \
-            exceeds this value, remove this sample
-    Returns:
-        data (pandas.DataFrame): data frame loaded from file, with missing values removed
-
-    """
-    if not os.path.exists(file_path):
-        raise FileNotFoundError("Data file not found")
-
-    data = read_csv(file_path, delimiter=r'\s+', header=sample_names, index_col=feature_names)
-    if data.empty or data.values.shape == (1, 1):
-        raise ValueError('File cannot be read correctly, file is not tab delimited or is corrupted')
-    elif data.values.dtype == np.object:
-        raise ValueError("File contains some non-numerical values other than 'NA'")
-
-    return filter_features_and_samples(data, drop_features=drop_features, drop_samples=drop_samples)
-
-
-def load_data_npz(file_path: str, sample_idx: str = None, drop_features: float = 0.1, drop_samples: float = 0.1):
-    """ Loads data from .npz file into pandas.DataFrame
-
-    Args:
-        file_path (str): path to the .npz file
-        sample_idx (str): key of array containing custom sample names in every .npz file \
-            (if not supplied use column indices)
-        drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
-        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping) \
-            exceeds this value, remove this sample
-
-    Returns:
-        data_frames (list): data frames loaded from file, with missing values removed
-
-    """
-
-    data = load_npz(file_path)
-
-    if len(data.keys()) == 0:
-        raise ValueError("File {} is empty".format(file_path))
-
-    logger = get_logger()
-    # extract sample names
-    if sample_idx:
-        # sample names supplied
-        if sample_idx not in data.keys():
-            raise ValueError("Sample names vector '{}' not found in {} file".format(sample_idx, file_path))
-
-        sample_names = data[sample_idx]
-        array_idx = [k for k in data.keys() if k != sample_idx]
-
-    else:
-        # sample names not supplied
-        array_idx = list(data.keys())
-        sample_names = np.arange(data[array_idx[0]].shape[1])
-        logger.warning("Sample names not supplied with '-names' parameter. Using default sample names, can " +
-                       "cause mistakes when there are missing samples!")
-
-    try:
-        if not all([data[idx].shape[1] == sample_names.shape[0] for idx in array_idx]):
-            raise ValueError("Length of vector with sample names does not corresponds to " +
-                             "shapes of other arrays in {} file.".format(file_path))
-    except IndexError:
-        raise AttributeError(
-            "One dimensional array found in input file, use '-names' option to supply sample names or remove array")
-
-    data_frames = []
-    for idx in array_idx:
-        df = filter_features_and_samples(DataFrame(data[idx], columns=list(sample_names)), drop_features=drop_features,
-                                         drop_samples=drop_samples)
-        data_frames.append(df)
-
-    return data_frames
 
 
 @docstring_formatter(sim_methods=SIMILARITY_METHODS, log_levels=LOG_LEVELS)
@@ -140,7 +15,7 @@ class SumoPrepare(SumoMode):
     in 'prepare' subparser.
 
     Args:
-        | infiles (list): list of paths to input .npz or .txt files (all input files should be structured in following \
+        | infiles (list): list of paths to input files (all input files should be structured in following \
             way: consecutive samples in columns, consecutive features in rows)
         | vars (list): either one variable type from for every data matrix or list of variable types for \
             each of them
@@ -150,8 +25,6 @@ class SumoPrepare(SumoMode):
         | alpha (float): hypherparameter of RBF similarity kernel
         | missing (list): acceptable fraction of available (not missing) values for assessment of distance/similarity \
             between pairs of samples, either one value or different values for every layer
-        | names (str): optional key of array containing custom sample names in every .npz file (if not set ids of \
-            samples are used, which can cause problems when layers have missing samples)
         | sn (int): index of row with sample names for .txt input files
         | fn (int): index of column with feature names for .txt input files
         | df (float): if percentage of missing values for feature exceeds this value, remove feature
@@ -199,7 +72,7 @@ class SumoPrepare(SumoMode):
         self.logger = setup_logger("main", self.log, self.logfile)
 
     def load_all_data(self):
-        """ Load all of .txt and .npz input files
+        """ Load all of input files
 
         Returns:
             list of tuples, every containing file name (str) and filtered feature matrix (pandas.DataFrame))
@@ -212,20 +85,11 @@ class SumoPrepare(SumoMode):
             self.logger.info(
                 "#Loading file: {} {}".format(fname, "(text file)" if pathlib.Path(fname).suffix == "" else ""))
 
-            if self.ftypes[i] in TEXT_EXT:
-                # load text file
-                data = load_data_text(file_path=fname, sample_names=self.sn, feature_names=self.fn,
-                                      drop_features=self.df, drop_samples=self.ds)
-                layers.append(data)
-                layers_fnames.append(fname)
-
-            else:
-                # load .npz file (can contain multiple matrices)
-                data = load_data_npz(file_path=fname, sample_idx=self.names, drop_features=self.df,
-                                     drop_samples=self.ds)
-                self.logger.info("#Found {} matrices in {} file".format(len(data), fname))
-                layers += data
-                layers_fnames += [fname] * len(data)
+            # load text file
+            data = load_data_text(file_path=fname, sample_names=self.sn, feature_names=self.fn, drop_features=self.df,
+                                  drop_samples=self.ds)
+            layers.append(data)
+            layers_fnames.append(fname)
 
         return list(zip(layers_fnames, layers))
 
@@ -285,7 +149,7 @@ class SumoPrepare(SumoMode):
                                      "Please, supply either binary dataset " +
                                      "(0 or 1 feature values) or continuous values standardized feature-wise. " +
                                      "Alternatively for almost standardized continuous data, " +
-                                     "decrease '-atol' parameter value.")
+                                     "increase '-atol' parameter value.")
                 else:
                     self.logger.debug("Data is correctly standardized")
             else:

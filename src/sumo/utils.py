@@ -302,3 +302,72 @@ def is_standardized(a: np.ndarray, axis: int = 1, atol: float = 1e-3):
     mean = np.nanmean(a, axis=axis)
     std = np.nanstd(a, axis=axis)
     return np.allclose(mean, 0, atol=atol) and np.allclose(std, 1, atol=atol), np.nanmean(mean), np.nanmean(std)
+
+
+def filter_features_and_samples(data: pd.DataFrame, drop_features: float = 0.1, drop_samples: float = 0.1):
+    """ Filter data frame features and samples
+
+    Args:
+        data (pandas.DataFrame): data frame (with samples in columns and features in rows)
+        drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
+        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping) \
+            exceeds this value, remove this sample
+
+    Returns:
+        filtered data frame
+    """
+    logger = get_logger()
+    # check arguments
+    if drop_features < 0 or drop_features >= 1:
+        raise ValueError("Incorrect value od 'drop_feature', expected value in range [0,1)")
+    if drop_samples < 0 or drop_samples >= 1:
+        raise ValueError("Incorrect value od 'drop_samples', expected value in range [0,1)")
+
+    # drop features if needed
+    nans = pd.isna(data).values
+    remove_feature = []
+    for i in range(nans.shape[0]):
+        if list(nans[i, :]).count(True) / nans.shape[1] > drop_features:
+            remove_feature.append(i)
+    data.drop(data.index[remove_feature], axis=0, inplace=True)
+
+    # drop samples if needed
+    nans = pd.isna(data).values
+    remove_sample = []
+    for i in range(nans.shape[1]):
+        if list(nans[:, i]).count(True) / nans.shape[0] > drop_samples:
+            remove_sample.append(i)
+    data.drop(data.columns[remove_sample], axis=1, inplace=True)
+
+    logger.info("Number of dropped rows/features: {}".format(len(remove_feature)))
+    logger.info("Number of dropped columns/samples: {}".format(len(remove_sample)))
+    logger.info("Data shape: {}".format(data.values.shape))
+
+    return data
+
+
+def load_data_text(file_path: str, sample_names: int = None, feature_names: int = None, drop_features: float = 0.1,
+                   drop_samples: float = 0.1):
+    """ Loads data from text file (with samples in columns and features in rows) into pandas.DataFrame
+
+    Args:
+        file_path (str): path to the tab delimited .txt file
+        sample_names (int): index of row with sample names
+        feature_names (int): index of column with feature names
+        drop_features (float): if percentage of missing values for feature exceeds this value, remove this feature
+        drop_samples (float): if percentage of missing values for sample (that remains after feature dropping) \
+            exceeds this value, remove this sample
+    Returns:
+        data (pandas.DataFrame): data frame loaded from file, with missing values removed
+
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError("Data file not found")
+
+    data = pd.read_csv(file_path, delimiter=r'\s+', header=sample_names, index_col=feature_names)
+    if data.empty or data.values.shape == (1, 1):
+        raise ValueError('File cannot be read correctly, file is not tab delimited or is corrupted')
+    elif data.values.dtype == np.object:
+        raise ValueError("File contains some non-numerical values other than 'NA'")
+
+    return filter_features_and_samples(data, drop_features=drop_features, drop_samples=drop_samples)

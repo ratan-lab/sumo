@@ -1,21 +1,19 @@
 # command_line
 __version__ = "0.1.2"
-SUMO_COMMANDS = ["prepare", "run", "evaluate"]
+SUMO_COMMANDS = ["prepare", "run", "evaluate", "interpret"]
 
 # prepare
 CORR_METHODS = ["pearson", "spearman"]
 SIMILARITY_METHODS = ["euclidean", "cosine"] + CORR_METHODS
 TXT_EXT = [".txt", '.txt.gz', '.txt.bz2']
 TSV_EXT = [".tsv", '.tsv.gz', '.tsv.bz2']
-TEXT_EXT = TXT_EXT + TSV_EXT
-SUPPORTED_EXT = [".npz"] + TEXT_EXT
+SUPPORTED_EXT = TXT_EXT + TSV_EXT
 
 PREPARE_DEFAULTS = {
     "method": ["euclidean"],
     "k": 0.1,
     "alpha": 0.5,
     "missing": [0.1],
-    "names": None,
     "sn": 0,
     "fn": 0,
     "df": 0.1,
@@ -43,12 +41,22 @@ RUN_DEFAULTS = {
 }
 RUN_ARGS = ["infile", "k", "outdir"] + list(RUN_DEFAULTS.keys())  # 3 positional args
 
-# evaluate args
+# evaluate
 EVALUATE_DEFAULTS = {
     "metric": None,
     "logfile": None
 }
 EVALUATE_ARGS = ["infile", "labels_file"] + list(EVALUATE_DEFAULTS.keys())  # 2 positional args
+
+# interpret
+INTERPRET_DEFAULTS = {
+    "logfile": None,
+    "sn": 0,
+    "fn": 0,
+    "df": 0.1,
+    "ds": 0.1
+}
+INTERPRET_ARGS = ['sumo_results', 'infiles', 'outfile'] + list(INTERPRET_DEFAULTS.keys())  # 3 positional args
 
 # utils
 LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING']

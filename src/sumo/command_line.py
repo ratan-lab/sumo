@@ -1,5 +1,5 @@
 from sumo.constants import __version__, CLUSTER_METHODS, LOG_LEVELS, SIMILARITY_METHODS, CLUSTER_METRICS, \
-    PREPARE_DEFAULTS, EVALUATE_DEFAULTS, RUN_DEFAULTS
+    PREPARE_DEFAULTS, EVALUATE_DEFAULTS, RUN_DEFAULTS, SUPPORTED_EXT, INTERPRET_DEFAULTS
 from sumo.modes import SUMO_COMMANDS
 import argparse
 
@@ -13,9 +13,9 @@ def add_prepare_command_options(subparsers):
 
     prepare_parser.add_argument('infiles', metavar='infile1,infile2,...',
                                 type=lambda s: [i for i in s.split(',')],
-                                help='comma-delimited list of paths to input .npz or .txt files (all input files ' +
-                                     'should be structured in following way: consecutive samples in columns, ' +
-                                     'consecutive features in rows")')
+                                help='comma-delimited list of paths to input files, containing standardized feature' +
+                                     ' matrices, with samples in columns and features in rows' +
+                                     ' (supported types of files: {})'.format(SUPPORTED_EXT))
 
     prepare_parser.add_argument('outfile', metavar='outfile.npz',
                                 type=str, help='path to output .npz file')
@@ -52,19 +52,13 @@ def add_prepare_command_options(subparsers):
                                      'standard deviation around one; use this parameter to set tolerance of ' +
                                      'standardization checks (default of %(default)s)')
 
-    prepare_parser.add_argument('-names', action='store',
-                                type=str, required=False, default=PREPARE_DEFAULTS["names"],
-                                help='optional key of array containing custom sample names in every .npz file ' +
-                                     '(if not set ids of samples are used, which can cause problems ' +
-                                     'when layers have missing samples)')
-
     prepare_parser.add_argument('-sn', action='store',
                                 type=int, required=False, default=PREPARE_DEFAULTS["sn"],
-                                help='index of row with sample names for .txt input files (default of %(default)s)')
+                                help='index of row with sample names for input files (default of %(default)s)')
 
     prepare_parser.add_argument('-fn', action='store',
                                 type=int, required=False, default=PREPARE_DEFAULTS["fn"],
-                                help='index of column with feature names for .txt input files (default of %(default)s)')
+                                help='index of column with feature names for input files (default of %(default)s)')
 
     prepare_parser.add_argument('-df', action='store',
                                 type=float, required=False, default=PREPARE_DEFAULTS["df"],
@@ -81,7 +75,7 @@ def add_prepare_command_options(subparsers):
                                 help='path to save log file, by default stdout is used')
 
     prepare_parser.add_argument('-log', default=PREPARE_DEFAULTS["log"], choices=LOG_LEVELS,
-                                help="Sets the logging level (default of %(default)s)")
+                                help="sets the logging level (default of %(default)s)")
 
     prepare_parser.add_argument('-plot', action='store',
                                 type=str, required=False, default=PREPARE_DEFAULTS["plot"],
@@ -143,7 +137,7 @@ def add_run_command_options(subparsers):
                                 help='path to save log file (by default printed to stdout)')
 
     cluster_parser.add_argument('-log', default=RUN_DEFAULTS['log'], choices=LOG_LEVELS,
-                                help="Set the logging level (default of %(default)s)")
+                                help="set the logging level (default of %(default)s)")
 
     cluster_parser.add_argument('-h_init', action='store',
                                 type=int, required=False, default=RUN_DEFAULTS['h_init'],
@@ -159,7 +153,7 @@ def add_evaluate_command_options(subparsers):
 
     description = "Evaluate clustering results, given set of labels"
     evaluate_parser = subparsers.add_parser('evaluate', description=description,
-                                            help='evaluate clustering results')
+                                            help='evaluate or compare clustering results')
 
     evaluate_parser.add_argument('infile', metavar='infile.npz', type=str,
                                  help="input .tsv file containing sample names in 'sample' and clustering labels" +
@@ -177,6 +171,53 @@ def add_evaluate_command_options(subparsers):
                                  help='path to save log file (by default printed to stdout)')
 
 
+def add_interpret_command_options(subparsers):
+    """ Add subparser for 'interpret' command """
+
+    description = "Find features that drive clusters separation"
+    interpret_parser = subparsers.add_parser('interpret', description=description,
+                                             help='interpret clustering results')
+
+    interpret_parser.add_argument('sumo_results', metavar='sumo_results.npz',
+                                  type=str, help='path to sumo_results.npz (created by running program with mode' +
+                                                 ' "run")')
+
+    interpret_parser.add_argument('infiles', metavar='infile1,infile2,...',
+                                  type=lambda s: [i for i in s.split(',')],
+                                  help='comma-delimited list of paths to input files, containing standardized feature' +
+                                       ' matrices, with samples in columns and features in rows' +
+                                       '(supported types of files: {})'.format(SUPPORTED_EXT))
+
+    interpret_parser.add_argument('outfile', metavar="outfile.tsv", type=str,
+                                  help='output file from this analysis, containing matrix (features x clusters), ' +
+                                       'where the value in each cell is the importance of the feature in that cluster')
+
+    interpret_parser.add_argument('--cv', dest='do_cv', action='store_true',
+                                  help='use cross-validation to find the best model')
+
+    interpret_parser.add_argument('-logfile', action='store',
+                                  type=str, required=False, default=INTERPRET_DEFAULTS['logfile'],
+                                  help='path to save log file (by default printed to stdout)')
+
+    interpret_parser.add_argument('-sn', action='store',
+                                  type=int, required=False, default=INTERPRET_DEFAULTS["sn"],
+                                  help='index of row with sample names for input files (default of %(default)s)')
+
+    interpret_parser.add_argument('-fn', action='store',
+                                  type=int, required=False, default=INTERPRET_DEFAULTS["fn"],
+                                  help='index of column with feature names for input files (default of %(default)s)')
+
+    interpret_parser.add_argument('-df', action='store',
+                                  type=float, required=False, default=INTERPRET_DEFAULTS["df"],
+                                  help='if percentage of missing values for feature exceeds this value, remove feature ' +
+                                       '(default of %(default)s)')
+
+    interpret_parser.add_argument('-ds', action='store',
+                                  type=float, required=False, default=INTERPRET_DEFAULTS["ds"],
+                                  help='if percentage of missing values for sample (that remains after feature ' +
+                                       'dropping) exceeds this value, remove sample (default of %(default)s)')
+
+
 def parse_args(argv):
     parser = argparse.ArgumentParser(
         description="sumo: subtyping tool for multi-omic data")
@@ -185,7 +226,8 @@ def parse_args(argv):
     subparsers = parser.add_subparsers(help="program mode", dest='command')
     map_subparsers = {"prepare": add_prepare_command_options,
                       "run": add_run_command_options,
-                      "evaluate": add_evaluate_command_options}
+                      "evaluate": add_evaluate_command_options,
+                      "interpret": add_interpret_command_options}
     assert all([command in SUMO_COMMANDS for command in map_subparsers.keys()])
 
     for mode in map_subparsers.keys():

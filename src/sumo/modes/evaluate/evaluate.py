@@ -30,7 +30,7 @@ class SumoEvaluate(SumoMode):
 
         if not all([hasattr(self, arg) for arg in EVALUATE_ARGS]):
             # this should never happened due to object creation with parse_args in sumo/__init__.py
-            raise AttributeError("Cannot create SumoRun object")
+            raise AttributeError("Cannot create SumoEvaluate object")
 
         if not os.path.exists(self.infile):
             raise FileNotFoundError("Input file not found")

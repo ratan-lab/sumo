@@ -5,6 +5,7 @@ History
 0.2.0 (????-??-??)
 ------------------
 * Added sumo icon.
+* Implemented new mode of sumo *interpret*, for finding features that drive clusters separation.
 
 [*prepare*]
 
@@ -14,6 +15,7 @@ History
 * Removed variable type argument, categorical and binary distance measure. Similarity measures now can be set for every layer separately with *-method* parameter. Available measures include pearson and spearman correlation, (new) cosine similarity and euclidean distance with RBF kernel (before used for continuous variables). The last measure remain the default.
 * Updated support for .txt (space) and .tsv (tab delimited files).
 * Added support for compressed files (.txt.gz, .txt.bz2, .tsv.gz, .tsv.bz2).
+* Removed support for .npz files.
 
 [*run*]
 
