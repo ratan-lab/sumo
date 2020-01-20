@@ -128,14 +128,9 @@ class SumoInterpret(SumoMode):
         model = LGBMClassifier(n_jobs=self.t)
         model.fit(x_train, y_train)
         predictions = model.predict_proba(x_test)
-        if np.unique(y_test).shape[0] == 2:
-            # special 'binary' case
-            predictions = np.argmax(predictions, axis=1)
-        auc = roc_auc_score(y_test, predictions, multi_class='ovr')
-        self.logger.debug('The baseline score on the test set is {:.4f}.'.format(auc))
+        is_binary = True if np.unique(y_test).shape[0] == 2 else False  # special 'binary' case
 
         space = {
-            'class_weight': hp.choice('class_weight', [None, 'balanced']),
             'boosting_type': hp.choice('boosting_type', [{'boosting_type': 'gbdt',
                                                           'subsample': hp.uniform('gdbt_subsample', 0.5, 1)},
                                                          {'boosting_type': 'goss', 'subsample': 1.0}]),
@@ -147,6 +142,13 @@ class SumoInterpret(SumoMode):
             'reg_lambda': hp.uniform('reg_lambda', 0.0, 1.0),
             'colsample_bytree': hp.uniform('colsample_by_tree', 0.6, 1.0)
         }
+
+        if is_binary:
+            predictions = np.argmax(predictions, axis=1)
+        else:
+            space['class_weight'] = hp.choice('class_weight', [None, 'balanced'])
+        auc = roc_auc_score(y_test, predictions, multi_class='ovr')
+        self.logger.debug('The baseline score on the test set is {:.4f}.'.format(auc))
 
         def objective(params, n_folds=self.n_folds):
             self.iteration += 1
@@ -195,8 +197,7 @@ class SumoInterpret(SumoMode):
 
         best.fit(x_train, y_train)
         predictions = best.predict_proba(x_test)
-        if np.unique(y_test).shape[0] == 2:
-            # special 'binary' case
+        if is_binary:
             predictions = np.argmax(predictions, axis=1)
         auc = roc_auc_score(y_test, predictions, multi_class='ovr')
         self.logger.info('The score on the test set after CV is {:.4f}.'.format(auc))

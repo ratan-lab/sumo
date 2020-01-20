@@ -12,17 +12,20 @@ and `miRNA <https://gdc.xenahubs.net/download/TCGA-LGG.mirna.tsv.gz>`_ expressio
 data preprocessing
 ==================
 
-Data should be prepared for *sumo* analysis using pipeline described below:
+While preprocessing data for *sumo* analysis we strongly suggest following steps below in order to receive the most
+meaningful results:
 
-.. |preprocessing| raw:: html
+ 1. **Filtering your data** - *sumo* handles missing values in feature matrices up to some extent, however removing
+features and samples with high amount of missing values improves quality of classification. Depending on used data,
+removing outliers may also be advisable.
 
-    <img src="https://raw.githubusercontent.com/ratan-lab/sumo/development/doc/_images/preprocessing.png" height="200px">
+ 2. **Data normalization / transformation** - in case of using counts data, log normalization should be performed
+(this step is omitted in code below, as data is already normalized). When using methylation data in form of beta values,
+we strongly recommend transforming values into M-values.
 
-|preprocessing|
+ 3. **Data standardization** - sumo required standardization of each feature matrices to provide classification that
+isn't biased towards any of the data types over another
 
-.. 1. filtering by missing data (removing features and samples with high amount of missing values) & outliers
-.. 2. normalization (data from xena already normalized) => log normalization or converting to M-value
-.. 3. standardization (the most important step)
 
 .. code-block:: R
 
@@ -58,7 +61,7 @@ Data should be prepared for *sumo* analysis using pipeline described below:
     #################
 
     ## load data
-    met <- read.table("TCGA-LGG.methylation450.tsv.gz", header=T, check.names = F, row.names = 1)
+    met <- read.table("TCGA-LGG.methylation450.tsv", header=T, check.names = F, row.names = 1)
 
     dim(met)
 
@@ -82,15 +85,6 @@ Data should be prepared for *sumo* analysis using pipeline described below:
     ## load data
     mirna <- read.table("TCGA-LGG.mirna.tsv.gz", header=T, check.names = F, row.names = 1)
 
-    mirna[1:3,1:3]
-    #               TCGA-S9-A6WQ-01A TCGA-S9-A7IS-01A TCGA-S9-A7IQ-01A
-    # hsa-let-7a-1         14.38229         13.73226         12.34947
-    # hsa-let-7a-2         14.38425         13.72343         12.36370
-    # hsa-let-7a-3         14.38227         13.73397         12.36738
-
-    dim(mirna)
-    #[1] 1881  530
-
     ## standardization
     mirna <- t(scale(t(as.matrix(mirna))))
 
@@ -110,24 +104,77 @@ running sumo
 
 |modes|
 
+*sumo* tool provides four modes allowing for molecular subtyping of multi-omic data (*prepare* and *run*),
+as well as comprehensive analysis including identification of molecular signatures driving classification (*interpret*)
+and comparison with existing subtype data (*evaluate*).
+
 ------------
 sumo prepare
 ------------
 
+First step in sumo analysis is a creation of multiplex network. In this case our network will have three layers,
+each corresponding to intra-layer similarities between samples in one of data types (gene expression, methylation
+and miRNA expression).
+
+::
+
+    sumo prepare -plot LGG.png TCGA-LGG.htseq_fpkm.flt.tsv.gz,TCGA-LGG.methylation450.flt.tsv.gz,TCGA-LGG.mirna.flt.tsv.gz prepared.LGG.npz
+
+Above commands creates 'prepared.LGG.npz' file containing our network and three .png files with plots of adjacency
+matrices for each network layer.
 
 --------
 sumo run
 --------
 
-.. PAC, CCC, directory tree
+To identify molecular subtypes in multi-omic supply network file created in last step to sumo *run*. Sumo factorizes
+network using symmetric non-negative matrix tri-factorization. You can run sumo by supplying set number of subtypes
+to find in data or the range of values to check (in this case we test number of clusters, k = {2, 3, 4}).
+
+::
+
+    sumo run prepared.LGG.npz 2,4 LGG
+
+Sumo creates directory for every k value containing factorization results in form of .npz files and 'clusters.tsv' file
+with sample labels. In 'plots' directory you can find plots helpful in selecting accurate number of subtypes in your data.
+Stable clustering results is characterized by high value of cophenetic correlation coefficient and low proportion of
+ambiguous clusterings.
+
+Output directory structure for above command is shown below.
+
+::
+
+    LGG
+    ├── k2
+    │   ├── clusters.tsv
+    │   ├── eta_0.1.log
+    │   ├── eta_0.1.npz
+    │   └── sumo_results.npz -> eta_0.1.npz
+    ├── k3
+    │   ├── clusters.tsv
+    │   ├── eta_0.1.log
+    │   ├── eta_0.1.npz
+    │   └── sumo_results.npz -> eta_0.1.npz
+    ├── k4
+    │   ├── clusters.tsv
+    │   ├── eta_0.1.log
+    │   ├── eta_0.1.npz
+    │   └── sumo_results.npz -> eta_0.1.npz
+    └── plots
+        ├── consensus_k2.png
+        ├── consensus_k3.png
+        ├── consensus_k4.png
+        ├── cophenet.png
+        └── pac.png
+
 
 --------------
 sumo interpret
 --------------
 
+Use sumo *interpret* to investigate which features drive obtained clustering results.
 
--------------
-sumo evaluate
--------------
-.. Comparing results of clustering with pre-existing
+::
+
+    sumo interpret LGG/k4/sumo_results.npz TCGA-LGG.htseq_fpkm.flt.tsv.gz,TCGA-LGG.methylation450.flt.tsv.gz,TCGA-LGG.mirna.flt.tsv.gz
 

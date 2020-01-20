@@ -57,7 +57,8 @@ class SumoPrepare(SumoMode):
 
         self.ftypes = []
         for fname in self.infiles:
-            suff = ''.join(pathlib.Path(fname).suffixes)
+            suff = pathlib.Path(fname).suffix if pathlib.Path(fname).suffix not in ['.gz', '.bz2'] else ''.join(
+                pathlib.Path(fname).suffixes[-2:])
             if suff not in SUPPORTED_EXT:
                 raise ValueError("Unrecognized input file type '{}'".format(suff))
             self.ftypes.append(suff if suff != "" else ".txt")
