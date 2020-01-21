@@ -59,11 +59,6 @@ def main() -> int:
         """ Get the local package version. """
         return re.search('^__version__\s*=\s*"(.*)"', open('src/sumo/constants.py').read(), re.M).group(1)
 
-    def long_description():
-        with open("README.rst", "r") as f:
-            d = f.read()
-        return d
-
     def description():
         with open("README.rst", "r") as f:
             d = f.read()
@@ -78,7 +73,7 @@ def main() -> int:
         "data_files": list(data_files(*_config["data_files"])),
         "version": version(),
         "description": description(),
-        "long_description": long_description(),
+        "long_description": description(),
         "long_description_content_type": "text/x-rst"
     })
     setup(**_config)
