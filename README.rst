@@ -30,30 +30,11 @@ sumo: subtyping tool for multi-omic data
 
 Installation
 ------------
-You can install **sumo** from PyPI, by executing command below. Please note that we require python 3.6+.
+You can install **sumo** from PyPI, by executing command below. Please note that we require **python 3.6+**.
 
 .. code:: sh
 
     pip install python-sumo
-
-Dependencies
-------------
-
--  python 3.6+
--  python libraries:
-
-   -  `NumPy <https://www.numpy.org>`__
-   -  `pandas <https://pandas.pydata.org>`__
-   -  `SciPy <https://www.scipy.org>`__
-   -  `scikit-learn <https://scikit-learn.org>`__
-   -  `Matplotlib <https://matplotlib.org>`__
-   -  `Seaborn <https://seaborn.pydata.org>`__
-
-Optional requirements
-^^^^^^^^^^^^^^^^^^^^^
-
--  `pytest <http://pytest.org>`__ (for running the test suite)
--  `Sphinx <http://sphinx-doc.org>`__ (for generating documentation)
 
 Documentation
 -------------
@@ -63,7 +44,6 @@ License
 -------
 
 `MIT <LICENSE>`__
-
 
 Usage
 -----
