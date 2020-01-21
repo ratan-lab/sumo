@@ -69,11 +69,18 @@ def main() -> int:
         x = x.replace('\n', ' ')
         return x
 
+    def long_description():
+        with open("README.rst", "r") as f:
+            d = f.read()
+        pattern = r'long-description-start-marker-do-not-remove(.*?)long-description-end-marker-do-not-remove'
+        x = re.findall(pattern, d, re.DOTALL)[0]
+        return x
+
     _config.update({
         "data_files": list(data_files(*_config["data_files"])),
         "version": version(),
         "description": description(),
-        "long_description": description(),
+        "long_description": long_description(),
         "long_description_content_type": "text/x-rst"
     })
     setup(**_config)
