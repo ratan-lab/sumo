@@ -99,12 +99,13 @@ class SumoInterpret(SumoMode):
         shap_values = explainer.shap_values(X, y=labels)
 
         # create output file
-        df = pd.DataFrame(0, index=features.columns.values, columns=range(len(shap_values)))
+        df = pd.DataFrame(0, index=features.columns.values,
+                          columns=["group_{}".format(x) for x in range(len(shap_values))])
         for i in range(len(shap_values)):
             shap_cat_values = np.abs(shap_values[i])
             mean_shap = np.sum(shap_cat_values, axis=0)
             df.iloc[:, [i]] = mean_shap
-        df.to_csv(self.outfile, sep='\t', index_label=False)
+        df.to_csv(self.outfile, sep='\t', index_label="feature")
 
     def create_classifier(self, x: np.ndarray, y: np.ndarray):
         """ Create a gradient boosting method classifier
@@ -161,7 +162,7 @@ class SumoInterpret(SumoMode):
             for p in ['num_leaves', 'subsample_for_bin', 'min_child_samples']:
                 params[p] = int(params[p])
 
-            params['histagram_pool_size'] = 1024
+            params['histogram_pool_size'] = 1024
             # NOTE: Above parameter is introduced to reduce memory consumption
             self.logger.debug("Parameters: {}".format(params))
 

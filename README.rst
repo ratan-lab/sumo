@@ -269,4 +269,4 @@ Find features that drive clusters separation.
 
 .. inclusion-end-marker-do-not-remove
 
- Please refer to documentation for example usage cases and suggestions for data pre-preparation.
+Please refer to documentation for `example usage cases and suggestions for data preprocessing <https://python-sumo.readthedocs.io/en/latest/example.html>`_.

@@ -2,10 +2,11 @@
 
 History
 =======
-0.2.0 (????-??-??)
+0.2.0 (2020-01-21)
 ------------------
 * Added sumo icon.
 * Implemented new mode of sumo *interpret*, for finding features that drive clusters separation.
+* Added example test case and data preprocessing suggestions in documentation.
 
 [*prepare*]
 
