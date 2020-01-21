@@ -170,6 +170,9 @@ def add_evaluate_command_options(subparsers):
                                  type=str, required=False, default=EVALUATE_DEFAULTS['logfile'],
                                  help='path to save log file (by default printed to stdout)')
 
+    evaluate_parser.add_argument('-log', default=EVALUATE_DEFAULTS["log"], choices=LOG_LEVELS,
+                                 help="sets the logging level (default of %(default)s)")
+
 
 def add_interpret_command_options(subparsers):
     """ Add subparser for 'interpret' command """
@@ -195,6 +198,9 @@ def add_interpret_command_options(subparsers):
     interpret_parser.add_argument('-logfile', action='store',
                                   type=str, required=False, default=INTERPRET_DEFAULTS['logfile'],
                                   help='path to save log file (by default printed to stdout)')
+
+    interpret_parser.add_argument('-log', default=INTERPRET_DEFAULTS["log"], choices=LOG_LEVELS,
+                                  help="sets the logging level (default of %(default)s)")
 
     interpret_parser.add_argument('-max_iter', action='store',
                                   type=int, required=False, default=INTERPRET_DEFAULTS["max_iter"],

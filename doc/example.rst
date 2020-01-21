@@ -163,13 +163,28 @@ Use SUMO *interpret* mode to investigate which features drive obtained clusterin
 
 The above command generates a file "features.tsv" which reports the importance of each feature in driving each cluster. Briefly, we train a LightGBM model (https://github.com/microsoft/LightGBM) based on the clusters identified by SUMO, and the results from this mode are the SHAP (SHapley Additive exPlanations) feature importance deduced using that model.
 
-For example, the results in features.tsv show that the following top 10 features drive the various clusters 
+For example, the results in features.tsv shows that the following top 10 features drive the various clusters:
 
-Group 0
-
-Group 1
-
-Group 2
-
-Group 3
-
++--------------------+--------------------+--------------------+--------------------+
+|       Group 0      |       Group 1      |       Group 2      |       Group 3      |
++====================+====================+====================+====================+
+|     cg27497900     |     cg21299958     |   hsa-mir-199a-2   |     cg14178895     |
++--------------------+--------------------+--------------------+--------------------+
+|     cg05934874     |     cg16907075     | ENSG00000153786.11 |     cg00617305     |
++--------------------+--------------------+--------------------+--------------------+
+|     hsa-mir-574    |     cg14142521     |     hsa-let-7e     |  ENSG00000269845.1 |
++--------------------+--------------------+--------------------+--------------------+
+|   hsa-mir-450a-1   | ENSG00000135404.10 |  ENSG00000229816.1 |  ENSG00000196705.7 |
++--------------------+--------------------+--------------------+--------------------+
+| ENSG00000173599.12 | ENSG00000185875.11 |  ENSG00000281016.1 |     cg09891761     |
++--------------------+--------------------+--------------------+--------------------+
+|     cg23705973     |     cg24995240     | ENSG00000177731.14 | ENSG00000160229.10 |
++--------------------+--------------------+--------------------+--------------------+
+|     cg26450541     | ENSG00000114942.12 |     cg18959422     |  ENSG00000255730.3 |
++--------------------+--------------------+--------------------+--------------------+
+| ENSG00000173482.15 |  ENSG00000271270.4 |  ENSG00000206841.1 |  ENSG00000269399.2 |
++--------------------+--------------------+--------------------+--------------------+
+|    hsa-mir-450b    | ENSG00000113272.12 |    hsa-mir-128-2   |    hsa-mir-4473    |
++--------------------+--------------------+--------------------+--------------------+
+| ENSG00000154122.11 |     cg06540636     |    hsa-mir-106a    |  ENSG00000270876.1 |
++--------------------+--------------------+--------------------+--------------------+

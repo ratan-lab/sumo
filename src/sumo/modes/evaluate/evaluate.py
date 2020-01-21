@@ -37,7 +37,7 @@ class SumoEvaluate(SumoMode):
         if not os.path.exists(self.labels_file):
             raise FileNotFoundError("Labels file not found")
 
-        self.logger = setup_logger("main", log_file=self.logfile)
+        self.logger = setup_logger("main", level=self.log, log_file=self.logfile)
         self.common_samples = None
         self.data = None
         self.labels = None

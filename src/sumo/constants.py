@@ -44,13 +44,15 @@ RUN_ARGS = ["infile", "k", "outdir"] + list(RUN_DEFAULTS.keys())  # 3 positional
 # evaluate
 EVALUATE_DEFAULTS = {
     "metric": None,
-    "logfile": None
+    "logfile": None,
+    "log": "INFO"
 }
 EVALUATE_ARGS = ["infile", "labels_file"] + list(EVALUATE_DEFAULTS.keys())  # 2 positional args
 
 # interpret
 INTERPRET_DEFAULTS = {
     "logfile": None,
+    "log": "INFO",
     "max_iter": 50,
     "n_folds": 5,
     "sn": 0,

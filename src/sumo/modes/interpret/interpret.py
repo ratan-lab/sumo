@@ -49,7 +49,7 @@ class SumoInterpret(SumoMode):
             # this should never happened due to object creation with parse_args in sumo/__init__.py
             raise AttributeError("Cannot create SumoInterpret object")
 
-        self.logger = setup_logger("main", log_file=self.logfile)
+        self.logger = setup_logger("main", level=self.log, log_file=self.logfile)
         self.iteration = 0
 
         # check positional arguments
