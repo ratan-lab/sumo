@@ -1,21 +1,22 @@
-from sumo.constants import EVALUATE_ARGS, CLUSTER_METRICS
+from sumo.constants import EVALUATE_ARGS, CLUSTER_METRICS, LOG_LEVELS
 from sumo.modes.mode import SumoMode
-from sumo.utils import setup_logger, load_npz, check_accuracy, docstring_formatter
-import numpy as np
+from sumo.utils import setup_logger, check_accuracy, docstring_formatter
+import pandas as pd
 import os
 
 
-@docstring_formatter(metrics=CLUSTER_METRICS)
+@docstring_formatter(metrics=CLUSTER_METRICS, log_levels=LOG_LEVELS)
 class SumoEvaluate(SumoMode):
     """
     Sumo mode for evaluating accuracy of clustering. Constructor args are set in 'evaluate' subparser.
 
     Args:
-        | infile (str): input .npz file containing array indexed as 'clusters', with sample names in first column and \
-            clustering labels in second column (file created by running sumo with mode 'run')
-        | labels (str): .npy file containing array with sample names in first column and true labels in second column \
-        | metric (str): one of metrics ({metrics}) for accuracy evaluation, if set to None all metrics are calculated \
+        | infile (str): input .tsv file containing sample names in 'sample' and clustering labels in 'label' column \
+            (clusters.tsv file created by running sumo with mode 'run')
+        | labels (str): .tsv of the same structure as input file
+        | metric (str): one of metrics ({metrics}) for accuracy evaluation, if set to None all metrics are calculated
         | logfile (str): path to save log file, if set to None stdout is used
+        | log (str): sets the logging level from {log_levels}
 
     """
 
@@ -30,68 +31,60 @@ class SumoEvaluate(SumoMode):
 
         if not all([hasattr(self, arg) for arg in EVALUATE_ARGS]):
             # this should never happened due to object creation with parse_args in sumo/__init__.py
-            raise AttributeError("Cannot create SumoRun object")
+            raise AttributeError("Cannot create SumoEvaluate object")
 
         if not os.path.exists(self.infile):
             raise FileNotFoundError("Input file not found")
-        if not os.path.exists(self.labels):
+        if not os.path.exists(self.labels_file):
             raise FileNotFoundError("Labels file not found")
 
-        self.logger = setup_logger("main", log_file=self.logfile)
-
-        self.true_labels = None
-        self.cluster_labels = None
+        self.logger = setup_logger("main", level=self.log, log_file=self.logfile)
         self.common_samples = None
+        self.data = None
+        self.labels = None
+
+    def load_tsv(self, fname: str):
+        """ Load .tsv file"""
+        data = pd.read_csv(fname, delimiter=r'\s+')
+        if data.empty or data.values.shape == (1, 1) or data.values.shape[1] <= 1:
+            raise ValueError('File {} is not tab delimited or have incorrect structure'.format(fname))
+        if not all([label in data.columns for label in ['sample', 'label']]):
+            raise ValueError('Incorrect file header ({})'.format(fname))
+        return data
 
     def run(self):
         """ Evaluate clustering results, given set of labels """
 
-        self.logger.info("#Loading file: {}".format(self.infile))
-        data = load_npz(self.infile)
-        if 'clusters' not in data.keys():
-            raise ValueError("Incorrect structure of input file")
-        clusters_array = data['clusters']
+        data = self.load_tsv(self.infile)
+        self.logger.info("#Loading input file: {} [{} x {}]".format(self.infile, data.shape[0], data.shape[1]))
 
-        if not self.npz:
-            labels_array = np.load(self.labels)
-            if isinstance(labels_array, np.lib.npyio.NpzFile):
-                raise ValueError("Attempting to use .npz label file without '-npz' option supplied")
-        else:
-            label_data = load_npz(self.labels)
-            if self.npz not in label_data.keys():
-                raise ValueError("Incorrect structure of label file")
-            labels_array = label_data[self.npz]
+        labels = self.load_tsv(self.labels_file)
+        self.logger.info(
+            "#Loading labels file: {} [{} x {}]".format(self.labels_file, labels.shape[0], labels.shape[1]))
 
-        if len(labels_array.shape) == 1 or labels_array.shape[1] < 2:
-            raise ValueError("Incorrect structure of label file")
-
-        self.common_samples = list(set(clusters_array[:, 0]) & set(labels_array[:, 0]))
+        self.common_samples = list(set(data['sample']) & set(labels['sample']))
         if len(self.common_samples) == 0:
-            raise ValueError(
-                "Labels from {} file does not correspond to cluster labels in {} file.".format(self.labels,
-                                                                                               self.infile))
-
-        if len(self.common_samples) != clusters_array.shape[0]:
-            all_samples = list(set(clusters_array[:, 0]) | set(labels_array[:, 0]))
+            raise ValueError("Sample labels in both files does not correspond.")
+        elif len(self.common_samples) != data.shape[0]:
+            all_samples = list(set(data['sample']) | set(labels['sample']))
             self.logger.warning(
                 "Found {} common labels [{} unique labels supplied in both files]".format(len(self.common_samples),
                                                                                           len(all_samples)))
 
-        true_labels = []
-        cluster_labels = []
-        for label in self.common_samples:
-            cluster_labels.append(clusters_array[np.where(clusters_array[:, 0] == label), 1][0][0])
-            true_labels.append(labels_array[np.where(labels_array[:, 0] == label), 1][0][0])
+        # TODO: assert sample and label in colnames
+        data_common = data.loc[data['sample'].isin(self.common_samples)]
+        self.data = data_common.sort_values(by=['sample'])
+        labels_common = labels.loc[labels['sample'].isin(self.common_samples)].sort_values(by=['sample'])
+        self.labels = labels_common.sort_values(by=['sample'])
 
-        self.true_labels = np.array(true_labels)
-        self.cluster_labels = np.array(cluster_labels)
-
+        assert list(self.data['sample']) == list(self.labels['sample'])
         self._evaluate(metric=self.metric)
 
     def _evaluate(self, metric: str = None):
         """Evaluate clustering accuracy"""
-        assert self.cluster_labels is not None and self.true_labels is not None
+        assert self.data is not None and self.labels is not None
         methods = [metric] if metric else CLUSTER_METRICS
         for method in methods:
-            self.logger.info("{}:\t{}".format(method, round(check_accuracy(self.cluster_labels, self.true_labels,
-                                                                           method=method), 5)))
+            self.logger.info(
+                "{}:\t{}".format(method, round(check_accuracy(self.data['label'].values, self.labels['label'].values,
+                                                              method=method), 5)))

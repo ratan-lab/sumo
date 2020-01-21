@@ -1,6 +1,6 @@
-*****
-modes
-*****
+**********
+SUMO modes
+**********
 
 .. automodule:: sumo.modes.mode
    :members:
@@ -47,4 +47,14 @@ SumoEvaluate Class
 ------------------
 
 .. automodule:: sumo.modes.evaluate.evaluate
+   :members:
+
+=========
+interpret
+=========
+-------------------
+SumoInterpret Class
+-------------------
+
+.. automodule:: sumo.modes.interpret.interpret
    :members:

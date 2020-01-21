@@ -1,33 +1,34 @@
 # command_line
-__version__ = "0.1.2"
-SUMO_COMMANDS = ["prepare", "run", "evaluate"]
+__version__ = "0.2.0"
+SUMO_COMMANDS = ["prepare", "run", "evaluate", "interpret"]
 
 # prepare
 CORR_METHODS = ["pearson", "spearman"]
-SIMILARITY_METHODS = ["rbf"] + CORR_METHODS
-SUPPORTED_EXT = [".txt", ".npz"]
-VAR_TYPES = ["continuous", "binary", "categorical"]
+SIMILARITY_METHODS = ["euclidean", "cosine"] + CORR_METHODS
+TXT_EXT = [".txt", '.txt.gz', '.txt.bz2']
+TSV_EXT = [".tsv", '.tsv.gz', '.tsv.bz2']
+SUPPORTED_EXT = TXT_EXT + TSV_EXT
+
 PREPARE_DEFAULTS = {
-    "method": "rbf",
+    "method": ["euclidean"],
     "k": 0.1,
     "alpha": 0.5,
-    "missing": 0.1,
-    "names": None,
+    "missing": [0.1],
     "sn": 0,
     "fn": 0,
     "df": 0.1,
     "ds": 0.1,
     "logfile": None,
     "log": "INFO",
-    "plot": None
+    "plot": None,
+    "atol": 1e-2
 }
-PREPARE_ARGS = ["infiles", "vars", "outfile"] + list(PREPARE_DEFAULTS.keys())  # 3 positional args
+PREPARE_ARGS = ["infiles", "outfile"] + list(PREPARE_DEFAULTS.keys())  # 3 positional args
 
 # run
 CLUSTER_METHODS = ["max_value", "spectral"]
-SPARSITY_RANGE = [1e-04, 1e-03, 1e-02, 1e-01, 1, 1e01, 1e02]
 RUN_DEFAULTS = {
-    "sparsity": SPARSITY_RANGE,
+    "sparsity": [0.1],
     "n": 50,
     "method": "max_value",
     "max_iter": 500,
@@ -40,13 +41,28 @@ RUN_DEFAULTS = {
 }
 RUN_ARGS = ["infile", "k", "outdir"] + list(RUN_DEFAULTS.keys())  # 3 positional args
 
-# evaluate args
+# evaluate
 EVALUATE_DEFAULTS = {
     "metric": None,
     "logfile": None,
-    "npz": None
+    "log": "INFO"
 }
-EVALUATE_ARGS = ["infile", "labels"] + list(EVALUATE_DEFAULTS.keys())  # 2 positional args
+EVALUATE_ARGS = ["infile", "labels_file"] + list(EVALUATE_DEFAULTS.keys())  # 2 positional args
+
+# interpret
+INTERPRET_DEFAULTS = {
+    "logfile": None,
+    "log": "INFO",
+    "max_iter": 50,
+    "n_folds": 5,
+    "sn": 0,
+    "fn": 0,
+    "df": 0.1,
+    "ds": 0.1,
+    "t": 1,
+    "seed": 1
+}
+INTERPRET_ARGS = ['sumo_results', 'infiles', 'outfile'] + list(INTERPRET_DEFAULTS.keys())  # 3 positional args
 
 # utils
 LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING']

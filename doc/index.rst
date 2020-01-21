@@ -10,6 +10,7 @@ Welcome to sumo's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   example
    modes
    network
    utils
