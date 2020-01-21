@@ -21,7 +21,10 @@ _config = {
         "scipy",
         "matplotlib",
         "numpy",
-        "pandas"
+        "pandas",
+        "lightgbm",
+        "hyperopt",
+        "shap"
     ],
     "entry_points": {
         "console_scripts": ("sumo = sumo.run:main",),

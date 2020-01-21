@@ -1,16 +1,15 @@
 from sumo.constants import EVALUATE_DEFAULTS
 from sumo.modes.evaluate.evaluate import SumoEvaluate
-from sumo.utils import save_arrays_to_npz
 import numpy as np
+import pandas as pd
 import os
 import pytest
-import re
 
 
 def _get_args(infile: str, labels: str):
     args = EVALUATE_DEFAULTS.copy()
     args["infile"] = infile
-    args["labels"] = labels
+    args["labels_file"] = labels
     return args
 
 
@@ -19,9 +18,9 @@ def test_init(tmpdir):
     with pytest.raises(AttributeError):
         SumoEvaluate()
 
-    fname = os.path.join(tmpdir, "indata.npz")
-    labels_npy = os.path.join(tmpdir, "labels.npy")
-    args = _get_args(fname, labels_npy)
+    fname = os.path.join(tmpdir, "indata.tsv")
+    labels_file = os.path.join(tmpdir, "labels.tsv")
+    args = _get_args(fname, labels_file)
 
     # no input file
     with pytest.raises(FileNotFoundError):
@@ -29,71 +28,76 @@ def test_init(tmpdir):
 
     samples = 10
     labels = [0] * int(samples / 2) + [1] * int(samples / 2)
-    data = np.array([
-        ['sample_{}'.format(i) for i in range(samples)], labels]).T
-    save_arrays_to_npz({'clusters': data}, fname)
+    data_array = np.array([['sample_{}'.format(i) for i in range(samples)], labels]).T
+    data = pd.DataFrame(data_array, columns=['sample', 'label'])
+    data.to_csv(fname, sep="\t")
 
     # no labels file
     with pytest.raises(FileNotFoundError):
         SumoEvaluate(**args)
 
-    np.save(labels_npy, np.array(labels), allow_pickle=True)
+    data.to_csv(labels_file, sep="\t")
     SumoEvaluate(**args)
 
 
 def test_run(tmpdir):
-    fname = os.path.join(tmpdir, "indata.npz")
-    other_fname = os.path.join(tmpdir, "other.npz")
-    labels_npz = os.path.join(tmpdir, "labels.npz")
-    other_labels = os.path.join(tmpdir, "other_labels.npz")
-    args = _get_args(fname, labels_npz)
+    fname = os.path.join(tmpdir, "indata.tsv")
+    labels_file = os.path.join(tmpdir, "labels.tsv")
+    args = _get_args(fname, labels_file)
 
     samples = 10
     labels = [0] * int(samples / 2) + [1] * int(samples / 2)
-    data = np.array([
-        ['sample_{}'.format(i) for i in range(samples)], labels]).T
-    save_arrays_to_npz({'clusters': data}, fname)
+    data_array = np.array([['sample_{}'.format(i) for i in range(samples)], labels]).T
+    data = pd.DataFrame(data_array, columns=['sample', 'label'])
 
-    # .npz labels file
-    save_arrays_to_npz({'labels': data}, labels_npz)
+    data.to_csv(fname, sep="\t")
+    data.to_csv(labels_file, sep="\t")
+    se = SumoEvaluate(**args)
+    se.run()
 
-    # no npz label idx
+    # incorrect file headers
+    data.columns = ['A', 'B']
+    data.to_csv(fname, sep="\t")
     with pytest.raises(ValueError):
         se = SumoEvaluate(**args)
         se.run()
 
-    # incorrect npz label idx
+    # incorrect labels file
+    data.columns = ['sample', 'label']
+    data.to_csv(fname, sep="\t")
+    incorrect_data = data.loc[:, data.columns != 'label']
+    incorrect_data.to_csv(labels_file, sep="\t")
     with pytest.raises(ValueError):
-        args['npz'] = 'my_labels'
         se = SumoEvaluate(**args)
         se.run()
 
     # incorrect input file
-    save_arrays_to_npz({'other_data': data}, other_fname)
-    args = _get_args(other_fname, labels_npz)
-    args['npz'] = 'labels'
+    data.to_csv(labels_file, sep="\t")
+    incorrect_data.to_csv(fname, sep="\t")
     with pytest.raises(ValueError):
         se = SumoEvaluate(**args)
         se.run()
 
-    # incorrect label file
-    args = _get_args(fname, other_labels)
-    args['npz'] = 'labels'
-    save_arrays_to_npz({'labels': data[:, 1]}, other_labels)
-    with pytest.raises(ValueError):
-        se = SumoEvaluate(**args)
-        se.run()
-
-    args = _get_args(fname, labels_npz)
-    args['npz'] = 'labels'
-    logfile = os.path.join(tmpdir, "results.log")
-    args['logfile'] = logfile
+    # not all common samples
+    data.to_csv(fname, sep="\t")
+    data['sample'][0] = 'sample_new'
+    data.to_csv(labels_file, sep="\t")
     se = SumoEvaluate(**args)
     se.run()
 
-    with open(logfile, 'r') as f:
-        for line in f.readlines():
-            if re.search('ARI', line):
-                ari = float(line.split()[1])
-                assert ari == 1.0
-                break
+    # additional columns in files
+    data['importance'] = ['very'] * data.shape[0]
+    data.to_csv(labels_file, sep="\t")
+    se = SumoEvaluate(**args)
+    se.run()
+    data.to_csv(fname, sep="\t")
+    se = SumoEvaluate(**args)
+    se.run()
+
+    # labels does not correspond
+    data_array = np.array([['other_sample_{}'.format(i) for i in range(samples)], labels]).T
+    data = pd.DataFrame(data_array, columns=['sample', 'label'])
+    data.to_csv(labels_file, sep="\t")
+    with pytest.raises(ValueError):
+        se = SumoEvaluate(**args)
+        se.run()
