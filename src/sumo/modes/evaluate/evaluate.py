@@ -1,11 +1,11 @@
-from sumo.constants import EVALUATE_ARGS, CLUSTER_METRICS
+from sumo.constants import EVALUATE_ARGS, CLUSTER_METRICS, LOG_LEVELS
 from sumo.modes.mode import SumoMode
 from sumo.utils import setup_logger, check_accuracy, docstring_formatter
 import pandas as pd
 import os
 
 
-@docstring_formatter(metrics=CLUSTER_METRICS)
+@docstring_formatter(metrics=CLUSTER_METRICS, log_levels=LOG_LEVELS)
 class SumoEvaluate(SumoMode):
     """
     Sumo mode for evaluating accuracy of clustering. Constructor args are set in 'evaluate' subparser.
@@ -16,6 +16,7 @@ class SumoEvaluate(SumoMode):
         | labels (str): .tsv of the same structure as input file
         | metric (str): one of metrics ({metrics}) for accuracy evaluation, if set to None all metrics are calculated
         | logfile (str): path to save log file, if set to None stdout is used
+        | log (str): sets the logging level from {log_levels}
 
     """
 

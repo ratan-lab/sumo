@@ -208,6 +208,8 @@ Evaluate clustering results, given set of labels.
                             metric for accuracy evaluation (by default all metrics
                             are calculated)
       -logfile LOGFILE      path to save log file (by default printed to stdout)
+      -log {DEBUG,INFO,WARNING}
+                        sets the logging level (default of INFO)
 
 **Example**
 
@@ -241,6 +243,8 @@ Find features that drive clusters separation.
     optional arguments:
       -h, --help           show this help message and exit
       -logfile LOGFILE     path to save log file (by default printed to stdout)
+      -log {DEBUG,INFO,WARNING}
+                            sets the logging level (default of INFO)
       -max_iter MAX_ITER   maximum number of iterations, while searching through
                            hyperparameter space
       -n_folds N_FOLDS     number of folds for model cross validation (default of

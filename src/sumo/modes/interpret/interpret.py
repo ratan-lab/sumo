@@ -1,4 +1,4 @@
-from sumo.constants import INTERPRET_ARGS, SUPPORTED_EXT
+from sumo.constants import INTERPRET_ARGS, SUPPORTED_EXT, LOG_LEVELS
 from sumo.modes.mode import SumoMode
 from sumo.utils import setup_logger, load_npz, load_data_text, docstring_formatter
 import os
@@ -12,7 +12,7 @@ from hyperopt import STATUS_OK, hp, fmin, tpe, Trials
 import shap
 
 
-@docstring_formatter(supported=SUPPORTED_EXT)
+@docstring_formatter(supported=SUPPORTED_EXT, log_levels=LOG_LEVELS)
 class SumoInterpret(SumoMode):
     """
     Sumo mode for interpreting clustering results. Constructor args are set in 'interpret' subparser.
@@ -33,6 +33,7 @@ class SumoInterpret(SumoMode):
         | ds (float): if percentage of missing values for sample (that remains after feature dropping) exceeds \
             this value, remove sample
         | logfile (str): path to save log file, if set to None stdout is used
+        | log (str): sets the logging level from {log_levels}
 
     """
 
@@ -159,6 +160,10 @@ class SumoInterpret(SumoMode):
             params['verbose'] = -1
             for p in ['num_leaves', 'subsample_for_bin', 'min_child_samples']:
                 params[p] = int(params[p])
+
+            params['histagram_pool_size'] = 1024
+            # NOTE: Above parameter is introduced to reduce memory consumption
+            self.logger.debug("Parameters: {}".format(params))
 
             start = timer()
             train_set = Dataset(x_train, label=y_train)

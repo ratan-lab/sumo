@@ -152,7 +152,7 @@ class SumoPrepare(SumoMode):
                                      "Please, supply either binary dataset " +
                                      "(0 or 1 feature values) or continuous values standardized feature-wise. " +
                                      "Alternatively for almost standardized continuous data, " +
-                                     "increase '-atol' parameter value.")
+                                     "increase '-atol' parameter value (currently {}).".format(self.atol))
                 else:
                     self.logger.debug("Data is correctly standardized")
             else:
