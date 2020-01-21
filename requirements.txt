@@ -4,12 +4,3 @@
 ##
 PyYAML>=3.11
 wheel
-seaborn
-scikit-learn
-scipy
-matplotlib
-numpy
-pandas
-lightgbm
-hyperopt
-shap
