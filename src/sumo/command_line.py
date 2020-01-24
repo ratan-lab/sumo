@@ -155,7 +155,7 @@ def add_evaluate_command_options(subparsers):
     evaluate_parser = subparsers.add_parser('evaluate', description=description,
                                             help='evaluate or compare clustering results')
 
-    evaluate_parser.add_argument('infile', metavar='infile.npz', type=str,
+    evaluate_parser.add_argument('infile', metavar='infile.tsv', type=str,
                                  help="input .tsv file containing sample names in 'sample' and clustering labels" +
                                       " in 'label' column (clusters.tsv file created by running sumo with mode 'run')")
 

@@ -176,10 +176,10 @@ Evaluate clustering results, given set of labels.
 ::
 
     usage: sumo evaluate [-h] [-metric {NMI,purity,ARI}] [-logfile LOGFILE]
-                         infile.npz labels
+                         infile.tsv labels
 
     positional arguments:
-      infile.npz            input .tsv file containing sample names in 'sample'
+      infile.tsv            input .tsv file containing sample names in 'sample'
                             and clustering labels in 'label' column (clusters.tsv
                             file created by running sumo with mode 'run')
       labels                .tsv of the same structure as input file
