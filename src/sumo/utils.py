@@ -140,11 +140,17 @@ def plot_line(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: str
     """ Create line plot from vectors of x and y values """
     fig = plt.figure()
 
-    plt.xticks(x)
-    plt.plot(x, y)
+    # remove missing values
+    indices = ~np.isnan(y)
+    y = np.array(y)[indices]
+    org_x = x
+    x = np.array(x)[indices]
+
+    plt.plot(x, y, marker='o')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
+    plt.xticks(org_x)
 
     if not file_path:
         plt.show()

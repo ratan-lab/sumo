@@ -278,7 +278,12 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
 
     # calculate cophenetic correlation coefficient
     dist = pdist(org_con, metric="correlation")
-    ccc = cophenet(linkage(dist, method="complete", metric="correlation"), dist)[0]
+    if np.any(np.isnan(dist)):
+        ccc = np.nan
+        sumo_run.logger.warning("Cannot calculate cophenetic correlation coefficient! Please inspect values in " +
+                                "your consensus matrix.")
+    else:
+        ccc = cophenet(linkage(dist, method="complete", metric="correlation"), dist)[0]
 
     # calculate proportion of ambiguous clustering
     den = (sumo_run.graph.nodes ** 2) - sumo_run.graph.nodes
