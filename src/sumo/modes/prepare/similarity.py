@@ -46,9 +46,51 @@ def correlation(a: np.ndarray, b: np.ndarray, missing: float, method="pearson"):
         return np.nan
 
 
+def filter_noisy_data(a: np.ndarray, n: float):
+    """ Perform additional filtering on adjacency matrices by setting 0 for every adjacency between
+    samples that aren't nearest neighbours
+
+    Args:
+        a (Numpy.ndarray): symmetric adjacency matrix (n x n)
+        n (float): fraction of nearest neighbours of sample
+
+    Returns:
+        a (Numpy.ndarray): symmetric adjacency matrix (n x n) with filtered out noise
+
+    """
+    if n <= 0 or n >= 1:
+        raise ValueError('Incorrect set fraction of nearest neighbours')
+
+    # find number of nearest neighbours
+    samples = np.array([i for i in range(a.shape[0]) if not np.all(np.isnan(a[i, :]))])
+    k = int(round(samples.shape[0] * n, 0))
+
+    # remove missing samples
+    avail_a = a[samples[:, None], samples]
+
+    # create mask for relationship of being somebody neighbour
+    mask = np.zeros((avail_a.shape[0], avail_a.shape[1]), dtype=bool)
+    np.fill_diagonal(mask, True)
+
+    for i in range(samples.shape[0]):
+        threshold = np.nanmin(np.sort(avail_a[:, i])[::-1][:k + 1])  # ties are treated as equal
+        tmp = np.zeros((avail_a.shape[0], avail_a.shape[0]), dtype=bool)
+        tmp[:, i][avail_a[:, i] < threshold] = True
+        tmp[i, :] = tmp[:, i]
+        mask = mask | tmp
+
+    # set other values to 0
+    avail_a[~mask] = 0.
+
+    # put missing samples back in
+    a[samples[:, None], samples] = avail_a
+    return a
+
+
 @docstring_formatter(missing=PREPARE_DEFAULTS['missing'][0], sim_methods=SIMILARITY_METHODS)
 def feature_to_adjacency(f: np.ndarray, missing: float = PREPARE_DEFAULTS['missing'][0],
-                         method: str = PREPARE_DEFAULTS['method'][0], n: float = None, alpha: float = None):
+                         method: str = PREPARE_DEFAULTS['method'][0], n: float = None, alpha: float = None,
+                         filter_noise: bool = False):
     """ Generate similarity matrix from genomic assay
 
     Args:
@@ -56,8 +98,10 @@ def feature_to_adjacency(f: np.ndarray, missing: float = PREPARE_DEFAULTS['missi
         missing (float): acceptable fraction of values for assessment of distance/similarity between two samples \
             (default of {missing}, means that up to 90 % of missing values is acceptable)
         method (str): similarity method selected from: {sim_methods}
-        n (float): parameter of euclidean similarity method, fraction of nearest neighbours of sample
+        n (float): fraction of nearest neighbours of sample
         alpha (float): parameter of euclidean similarity method, RBF kernel hyperparameter
+        filter_noise (bool): perform additional filtering on adjacency matrices by setting 0 for every adjacency \
+            between samples that aren't nearest neighbours
 
     Returns:
         sim (Numpy.ndarray): symmetric matrix describing similarity between samples (n x n)
@@ -89,6 +133,11 @@ def feature_to_adjacency(f: np.ndarray, missing: float = PREPARE_DEFAULTS['missi
         # remove negative values
         vals[vals < 0] = 0
         sim[~np.isnan(sim)] = vals
+
+    if filter_noise:
+        if n is None:
+            raise ValueError("Additional noise filtering selected, but '-k' is not supplied")
+        sim = filter_noisy_data(sim, n=n)
 
     return sim
 
@@ -155,6 +204,6 @@ def feature_rbf_similarity(f: np.ndarray, missing: float = PREPARE_DEFAULTS['mis
             else:
                 sample_w[i, j] = 1.
 
-            w[samples[:, None], samples] = sample_w  # put missing samples back in
+    w[samples[:, None], samples] = sample_w  # put missing samples back in
 
     return w

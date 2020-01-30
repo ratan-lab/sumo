@@ -80,8 +80,8 @@ Generates similarity matrices for samples based on biological data and saves the
 
     usage: sumo prepare [-h] [-method METHOD] [-k K] [-alpha ALPHA]
                         [-missing MISSING] [-atol ATOL] [-sn SN] [-fn FN] [-df DF]
-                        [-ds DS] [-logfile LOGFILE] [-log {DEBUG,INFO,WARNING}]
-                        [-plot PLOT]
+                        [-ds DS] [--noisy] [-logfile LOGFILE]
+                        [-log {DEBUG,INFO,WARNING}] [-plot PLOT]
                         infile1,infile2,... outfile.npz
 
     positional arguments:
@@ -101,7 +101,8 @@ Generates similarity matrices for samples based on biological data and saves the
                             euclidean)
       -k K                  fraction of nearest neighbours to use for sample
                             similarity calculation using Euclidean distance
-                            similarity (default of 0.1)
+                            similarity and additional noise filtering (default of
+                            0.1)
       -alpha ALPHA          hypherparameter of RBF similarity kernel, for
                             Euclidean distance similarity (default of 0.5)
       -missing MISSING      acceptable fraction of available values for assessment
@@ -122,11 +123,15 @@ Generates similarity matrices for samples based on biological data and saves the
       -ds DS                if percentage of missing values for sample (that
                             remains after feature dropping) exceeds this value,
                             remove sample (default of 0.1)
+      --noisy               Perform additional filtering on adjacency matrices by
+                            setting 0 for every adjacency between samples that
+                            aren't nearest neighbours (use this option when
+                            working with extremely noisy data)
       -logfile LOGFILE      path to save log file, by default stdout is used
       -log {DEBUG,INFO,WARNING}
                             sets the logging level (default of INFO)
       -plot PLOT            path to save adjacency matrix heatmap(s), by default
-                            plots are displayed on screen
+                            plots are displayed on screen`
 
 **Example**
 
