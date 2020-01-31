@@ -20,7 +20,7 @@ class SumoPrepare(SumoMode):
         | outfile (str): path to output .npz file
         | method (list): comma-separated list of methods for every layer (available methods: {sim_methods})
         | k (float): fraction of nearest neighbours to use for sample similarity calculation using Euclidean distance \
-            similarity and additional noise filtering
+            similarity
         | alpha (float): hypherparameter of RBF similarity kernel, for Euclidean distance similarity
         | missing (list): acceptable fraction of available (not missing) values for assessment of distance/similarity \
             between pairs of samples, either one value or different values for every layer
@@ -32,8 +32,6 @@ class SumoPrepare(SumoMode):
         | df (float): if percentage of missing values for feature exceeds this value, remove feature
         | ds (float): if percentage of missing values for sample (that remains after feature dropping) exceeds \
             this value, remove sample
-        | noisy (bool): perform additional filtering on adjacency matrices by setting 0 for every adjacency between \
-            samples that aren't nearest neighbours
         | logfile (str): path to save log file, if set to None stdout is used
         | log (str): sets the logging level from {log_levels}
         | plot (str): path to save adjacency matrix heatmap(s), if set None plots are displayed on screen
@@ -164,8 +162,7 @@ class SumoPrepare(SumoMode):
                                      "Suggested better measure: cosine similarity.")
 
             # create adjacency matrix
-            a = feature_to_adjacency(f, missing=self.missing[i], method=self.method[i], n=self.k, alpha=self.alpha,
-                                     filter_noise=self.noisy)
+            a = feature_to_adjacency(f, missing=self.missing[i], method=self.method[i], n=self.k, alpha=self.alpha)
             self.logger.info('Adjacency matrix {} created [similarity method: {}]'.format(a.shape, self.method[i]))
 
             # plot adjacency matrix

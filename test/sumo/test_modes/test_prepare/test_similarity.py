@@ -96,16 +96,3 @@ def test_feature_to_adjacency():
         assert check_matrix_symmetry(a)
         assert np.allclose(np.diag(a), 1)
         assert np.all(a >= 0)
-
-
-def test_filter_noisy_data():
-    a = np.random.random((20, 20))
-    a = (a + a.T) * 0.5
-    np.fill_diagonal(a, 1)
-
-    args = {'a': a, 'n': 1}
-    with pytest.raises(ValueError):
-        similarity.filter_noisy_data(**args)
-
-    args['n'] = 0.1
-    similarity.filter_noisy_data(**args)

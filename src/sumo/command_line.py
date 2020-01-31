@@ -30,8 +30,7 @@ def add_prepare_command_options(subparsers):
     prepare_parser.add_argument('-k', action='store',
                                 type=float, required=False, default=PREPARE_DEFAULTS["k"],
                                 help='fraction of nearest neighbours to use for sample similarity calculation using ' +
-                                     'Euclidean distance similarity and additional noise filtering ' +
-                                     '(default of %(default)s)')
+                                     'Euclidean distance similarity (default of %(default)s)')
 
     prepare_parser.add_argument('-alpha', action='store',
                                 type=float, required=False, default=PREPARE_DEFAULTS["alpha"],
@@ -70,11 +69,6 @@ def add_prepare_command_options(subparsers):
                                 type=float, required=False, default=PREPARE_DEFAULTS["ds"],
                                 help='if percentage of missing values for sample (that remains after feature ' +
                                      'dropping) exceeds this value, remove sample (default of %(default)s)')
-
-    prepare_parser.add_argument('--noisy', action='store_true', required=False,
-                                help="Perform additional filtering on adjacency matrices by setting 0 for every " +
-                                     "adjacency between samples that aren't nearest neighbours (use this option " +
-                                     "when working with extremely noisy data)")
 
     prepare_parser.add_argument('-logfile', action='store',
                                 type=str, required=False, default=PREPARE_DEFAULTS["logfile"],

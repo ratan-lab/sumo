@@ -95,11 +95,6 @@ def test_run(tmpdir):
     sp = SumoPrepare(**args)
     sp.run()
 
-    args['method'] = ['euclidean']
-    args['noisy'] = True
-    sp = SumoPrepare(**args)
-    sp.run()
-
     assert os.path.exists(fname_outfile)
     assert os.path.exists(logfile)
 
