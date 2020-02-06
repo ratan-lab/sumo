@@ -22,6 +22,8 @@ sumo: subtyping tool for multi-omic data
 
 .. inclusion-start-marker-do-not-remove
 
+.. long-description-start-marker-do-not-remove
+
 .. short-description-start-marker-do-not-remove
 
 **sumo** is a command-line tool to identify molecular subtypes in multi-omics datasets. It implements a novel nonnegative matrix factorization (NMF) algorithm to identify groups of samples that share molecular signatures, and provides tools to evaluate such assignments.
@@ -30,30 +32,11 @@ sumo: subtyping tool for multi-omic data
 
 Installation
 ------------
-You can install **sumo** from PyPI, by executing command below. Please note that we require python 3.6+.
+You can install **sumo** from PyPI, by executing command below. Please note that we require **python 3.6+**.
 
 .. code:: sh
 
     pip install python-sumo
-
-Dependencies
-------------
-
--  python 3.6+
--  python libraries:
-
-   -  `NumPy <https://www.numpy.org>`__
-   -  `pandas <https://pandas.pydata.org>`__
-   -  `SciPy <https://www.scipy.org>`__
-   -  `scikit-learn <https://scikit-learn.org>`__
-   -  `Matplotlib <https://matplotlib.org>`__
-   -  `Seaborn <https://seaborn.pydata.org>`__
-
-Optional requirements
-^^^^^^^^^^^^^^^^^^^^^
-
--  `pytest <http://pytest.org>`__ (for running the test suite)
--  `Sphinx <http://sphinx-doc.org>`__ (for generating documentation)
 
 Documentation
 -------------
@@ -63,7 +46,6 @@ License
 -------
 
 `MIT <LICENSE>`__
-
 
 Usage
 -----
@@ -80,8 +62,8 @@ Generates similarity matrices for samples based on biological data and saves the
 
     usage: sumo prepare [-h] [-method METHOD] [-k K] [-alpha ALPHA]
                         [-missing MISSING] [-atol ATOL] [-sn SN] [-fn FN] [-df DF]
-                        [-ds DS] [-logfile LOGFILE]
-                        [-log {DEBUG,INFO,WARNING}] [-plot PLOT]
+                        [-ds DS] [-logfile LOGFILE] [-log {DEBUG,INFO,WARNING}]
+                        [-plot PLOT]
                         infile1,infile2,... outfile.npz
 
     positional arguments:
@@ -126,7 +108,7 @@ Generates similarity matrices for samples based on biological data and saves the
       -log {DEBUG,INFO,WARNING}
                             sets the logging level (default of INFO)
       -plot PLOT            path to save adjacency matrix heatmap(s), by default
-                            plots are displayed on screen`
+                            plots are displayed on screen
 
 **Example**
 
@@ -194,10 +176,10 @@ Evaluate clustering results, given set of labels.
 ::
 
     usage: sumo evaluate [-h] [-metric {NMI,purity,ARI}] [-logfile LOGFILE]
-                         infile.npz labels
+                         infile.tsv labels
 
     positional arguments:
-      infile.npz            input .tsv file containing sample names in 'sample'
+      infile.tsv            input .tsv file containing sample names in 'sample'
                             and clustering labels in 'label' column (clusters.tsv
                             file created by running sumo with mode 'run')
       labels                .tsv of the same structure as input file
@@ -270,3 +252,5 @@ Find features that drive clusters separation.
 .. inclusion-end-marker-do-not-remove
 
 Please refer to documentation for `example usage cases and suggestions for data preprocessing <https://python-sumo.readthedocs.io/en/latest/example.html>`_.
+
+.. long-description-end-marker-do-not-remove

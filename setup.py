@@ -59,11 +59,6 @@ def main() -> int:
         """ Get the local package version. """
         return re.search('^__version__\s*=\s*"(.*)"', open('src/sumo/constants.py').read(), re.M).group(1)
 
-    def long_description():
-        with open("README.rst", "r") as f:
-            d = f.read()
-        return d
-
     def description():
         with open("README.rst", "r") as f:
             d = f.read()
@@ -72,6 +67,13 @@ def main() -> int:
         x = x.replace('.. ', '')
         x = x.replace('\n\n', '')
         x = x.replace('\n', ' ')
+        return x
+
+    def long_description():
+        with open("README.rst", "r") as f:
+            d = f.read()
+        pattern = r'long-description-start-marker-do-not-remove(.*?)long-description-end-marker-do-not-remove'
+        x = re.findall(pattern, d, re.DOTALL)[0]
         return x
 
     _config.update({
