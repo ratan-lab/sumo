@@ -2,8 +2,13 @@
 
 History
 =======
-0.2.1 & 0.2.2 (2020-01-21)
+
+0.2.3 (????-??-??)
 ------------------
+* Implemented additional filtering in *prepare* for very noisy data.
+
+0.2.1 & 0.2.2 (2020-01-21)
+--------------------------
 * Adressed PyPI issues with long description.
 
 0.2.0 (2020-01-21)
