@@ -134,7 +134,7 @@ def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray = None, title: str = 
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
         fig = p.get_figure()
         fig.savefig(file_path)
-
+        plt.close()
 
 def plot_line(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: str = None):
     """ Create line plot from vectors of x and y values """

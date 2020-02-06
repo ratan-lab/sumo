@@ -290,6 +290,11 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     num = org_con[(org_con > 0.1) & (org_con < 0.9)].size
     pac = num * (1. / den)
 
+    # calculate proportion of ambiguous clustering
+    den = (sumo_run.graph.nodes ** 2) - sumo_run.graph.nodes
+    num = org_con[(org_con > 0.1) & (org_con < 0.9)].size
+    pac = num * (1. / den)
+
     eta_logger.info("#Extracting final clustering result, using normalized cut")
     consensus_labels = extract_ncut(consensus, k=k)
 

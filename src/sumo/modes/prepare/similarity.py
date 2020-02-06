@@ -56,7 +56,7 @@ def feature_to_adjacency(f: np.ndarray, missing: float = PREPARE_DEFAULTS['missi
         missing (float): acceptable fraction of values for assessment of distance/similarity between two samples \
             (default of {missing}, means that up to 90 % of missing values is acceptable)
         method (str): similarity method selected from: {sim_methods}
-        n (float): fraction of nearest neighbours of sample
+        n (float): parameter of euclidean similarity method, fraction of nearest neighbours of sample
         alpha (float): parameter of euclidean similarity method, RBF kernel hyperparameter
 
     Returns:
