@@ -2,8 +2,13 @@
 
 History
 =======
-0.2.1 & 0.2.2 (2020-01-21)
+0.2.3 (????-??-??)
 ------------------
+* Handle NaN values of cophenetic correlation coefficient.
+* Update vignette.
+
+0.2.1 & 0.2.2 (2020-01-21)
+--------------------------
 * Adressed PyPI issues with long description.
 
 0.2.0 (2020-01-21)

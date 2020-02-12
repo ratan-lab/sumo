@@ -49,7 +49,7 @@ Here is code in python that we can use to perform the preprocessing for the RNA-
         scaled_fpkm = pd.DataFrame(scaled_fpkm, index=list(fpkm.index), columns=list(fpkm.columns))
     
         # write the file
-        scaled_fpkm.to_csv(outputfile, sep='\t', index=True)
+        scaled_fpkm.to_csv(outputfile, sep='\t', index=True, na_rep="NA")
         print("Wrote %s" % outputfile)
         
     preprocess_logfpkm("TCGA-LAML.htseq_fpkm.tsv.gz", "TCGA-LAML.htseq_fpkm.flt.tsv.gz")
@@ -72,7 +72,8 @@ Here is the python code to perform preprocessing of the methylation dataset.
     
     # convert each beta value to the corresponding M values
     def convert(B):
-        return(np.log2(B/(1. - B)))
+        eps = np.spacing(1)
+        return(np.log2((B + eps)/(1. - B + eps)))
         
     M = beta.applymap(convert)
     print("Converted to M values")
@@ -83,7 +84,7 @@ Here is the python code to perform preprocessing of the methylation dataset.
     scaled_M = pd.DataFrame(scaled_M, index=list(M.index), columns=list(M.columns))
     print("Standardization complete")
     
-    scaled_M.to_csv("TCGA-LAML.methylation27.flt.tsv.gz", sep='\t', index=True)
+    scaled_M.to_csv("TCGA-LAML.methylation27.flt.tsv.gz", sep='\t', index=True, na_rep="NA")
 
 
 ============
