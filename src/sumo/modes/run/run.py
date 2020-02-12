@@ -5,11 +5,11 @@ from sumo.modes.mode import SumoMode
 from sumo.modes.run.solver import SumoNMF
 from sumo.network import MultiplexNet
 from sumo.utils import extract_ncut, load_npz, save_arrays_to_npz, setup_logger, docstring_formatter, \
-    plot_heatmap_seaborn, plot_line
-import matplotlib.pyplot as plt
+    plot_heatmap_seaborn, plot_line, close_logger
 import multiprocessing as mp
 import numpy as np
 import os
+import shutil
 
 _sumo_run = None
 
@@ -71,10 +71,12 @@ class SumoRun(SumoMode):
         if os.path.exists(self.outdir):
             if not os.path.isdir(self.outdir):
                 raise NotADirectoryError("{} already exists and is not a directory!".format(self.outdir))
-            self.logger.warning("Directory '{}' already exist, some files may be overwritten.".format(self.outdir))
+            self.logger.warning("Directory '{}' already exist and will be overwritten.".format(self.outdir))
+            shutil.rmtree(self.outdir)
+
         else:
-            os.mkdir(self.outdir)
-            self.logger.info("Directory '{}' created".format(self.outdir))
+            self.logger.info("Creating directory '{}'".format(self.outdir))
+        os.mkdir(self.outdir)
 
         if len(self.k) > 2 or (len(self.k) == 2 and self.k[0] > self.k[1]):
             raise ValueError("Incorrect range of k values")
@@ -155,7 +157,7 @@ class SumoRun(SumoMode):
 
             quality_output = []
             for (result, sparsity) in zip(results, sparsity_order):
-                self.logger.info("Clustering quality (eta={}): {}".format(sparsity, result[0]))
+                self.logger.info("#Clustering quality (eta={}): {}".format(sparsity, result[0]))
                 quality_output.append(np.array([sparsity, result[0]]))
                 if result[1] == best_result[1]:
                     best_eta = sparsity
@@ -187,7 +189,7 @@ class SumoRun(SumoMode):
             os.chdir(workdir)
             assert os.getcwd() == workdir
 
-            self.logger.info("#Results (k = {}) saved to {}".format(k, summary_outfile))
+            self.logger.info("Results (k = {}) saved to {}".format(k, summary_outfile))
 
             plot_heatmap_seaborn(out_arrays['consensus'], labels=np.arange(self.graph.nodes),
                                  title="Consensus matrix (K = {})".format(k),
@@ -331,5 +333,6 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     save_arrays_to_npz(data=out_arrays,
                        file_path=outfile)  # TODO: add detailed output files description in documentation
     eta_logger.info("#Output file {} created".format(outfile))
+    close_logger(eta_logger)
 
     return quality, outfile
