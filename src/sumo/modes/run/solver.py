@@ -128,7 +128,12 @@ class SumoNMFResults:
             raise ValueError(
                 'Incorrect method of cluster extraction - supported methods: {}'.format(CLUSTER_METHODS))
         elif method == "max_value":
-            self.labels = extract_max_value(self.h)
+            # normalize H column-wise
+            means = np.mean(self.h, axis=0)
+            sds = np.std(self.h, axis=0)
+            h = (self.h - means) / sds
+            self.labels = extract_max_value(h)
+
             if np.unique(self.labels).size != self.h.shape[1]:
                 self.logger.info('Number of clusters extracted from H matrix is different then expected (k)!')
         else:

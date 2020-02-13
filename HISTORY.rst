@@ -2,10 +2,14 @@
 
 History
 =======
-
 0.2.3 (????-??-??)
 ------------------
-* Implemented additional filtering in *prepare* for very noisy data.
+* Handle NaN values of cophenetic correlation coefficient.
+* Update vignette.
+* Fix issue resulting in not closing log files in *run*.
+* If output directory of *run* already exists, remove it instead of overwriting.
+
+.. * Implemented additional filtering in *prepare* for very noisy data.
 
 0.2.1 & 0.2.2 (2020-01-21)
 --------------------------

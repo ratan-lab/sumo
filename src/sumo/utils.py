@@ -41,6 +41,14 @@ def setup_logger(logger_name, level="INFO", log_file: str = None):
     return logger
 
 
+def close_logger(logger):
+    """ Remove all handlers of logger """
+    for x in list(logger.handlers):
+        logger.removeHandler(x)
+        x.flush()
+        x.close()
+
+
 def get_logger(logger_name: str = None):
     return logging.getLogger(logger_name if logger_name else 'main')
 
@@ -135,6 +143,7 @@ def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray = None, title: str = 
         fig = p.get_figure()
         fig.savefig(file_path)
         plt.close()
+
 
 def plot_line(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: str = None):
     """ Create line plot from vectors of x and y values """
