@@ -177,7 +177,7 @@ def add_evaluate_command_options(subparsers):
 def add_interpret_command_options(subparsers):
     """ Add subparser for 'interpret' command """
 
-    description = "Find features that drive clusters separation"
+    description = "Find features that support clusters separation"
     interpret_parser = subparsers.add_parser('interpret', description=description,
                                              help='interpret clustering results')
 

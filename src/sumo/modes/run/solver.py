@@ -102,7 +102,7 @@ class SumoNMFResults:
     """
 
     def __init__(self, graph: MultiplexNet, h: np.ndarray, s: list, objval: np.ndarray, steps: int,
-                 sparsity_penalty: float, k: int):
+                 sparsity_penalty: float, k: int, logger):
         self.graph = graph
         self.h = h
         self.s = s
@@ -114,6 +114,7 @@ class SumoNMFResults:
         self.labels = None  # cluster labels for every node
         self.connectivity = None  # samples x samples with 1 if pair of samples is in the same cluster, 0 otherwise
         self.RE = np.sum(self.delta_cost[-1, :self.graph.layers])  # residual error
+        self.logger = logger
 
     def extract_clusters(self, method: str):
         """ Extract cluster labels using selected method
@@ -127,7 +128,14 @@ class SumoNMFResults:
             raise ValueError(
                 'Incorrect method of cluster extraction - supported methods: {}'.format(CLUSTER_METHODS))
         elif method == "max_value":
-            self.labels = extract_max_value(self.h)
+            # normalize H column-wise
+            means = np.mean(self.h, axis=0)
+            sds = np.std(self.h, axis=0)
+            h = (self.h - means) / sds
+            self.labels = extract_max_value(h)
+
+            if np.unique(self.labels).size != self.h.shape[1]:
+                self.logger.info('Number of clusters extracted from H matrix is different then expected (k)!')
         else:
             self.labels = extract_spectral(self.h)
 
@@ -170,6 +178,8 @@ class SumoNMF:
         # layer impact balancing parameters
         self.lambdas = [(1. / samples.shape[0]) ** 2 for samples in self.graph.samples]
 
+        self.logger = get_logger()
+
     def factorize(self, sparsity_penalty: float, k: int, max_iter: int = 500, tol: float = 1e-5, calc_cost: int = 1,
                   h_init: int = None, logger_name: str = None):
         """ Run tri-factorization
@@ -189,7 +199,7 @@ class SumoNMF:
             h (Numpy.ndarray): result feature matrix / soft cluster indicator matrix
             s: list of result S matrices for each graph layer
         """
-        logger = get_logger(logger_name)
+        self.logger = get_logger(logger_name)
 
         eps = np.spacing(1)  # epsilon
 
@@ -253,14 +263,14 @@ class SumoNMF:
                     best_result = (step, h.copy(), s.copy())
 
                 if step == 0:
-                    logger.info("Initial ℒ/Δℒ: {}\t[{} + {}]".format(round(objval[step_recorded, -1], 6),
-                                                                     round(np.sum(objval[step_recorded, :-2]), 6),
-                                                                     round(objval[step_recorded, -2], 6)))
+                    self.logger.info("Initial ℒ/Δℒ: {}\t[{} + {}]".format(round(objval[step_recorded, -1], 6),
+                                                                          round(np.sum(objval[step_recorded, :-2]), 6),
+                                                                          round(objval[step_recorded, -2], 6)))
                 else:
                     # objective function value decreases
-                    logger.info("Step({}),\t ℒ: {}\t[{} + {}]".format(step, round(objval[step_recorded, -1], 6),
-                                                                      round(np.sum(objval[step_recorded, :-2]), 6),
-                                                                      round(objval[step_recorded, -2], 6)))
+                    self.logger.info("Step({}),\t ℒ: {}\t[{} + {}]".format(step, round(objval[step_recorded, -1], 6),
+                                                                           round(np.sum(objval[step_recorded, :-2]), 6),
+                                                                           round(objval[step_recorded, -2], 6)))
                 before_val = after_val
                 step_recorded += 1
 
@@ -268,20 +278,20 @@ class SumoNMF:
 
         if stop < tol:
             # stop condition was achieved
-            logger.info("Stop condition for iterations achieved (|Δℒ| < |{}|).".format(tol))
+            self.logger.info("Stop condition for iterations achieved (|Δℒ| < |{}|).".format(tol))
         else:
             # maximum iterations was reached
-            logger.info("Maximum iterations ({}) reached".format(max_iter))
+            self.logger.info("Maximum iterations ({}) reached".format(max_iter))
 
         objval = objval[:step_recorded, :]
         np.set_printoptions(threshold=np.inf)
-        logger.info("#Best achieved results:")
+        self.logger.info("#Best achieved results:")
 
         for i in range(len(best_result[2])):
-            logger.debug("- Final S({}):\n{}".format(i, best_result[2][i]))
-        logger.debug("- Final H:\n{}".format(best_result[1]))
-        logger.info("- Final ℒ: {} ({}) [step: {}]".format(round(objval[-1, -1], 6),
-                                                           round(np.sum(objval[-1, :-2]), 6),
-                                                           best_result[0]))
+            self.logger.debug("- Final S({}):\n{}".format(i, best_result[2][i]))
+        self.logger.debug("- Final H:\n{}".format(best_result[1]))
+        self.logger.info("- Final ℒ: {} ({}) [step: {}]".format(round(objval[-1, -1], 6),
+                                                                round(np.sum(objval[-1, :-2]), 6),
+                                                                best_result[0]))
 
-        return SumoNMFResults(self.graph, h, s, objval, step, sparsity_penalty, k)
+        return SumoNMFResults(self.graph, h, s, objval, step, sparsity_penalty, k, self.logger)

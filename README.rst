@@ -201,7 +201,7 @@ Evaluate clustering results, given set of labels.
 
 interpret
 ^^^^^^^^^
-Find features that drive clusters separation.
+Find features that support clusters separation.
 
 ::
 

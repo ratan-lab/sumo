@@ -28,29 +28,22 @@ Here is code in python that we can use to perform the preprocessing for the RNA-
     
     def preprocess_logfpkm(inputfile, outputfile):
         """Filter the input log2(fpkm+1) values and write the output"""
+
         # read the log2(fpkm+1) values
-        fpkm = pd.read_csv(inputfile, sep='\t', header=0, index_col=0)
+        norm_fpkm = pd.read_csv(inputfile, sep='\t', header=0, index_col=0)
         print("Read %s" % inputfile)
     
-        # convert to fpkm
-        fpkm = np.power(2, fpkm) - 1
-    
-        # remove genes where the FPKM rowsum is less than or equal to 1
-        fpkm = fpkm[fpkm.sum(axis=1, skipna=True) > 1]
-        fpkm = fpkm + 1
-    
-        # convert back to log2 space 
-        fpkm = fpkm.apply(np.log2)
-        
-        # standardize the fpkm matrix
+        # remove genes where less then two samples have FPKM higher then zero
+        norm_fpkm = norm_fpkm[np.sum(norm_fpkm > 1, axis=1) > 1]
+
+        # standardize the norm_fpkm matrix
         scaler = preprocessing.StandardScaler()
-        scaled_fpkm = scaler.fit_transform(fpkm.T)
+        scaled_fpkm = scaler.fit_transform(norm_fpkm.T)
         scaled_fpkm = scaled_fpkm.T
-        scaled_fpkm = pd.DataFrame(scaled_fpkm, index=list(fpkm.index), columns=list(fpkm.columns))
-    
-        # write the file
-        scaled_fpkm.to_csv(outputfile, sep='\t', index=True)
-        print("Wrote %s" % outputfile)
+        scaled_fpkm = pd.DataFrame(scaled_fpkm, index=list(norm_fpkm.index), columns=list(norm_fpkm.columns))
+            # write the file
+            scaled_fpkm.to_csv(outputfile, sep='\t', index=True, na_rep="NA")
+            print("Wrote %s" % outputfile)
         
     preprocess_logfpkm("TCGA-LAML.htseq_fpkm.tsv.gz", "TCGA-LAML.htseq_fpkm.flt.tsv.gz")
     preprocess_logfpkm("TCGA-LAML.mirna.tsv.gz", "TCGA-LAML.mirna.flt.tsv.gz")
@@ -72,7 +65,8 @@ Here is the python code to perform preprocessing of the methylation dataset.
     
     # convert each beta value to the corresponding M values
     def convert(B):
-        return(np.log2(B/(1. - B)))
+        eps = np.spacing(1)
+        return(np.log2((B + eps)/(1. - B + eps)))
         
     M = beta.applymap(convert)
     print("Converted to M values")
@@ -83,7 +77,7 @@ Here is the python code to perform preprocessing of the methylation dataset.
     scaled_M = pd.DataFrame(scaled_M, index=list(M.index), columns=list(M.columns))
     print("Standardization complete")
     
-    scaled_M.to_csv("TCGA-LAML.methylation27.flt.tsv.gz", sep='\t', index=True)
+    scaled_M.to_csv("TCGA-LAML.methylation27.flt.tsv.gz", sep='\t', index=True, na_rep="NA")
 
 
 ============

@@ -41,6 +41,14 @@ def setup_logger(logger_name, level="INFO", log_file: str = None):
     return logger
 
 
+def close_logger(logger):
+    """ Remove all handlers of logger """
+    for x in list(logger.handlers):
+        logger.removeHandler(x)
+        x.flush()
+        x.close()
+
+
 def get_logger(logger_name: str = None):
     return logging.getLogger(logger_name if logger_name else 'main')
 
@@ -134,17 +142,24 @@ def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray = None, title: str = 
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
         fig = p.get_figure()
         fig.savefig(file_path)
+        plt.close()
 
 
 def plot_line(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: str = None):
     """ Create line plot from vectors of x and y values """
     fig = plt.figure()
 
-    plt.xticks(x)
-    plt.plot(x, y)
+    # remove missing values
+    indices = ~np.isnan(y)
+    y = np.array(y)[indices]
+    org_x = x
+    x = np.array(x)[indices]
+
+    plt.plot(x, y, marker='o')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
+    plt.xticks(org_x)
 
     if not file_path:
         plt.show()
@@ -292,8 +307,8 @@ def is_standardized(a: np.ndarray, axis: int = 1, atol: float = 1e-3):
 
     Returns:
         is_standard (bool): True if data is standardized
-        mean (float): average mean of columns/rows
-        std (float): average standard deviation of columns/rows
+        mean (float): maximum mean of columns/rows
+        std (float): maximum standard deviation of columns/rows
 
     """
     if axis not in [0, 1]:
@@ -301,7 +316,7 @@ def is_standardized(a: np.ndarray, axis: int = 1, atol: float = 1e-3):
 
     mean = np.nanmean(a, axis=axis)
     std = np.nanstd(a, axis=axis)
-    return np.allclose(mean, 0, atol=atol) and np.allclose(std, 1, atol=atol), np.nanmean(mean), np.nanmean(std)
+    return np.allclose(mean, 0, atol=atol) and np.allclose(std, 1, atol=atol), np.nanmax(mean), np.nanmax(std)
 
 
 def filter_features_and_samples(data: pd.DataFrame, drop_features: float = 0.1, drop_samples: float = 0.1):

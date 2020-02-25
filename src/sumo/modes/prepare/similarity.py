@@ -155,6 +155,6 @@ def feature_rbf_similarity(f: np.ndarray, missing: float = PREPARE_DEFAULTS['mis
             else:
                 sample_w[i, j] = 1.
 
-            w[samples[:, None], samples] = sample_w  # put missing samples back in
+    w[samples[:, None], samples] = sample_w  # put missing samples back in
 
     return w

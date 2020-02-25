@@ -2,8 +2,16 @@
 
 History
 =======
-0.2.1 & 0.2.2 (2020-01-21)
+0.2.3 (2020-02-25)
 ------------------
+* Handle NaN values of cophenetic correlation coefficient.
+* Update vignette.
+* Fix issue resulting in not closing log files in *run*.
+* If output directory of *run* already exists, remove it instead of overwriting.
+* Change error information for data not meeting standardization thresholds in *prepare*
+
+0.2.1 & 0.2.2 (2020-01-21)
+--------------------------
 * Adressed PyPI issues with long description.
 
 0.2.0 (2020-01-21)
