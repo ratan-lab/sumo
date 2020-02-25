@@ -307,8 +307,8 @@ def is_standardized(a: np.ndarray, axis: int = 1, atol: float = 1e-3):
 
     Returns:
         is_standard (bool): True if data is standardized
-        mean (float): average mean of columns/rows
-        std (float): average standard deviation of columns/rows
+        mean (float): maximum mean of columns/rows
+        std (float): maximum standard deviation of columns/rows
 
     """
     if axis not in [0, 1]:
@@ -316,7 +316,7 @@ def is_standardized(a: np.ndarray, axis: int = 1, atol: float = 1e-3):
 
     mean = np.nanmean(a, axis=axis)
     std = np.nanstd(a, axis=axis)
-    return np.allclose(mean, 0, atol=atol) and np.allclose(std, 1, atol=atol), np.nanmean(mean), np.nanmean(std)
+    return np.allclose(mean, 0, atol=atol) and np.allclose(std, 1, atol=atol), np.nanmax(mean), np.nanmax(std)
 
 
 def filter_features_and_samples(data: pd.DataFrame, drop_features: float = 0.1, drop_samples: float = 0.1):

@@ -65,7 +65,7 @@ class SumoInterpret(SumoMode):
             raise ValueError("Incorrect number of threads set with parameter '-t'")
 
     def run(self):
-        """ Find features that drive clusters separation """
+        """ Find features that support clusters separation """
 
         # read in the output of the classifier
         sumo = load_npz(self.sumo_results)
