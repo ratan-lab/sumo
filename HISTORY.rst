@@ -8,7 +8,8 @@ History
 * Update vignette.
 * Fix issue resulting in not closing log files in *run*.
 * If output directory of *run* already exists, remove it instead of overwriting.
-* Change error information for data not meeting standardization thresholds in *prepare*
+* Change error information for data not meeting standardization thresholds in *prepare*.
+* Add column-wise normalization of H matrix in *run* before cluster extraction using max_value method.
 
 0.2.1 & 0.2.2 (2020-01-21)
 --------------------------
