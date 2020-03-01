@@ -259,10 +259,13 @@ def add_predict_command_options(subparsers):
                                      ' clusters found by sumo (supported types of files: {})'.format(SUPPORTED_EXT))
 
     predict_parser.add_argument('classifier', metavar="classifier.pickle", type=str,
-                                help='')
+                                help="classifier file created by sumo 'interpret'")
 
     predict_parser.add_argument('output_prefix', type=str,
-                                help='')
+                                help='prefix of output files - sumo will create two output files (1) .tsv file, ' +
+                                     'containing table with predicted probability for each class for each sample and ' +
+                                     '(2) .labels.tsv file with table containing predicted cluster labels for ' +
+                                     'every sample')
 
     predict_parser.add_argument('-logfile', action='store',
                                 type=str, required=False, default=PREDICT_DEFAULTS['logfile'],
@@ -270,6 +273,24 @@ def add_predict_command_options(subparsers):
 
     predict_parser.add_argument('-log', default=PREDICT_DEFAULTS["log"], choices=LOG_LEVELS,
                                 help="sets the logging level (default of %(default)s)")
+
+    predict_parser.add_argument('-sn', action='store',
+                                type=int, required=False, default=INTERPRET_DEFAULTS["sn"],
+                                help='index of row with sample names for input files (default of %(default)s)')
+
+    predict_parser.add_argument('-fn', action='store',
+                                type=int, required=False, default=INTERPRET_DEFAULTS["fn"],
+                                help='index of column with feature names for input files (default of %(default)s)')
+
+    predict_parser.add_argument('-df', action='store',
+                                type=float, required=False, default=INTERPRET_DEFAULTS["df"],
+                                help='if percentage of missing values for feature exceeds this value, remove feature ' +
+                                     '(default of %(default)s)')
+
+    predict_parser.add_argument('-ds', action='store',
+                                type=float, required=False, default=INTERPRET_DEFAULTS["ds"],
+                                help='if percentage of missing values for sample (that remains after feature ' +
+                                     'dropping) exceeds this value, remove sample (default of %(default)s)')
 
 
 def parse_args(argv):

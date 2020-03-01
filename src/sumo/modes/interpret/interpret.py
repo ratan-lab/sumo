@@ -22,8 +22,11 @@ class SumoInterpret(SumoMode):
         | sumo_results (str): path to sumo_results.npz (created by running program with mode "run")
         | infiles (list): comma-delimited list of paths to input files, containing standardized feature matrices, \
             with samples in columns and features in rows(supported types of files: {supported})
-        | outfile (str): output file from this analysis, containing matrix (features x clusters), \
-            where the value in each cell is the importance of the feature in that cluster
+        | output_prefix (str): prefix of output files - sumo will create three output files (1) .tsv file containing \
+            matrix (features x clusters), where the value in each cell is the importance of the feature in that \
+            cluster; (2) .hits.tsv file containing features of most importance; (3) .pickle file containing created \
+            sample classifier
+        | hits (int): sets number of most important features for every cluster, that are logged in .hits.tsv file
         | max_iter (int): maximum number of iterations, while searching through hyperparameter space
         | n_folds (int): number of folds for model cross validation
         | t (int): number of threads
@@ -112,7 +115,7 @@ class SumoInterpret(SumoMode):
 
         # create output .tsv file
         df = pd.DataFrame(0, index=features.columns.values,
-                          columns=["group_{}".format(x) for x in range(ngroups)])
+                          columns=["GROUP_{}".format(x) for x in range(ngroups)])
         for i in range(len(shap_values)):
             shap_cat_values = np.abs(shap_values[i])
             mean_shap = np.sum(shap_cat_values, axis=0)
@@ -121,8 +124,8 @@ class SumoInterpret(SumoMode):
 
         # create output .hits.tsv file
         with open("{}.hits.tsv".format(self.output_prefix), 'w') as hitfile:
-            for group in ["group_{}".format(x) for x in range(ngroups)]:
-                hitfile.write(group.upper() + "\n")
+            for group in ["GROUP_{}".format(x) for x in range(ngroups)]:
+                hitfile.write(group + "\n")
                 hits = df.nlargest(self.hits, [group])
                 for index, row in hits.iterrows():
                     hitfile.write("{}\t{}\n".format(index, row[group]))

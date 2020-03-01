@@ -9,20 +9,24 @@ TXT_EXT = [".txt", '.txt.gz', '.txt.bz2']
 TSV_EXT = [".tsv", '.tsv.gz', '.tsv.bz2']
 SUPPORTED_EXT = TXT_EXT + TSV_EXT
 
-PREPARE_DEFAULTS = {
+TEXT_FILE_DEFAULTS = {
+    "sn": 0,
+    "fn": 0,
+    "df": 0.1,
+    "ds": 0.1
+}
+
+_PREPARE_DEFAULTS = {
     "method": ["euclidean"],
     "k": 0.1,
     "alpha": 0.5,
     "missing": [0.1],
-    "sn": 0,
-    "fn": 0,
-    "df": 0.1,
-    "ds": 0.1,
     "logfile": None,
     "log": "INFO",
     "plot": None,
     "atol": 1e-2
 }
+PREPARE_DEFAULTS = {**TEXT_FILE_DEFAULTS, **_PREPARE_DEFAULTS}
 PREPARE_ARGS = ["infiles", "outfile"] + list(PREPARE_DEFAULTS.keys())  # 3 positional args
 
 # run
@@ -50,28 +54,25 @@ EVALUATE_DEFAULTS = {
 EVALUATE_ARGS = ["infile", "labels_file"] + list(EVALUATE_DEFAULTS.keys())  # 2 positional args
 
 # interpret
-INTERPRET_DEFAULTS = {
+_INTERPRET_DEFAULTS = {
     "logfile": None,
     "log": "INFO",
     "max_iter": 50,
     "n_folds": 5,
-    "sn": 0,
-    "fn": 0,
-    "df": 0.1,
-    "ds": 0.1,
     "t": 1,
     "seed": 1,
     "hits": 10
 }
+INTERPRET_DEFAULTS = {**TEXT_FILE_DEFAULTS, **_INTERPRET_DEFAULTS}
 INTERPRET_ARGS = ['sumo_results', 'infiles', 'output_prefix'] + list(INTERPRET_DEFAULTS.keys())  # 3 positional args
 
 # predict
-PREDICT_DEFAULTS = {
+_PREDICT_DEFAULTS = {
     "logfile": None,
     "log": "INFO"
 }
-
-PREDICT_ARGS = ["infiles", "classifier", "output_prefix"] + list(PREDICT_DEFAULTS.keys())  # 4 positional args
+PREDICT_DEFAULTS = {**TEXT_FILE_DEFAULTS, **_PREDICT_DEFAULTS}
+PREDICT_ARGS = ["infiles", "classifier", "output_prefix"] + list(PREDICT_DEFAULTS.keys())  # 3 positional args
 
 # utils
 LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING']
