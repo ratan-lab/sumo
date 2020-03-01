@@ -1,6 +1,6 @@
 # command_line
 __version__ = "0.2.3"
-SUMO_COMMANDS = ["prepare", "run", "evaluate", "interpret"]
+SUMO_COMMANDS = ["prepare", "run", "evaluate", "interpret", "predict"]
 
 # prepare
 CORR_METHODS = ["pearson", "spearman"]
@@ -60,9 +60,18 @@ INTERPRET_DEFAULTS = {
     "df": 0.1,
     "ds": 0.1,
     "t": 1,
-    "seed": 1
+    "seed": 1,
+    "hits": 10
 }
-INTERPRET_ARGS = ['sumo_results', 'infiles', 'outfile'] + list(INTERPRET_DEFAULTS.keys())  # 3 positional args
+INTERPRET_ARGS = ['sumo_results', 'infiles', 'output_prefix'] + list(INTERPRET_DEFAULTS.keys())  # 3 positional args
+
+# predict
+PREDICT_DEFAULTS = {
+    "logfile": None,
+    "log": "INFO"
+}
+
+PREDICT_ARGS = ["infiles", "classifier", "output_prefix"] + list(PREDICT_DEFAULTS.keys())  # 4 positional args
 
 # utils
 LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING']

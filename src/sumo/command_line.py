@@ -1,5 +1,5 @@
 from sumo.constants import __version__, CLUSTER_METHODS, LOG_LEVELS, SIMILARITY_METHODS, CLUSTER_METRICS, \
-    PREPARE_DEFAULTS, EVALUATE_DEFAULTS, RUN_DEFAULTS, SUPPORTED_EXT, INTERPRET_DEFAULTS
+    PREPARE_DEFAULTS, EVALUATE_DEFAULTS, RUN_DEFAULTS, SUPPORTED_EXT, INTERPRET_DEFAULTS, PREDICT_DEFAULTS
 from sumo.modes import SUMO_COMMANDS
 import argparse
 
@@ -191,9 +191,12 @@ def add_interpret_command_options(subparsers):
                                        ' matrices, with samples in columns and features in rows' +
                                        '(supported types of files: {})'.format(SUPPORTED_EXT))
 
-    interpret_parser.add_argument('outfile', metavar="outfile.tsv", type=str,
-                                  help='output file from this analysis, containing matrix (features x clusters), ' +
-                                       'where the value in each cell is the importance of the feature in that cluster')
+    interpret_parser.add_argument('output_prefix', type=str,
+                                  help='prefix of output files - sumo will create three output files (1) .tsv file ' +
+                                       'containing matrix (features x clusters), where the value in each cell is ' +
+                                       'the importance of the feature in that cluster; (2) .hits.tsv file containing ' +
+                                       'features of most importance; (3) .pickle file containing created sample ' +
+                                       'classifier)')
 
     interpret_parser.add_argument('-logfile', action='store',
                                   type=str, required=False, default=INTERPRET_DEFAULTS['logfile'],
@@ -201,6 +204,11 @@ def add_interpret_command_options(subparsers):
 
     interpret_parser.add_argument('-log', default=INTERPRET_DEFAULTS["log"], choices=LOG_LEVELS,
                                   help="sets the logging level (default of %(default)s)")
+
+    interpret_parser.add_argument('-hits', action='store',
+                                  type=int, required=False, default=INTERPRET_DEFAULTS["hits"],
+                                  help='sets number of most important features for every cluster, that are logged ' +
+                                       'in .hits.tsv file')
 
     interpret_parser.add_argument('-max_iter', action='store',
                                   type=int, required=False, default=INTERPRET_DEFAULTS["max_iter"],
@@ -237,6 +245,33 @@ def add_interpret_command_options(subparsers):
                                        'dropping) exceeds this value, remove sample (default of %(default)s)')
 
 
+def add_predict_command_options(subparsers):
+    """ Add subparser for 'predict' command """
+
+    description = "Classify new samples into clusters found by sumo"
+    predict_parser = subparsers.add_parser('predict', description=description,
+                                           help='classify new samples into existing clusters')
+
+    predict_parser.add_argument('infiles', metavar='infile1,infile2,...',
+                                type=lambda s: [i for i in s.split(',')],
+                                help='comma-delimited list of paths to input files, containing standardized feature' +
+                                     ' matrices, with columns corresponding to new samples we want to classify into' +
+                                     ' clusters found by sumo (supported types of files: {})'.format(SUPPORTED_EXT))
+
+    predict_parser.add_argument('classifier', metavar="classifier.pickle", type=str,
+                                help='')
+
+    predict_parser.add_argument('output_prefix', type=str,
+                                help='')
+
+    predict_parser.add_argument('-logfile', action='store',
+                                type=str, required=False, default=PREDICT_DEFAULTS['logfile'],
+                                help='path to save log file (by default printed to stdout)')
+
+    predict_parser.add_argument('-log', default=PREDICT_DEFAULTS["log"], choices=LOG_LEVELS,
+                                help="sets the logging level (default of %(default)s)")
+
+
 def parse_args(argv):
     parser = argparse.ArgumentParser(
         description="sumo: subtyping tool for multi-omic data")
@@ -246,7 +281,9 @@ def parse_args(argv):
     map_subparsers = {"prepare": add_prepare_command_options,
                       "run": add_run_command_options,
                       "evaluate": add_evaluate_command_options,
-                      "interpret": add_interpret_command_options}
+                      "interpret": add_interpret_command_options,
+                      "predict": add_predict_command_options}
+
     assert all([command in SUMO_COMMANDS for command in map_subparsers.keys()])
 
     for mode in map_subparsers.keys():

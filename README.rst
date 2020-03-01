@@ -205,43 +205,47 @@ Find features that support clusters separation.
 
 ::
 
-    usage: sumo interpret [-h] [-logfile LOGFILE] [-max_iter MAX_ITER]
-                          [-n_folds N_FOLDS] [-t T] [-seed SEED] [-sn SN] [-fn FN]
-                          [-df DF] [-ds DS]
-                          sumo_results.npz infile1,infile2,... outfile.tsv
+    usage: sumo interpret [-h] [-logfile LOGFILE] [-log {DEBUG,INFO,WARNING}]
+                          [-hits HITS] [-max_iter MAX_ITER] [-n_folds N_FOLDS]
+                          [-t T] [-seed SEED] [-sn SN] [-fn FN] [-df DF] [-ds DS]
+                          sumo_results.npz infile1,infile2,... output_prefix
 
     positional arguments:
-      sumo_results.npz     path to sumo_results.npz (created by running program
-                           with mode "run")
-      infile1,infile2,...  comma-delimited list of paths to input files,
-                           containing standardized feature matrices, with samples
-                           in columns and features in rows(supported types of
-                           files: ['.txt', '.txt.gz', '.txt.bz2', '.tsv',
-                           '.tsv.gz', '.tsv.bz2'])
-      outfile.tsv          output file from this analysis, containing matrix
-                           (features x clusters), where the value in each cell is
-                           the importance of the feature in that cluster
+      sumo_results.npz      path to sumo_results.npz (created by running program
+                            with mode "run")
+      infile1,infile2,...   comma-delimited list of paths to input files,
+                            containing standardized feature matrices, with samples
+                            in columns and features in rows(supported types of
+                            files: ['.txt', '.txt.gz', '.txt.bz2', '.tsv',
+                            '.tsv.gz', '.tsv.bz2'])
+      output_prefix         prefix of output files - sumo will create three output
+                            files (1) .tsv file containing matrix (features x
+                            clusters), where the value in each cell is the
+                            importance of the feature in that cluster; (2)
+                            .hits.tsv file containing features of most importance;
+                            (3) .pickle file containing created sample classifier)
 
     optional arguments:
-      -h, --help           show this help message and exit
-      -logfile LOGFILE     path to save log file (by default printed to stdout)
+      -h, --help            show this help message and exit
+      -logfile LOGFILE      path to save log file (by default printed to stdout)
       -log {DEBUG,INFO,WARNING}
                             sets the logging level (default of INFO)
-      -max_iter MAX_ITER   maximum number of iterations, while searching through
-                           hyperparameter space
-      -n_folds N_FOLDS     number of folds for model cross validation (default of
-                           5)
-      -t T                 number of threads (default of 1)
-      -seed SEED           random state (default of 1)
-      -sn SN               index of row with sample names for input files (default
-                           of 0)
-      -fn FN               index of column with feature names for input files
-                           (default of 0)
-      -df DF               if percentage of missing values for feature exceeds
-                           this value, remove feature (default of 0.1)
-      -ds DS               if percentage of missing values for sample (that
-                           remains after feature dropping) exceeds this value,
-                           remove sample (default of 0.1)
+      -hits HITS            sets number of most important features for every
+                            cluster, that are logged in .hits.tsv file
+      -max_iter MAX_ITER    maximum number of iterations, while searching through
+                            hyperparameter space
+      -n_folds N_FOLDS      number of folds for model cross validation (default of 5)
+      -t T                  number of threads (default of 1)
+      -seed SEED            random state (default of 1)
+      -sn SN                index of row with sample names for input files
+                            (default of 0)
+      -fn FN                index of column with feature names for input files
+                            (default of 0)
+      -df DF                if percentage of missing values for feature exceeds
+                            this value, remove feature (default of 0.1)
+      -ds DS                if percentage of missing values for sample (that
+                            remains after feature dropping) exceeds this value,
+                            remove sample (default of 0.1)
 
 **Example**
 

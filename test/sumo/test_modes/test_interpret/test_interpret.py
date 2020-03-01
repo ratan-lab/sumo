@@ -11,7 +11,7 @@ def _get_args(sumo_results: str, labels_file: list, outfile: str):
     args = INTERPRET_DEFAULTS.copy()
     args["sumo_results"] = sumo_results
     args["infiles"] = labels_file
-    args["outfile"] = outfile
+    args["output_prefix"] = outfile
     return args
 
 
@@ -23,8 +23,8 @@ def test_init(tmpdir):
     fname = os.path.join(tmpdir, "indata.npz")
     feature1 = os.path.join(tmpdir, "feature1.tsv")
     feature2 = os.path.join(tmpdir, "feature2.tsv")
-    outfile = os.path.join(tmpdir, "outfile.tsv")
-    args = _get_args(fname, [feature1, feature2], outfile)
+    output_prefix = os.path.join(tmpdir, "outfile")
+    args = _get_args(fname, [feature1, feature2], output_prefix)
 
     # no input file
     with pytest.raises(FileNotFoundError):
@@ -49,7 +49,7 @@ def test_init(tmpdir):
 
     # overwriting output file
     tmp = pd.DataFrame(np.array([]))
-    tmp.to_csv(outfile)
+    tmp.to_csv("{}.tsv".format(output_prefix))
     SumoInterpret(**args)
 
     # incorrect number of threads

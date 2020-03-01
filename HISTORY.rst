@@ -2,6 +2,13 @@
 
 History
 =======
+0.2.4 (????-??-??)
+------------------
+* sumo *interpret* now creates three output files:
+    - .tsv file containing matrix (features x clusters), where the value in each cell is the importance of the feature in that cluster;
+    - .hits.tsv file containing features of most importance (number of top hits can be set with '-hits' parameter);
+    - .pickle file containing created sample classifier.
+
 0.2.3 (2020-02-25)
 ------------------
 * Handle NaN values of cophenetic correlation coefficient.
