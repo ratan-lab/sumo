@@ -1,8 +1,9 @@
 from lightgbm import LGBMClassifier
+from sklearn.exceptions import NotFittedError
 from pathlib import Path
 from sumo.constants import PREDICT_ARGS, SUPPORTED_EXT, LOG_LEVELS
 from sumo.modes.mode import SumoMode
-from sumo.utils import setup_logger, load_npz, load_data_text, docstring_formatter
+from sumo.utils import setup_logger, load_data_text, docstring_formatter
 import os
 import numpy as np
 import pandas as pd
@@ -68,8 +69,14 @@ class SumoPredict(SumoMode):
             classifier = pickle.load(pickle_handle)
             model = classifier['model']
             feature_names = classifier['features']
-            if not isinstance(model, LGBMClassifier) and feature_names.size == model.n_features_:
-                # this should not happen if .pickle file is created by sumo interpret
+            # below errors should not happen if .pickle file is created by sumo interpret
+            if not isinstance(model, LGBMClassifier):
+                raise ValueError("Incorrect classifier file")
+            try:
+                model_features = model.n_features_
+            except NotFittedError:
+                raise ValueError("Incorrect classifier file")
+            if feature_names.size != model_features:
                 raise ValueError("Incorrect classifier file")
 
         # read all the features matrices
@@ -110,15 +117,20 @@ class SumoPredict(SumoMode):
         predicted_classes = pd.DataFrame(res, columns=model.classes_, index=data.columns)
         predicted_classes.index.name = "sample"
         assert np.allclose(predicted_classes.sum(axis=1).values, 1)
-        labels = predicted_classes.idxmax(axis=1).to_frame(name="label")
+
+        maxvals = np.max(res, axis=1)
+        selected_labels = []  # in case of equality, return all possible class labels
+        for sample in range(maxvals.size):
+            selected_labels += [",".join([str(x) for x in np.argwhere(res[sample, :] == maxvals[sample])[0]])]
+        labels = pd.DataFrame(selected_labels, columns=['label'], index=data.columns)
+        labels.index.name = "sample"
 
         # create output files
         predicted_classes.columns = ["GROUP_{}".format(x) for x in predicted_classes.columns]
         predicted_classes.to_csv("{}.tsv".format(self.output_prefix), sep="\t")
         self.logger.debug("Predicted probability for each class:\n{}".format(predicted_classes))
 
-        labels.to_csv("{}.labels.tsv".format(self.output_prefix),
-                      sep="\t")  # TODO now in case of equality, returns first occurence
+        labels.to_csv("{}.labels.tsv".format(self.output_prefix), sep="\t")
         self.logger.debug("Sample labels:\n{}".format(labels))
 
         self.logger.info(

@@ -4,19 +4,21 @@ History
 =======
 0.2.4 (????-??-??)
 ------------------
-* sumo *interpret* now creates three output files:
+* Sumo *interpret* now creates three output files:
     - .tsv file containing matrix (features x clusters), where the value in each cell is the importance of the feature in that cluster;
     - .hits.tsv file containing features of most importance (number of top hits can be set with '-hits' parameter);
     - .pickle file containing created sample classifier.
+* Fixed training dataset in *interpret* to contain 80% of every unique class label.
+* Implemented new sumo mode *predict*, that can be used to classify new samples into clusters from sumo *run* using a classifier created by sumo *interpret*.
 
 0.2.3 (2020-02-25)
 ------------------
-* Handle NaN values of cophenetic correlation coefficient.
-* Update vignette.
-* Fix issue resulting in not closing log files in *run*.
+* Handled NaN values of cophenetic correlation coefficient.
+* Updated vignette.
+* Fixed issue resulting in not closing log files in *run*.
 * If output directory of *run* already exists, remove it instead of overwriting.
-* Change error information for data not meeting standardization thresholds in *prepare*.
-* Add column-wise normalization of H matrix in *run* before cluster extraction using max_value method.
+* Changed error information for data not meeting standardization thresholds in *prepare*.
+* Added column-wise normalization of H matrix in *run* before cluster extraction using max_value method.
 
 0.2.1 & 0.2.2 (2020-01-21)
 --------------------------
