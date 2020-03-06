@@ -191,9 +191,11 @@ def add_interpret_command_options(subparsers):
                                        ' matrices, with samples in columns and features in rows' +
                                        '(supported types of files: {})'.format(SUPPORTED_EXT))
 
-    interpret_parser.add_argument('outfile', metavar="outfile.tsv", type=str,
-                                  help='output file from this analysis, containing matrix (features x clusters), ' +
-                                       'where the value in each cell is the importance of the feature in that cluster')
+    interpret_parser.add_argument('output_prefix', type=str,
+                                  help='prefix of output files - sumo will create two output files (1) .tsv file ' +
+                                       'containing matrix (features x clusters), where the value in each cell is ' +
+                                       'the importance of the feature in that cluster; (2) .hits.tsv file containing ' +
+                                       'features of most importance')
 
     interpret_parser.add_argument('-logfile', action='store',
                                   type=str, required=False, default=INTERPRET_DEFAULTS['logfile'],
@@ -201,6 +203,11 @@ def add_interpret_command_options(subparsers):
 
     interpret_parser.add_argument('-log', default=INTERPRET_DEFAULTS["log"], choices=LOG_LEVELS,
                                   help="sets the logging level (default of %(default)s)")
+
+    interpret_parser.add_argument('-hits', action='store',
+                                  type=int, required=False, default=INTERPRET_DEFAULTS["hits"],
+                                  help='sets number of most important features for every cluster, that are logged ' +
+                                       'in .hits.tsv file')
 
     interpret_parser.add_argument('-max_iter', action='store',
                                   type=int, required=False, default=INTERPRET_DEFAULTS["max_iter"],
