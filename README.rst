@@ -251,7 +251,7 @@ Find features that support clusters separation.
 
 .. code:: sh
 
-    sumo interpret results_dir/k3/sumo_results.npz methylation.txt,expression.txt results.tsv
+    sumo interpret results_dir/k3/sumo_results.npz methylation.txt,expression.txt interpret_results
 
 .. inclusion-end-marker-do-not-remove
 
