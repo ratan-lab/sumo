@@ -21,8 +21,10 @@ class SumoInterpret(SumoMode):
         | sumo_results (str): path to sumo_results.npz (created by running program with mode "run")
         | infiles (list): comma-delimited list of paths to input files, containing standardized feature matrices, \
             with samples in columns and features in rows(supported types of files: {supported})
-        | outfile (str): output file from this analysis, containing matrix (features x clusters), \
-            where the value in each cell is the importance of the feature in that cluster
+        | output_prefix (str): prefix of output files - sumo will create two output files (1) .tsv file containing \
+            matrix (features x clusters), where the value in each cell is the importance of the feature in that \
+            cluster; (2) .hits.tsv file containing features of most importance
+        | hits (int): sets number of most important features for every cluster, that are logged in .hits.tsv file
         | max_iter (int): maximum number of iterations, while searching through hyperparameter space
         | n_folds (int): number of folds for model cross validation
         | t (int): number of threads
@@ -58,11 +60,13 @@ class SumoInterpret(SumoMode):
             raise FileNotFoundError("Sumo results file not found")
         if not all([os.path.exists(fname) for fname in self.infiles]):
             raise FileNotFoundError("Input file not found")
-        if os.path.exists(self.outfile):
-            self.logger.warning("File '{}' already exist and will be overwritten.".format(self.outfile))
+        if os.path.exists(self.output_prefix):
+            self.logger.warning("File '{}' already exist and will be overwritten.".format(self.output_prefix))
 
         if self.t <= 0:
             raise ValueError("Incorrect number of threads set with parameter '-t'")
+        if self.hits <= 0:
+            raise ValueError("Incorrect value of '-hits' parameter")
 
     def run(self):
         """ Find features that support clusters separation """
@@ -97,15 +101,27 @@ class SumoInterpret(SumoMode):
         model.fit(X, labels)
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(X, y=labels)
+        ngroups = len(shap_values)
 
-        # create output file
+        # create output .tsv file
         df = pd.DataFrame(0, index=features.columns.values,
-                          columns=["group_{}".format(x) for x in range(len(shap_values))])
+                          columns=["GROUP_{}".format(x) for x in range(ngroups)])
         for i in range(len(shap_values)):
             shap_cat_values = np.abs(shap_values[i])
             mean_shap = np.sum(shap_cat_values, axis=0)
             df.iloc[:, [i]] = mean_shap
-        df.to_csv(self.outfile, sep='\t', index_label="feature")
+        df.to_csv("{}.tsv".format(self.output_prefix), sep='\t', index_label="feature")
+
+        # create output .hits.tsv file
+        with open("{}.hits.tsv".format(self.output_prefix), 'w') as hitfile:
+            for group in ["GROUP_{}".format(x) for x in range(ngroups)]:
+                hitfile.write(group + "\n")
+                hits = df.nlargest(self.hits, [group])
+                for index, row in hits.iterrows():
+                    hitfile.write("{}\t{}\n".format(index, row[group]))
+                hitfile.write("\n")
+
+        self.logger.info("#Output files {}.tsv and {}.hits.tsv saved.".format(self.output_prefix, self.output_prefix))
 
     def create_classifier(self, x: np.ndarray, y: np.ndarray):
         """ Create a gradient boosting method classifier
@@ -118,8 +134,12 @@ class SumoInterpret(SumoMode):
             LGBM classifier
         """
 
-        # divide this data into training and test data
-        train_index = np.random.choice(range(0, y.shape[0]), int(0.8 * y.shape[0]), replace=False)
+        # divide this data into training data (80% of each unique class of samples) and test data
+        train_index = []
+        for label in np.unique(y):
+            y_label = np.arange(y.shape[0])[y == label]
+            train_index += list(np.random.choice(list(y_label), round(0.8 * y_label.shape[0]), replace=False))
+
         test_index = list(set(range(0, y.shape[0])) - set(train_index))
         y_train = y[train_index]
         x_train = x[train_index]
