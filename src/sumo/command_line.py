@@ -192,11 +192,10 @@ def add_interpret_command_options(subparsers):
                                        '(supported types of files: {})'.format(SUPPORTED_EXT))
 
     interpret_parser.add_argument('output_prefix', type=str,
-                                  help='prefix of output files - sumo will create three output files (1) .tsv file ' +
+                                  help='prefix of output files - sumo will create two output files (1) .tsv file ' +
                                        'containing matrix (features x clusters), where the value in each cell is ' +
                                        'the importance of the feature in that cluster; (2) .hits.tsv file containing ' +
-                                       'features of most importance; (3) .pickle file containing created sample ' +
-                                       'classifier)')
+                                       'features of most importance')
 
     interpret_parser.add_argument('-logfile', action='store',
                                   type=str, required=False, default=INTERPRET_DEFAULTS['logfile'],

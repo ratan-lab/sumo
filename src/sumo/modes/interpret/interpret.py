@@ -22,10 +22,9 @@ class SumoInterpret(SumoMode):
         | sumo_results (str): path to sumo_results.npz (created by running program with mode "run")
         | infiles (list): comma-delimited list of paths to input files, containing standardized feature matrices, \
             with samples in columns and features in rows(supported types of files: {supported})
-        | output_prefix (str): prefix of output files - sumo will create three output files (1) .tsv file containing \
+        | output_prefix (str): prefix of output files - sumo will create two output files (1) .tsv file containing \
             matrix (features x clusters), where the value in each cell is the importance of the feature in that \
-            cluster; (2) .hits.tsv file containing features of most importance; (3) .pickle file containing created \
-            sample classifier
+            cluster; (2) .hits.tsv file containing features of most importance
         | hits (int): sets number of most important features for every cluster, that are logged in .hits.tsv file
         | max_iter (int): maximum number of iterations, while searching through hyperparameter space
         | n_folds (int): number of folds for model cross validation

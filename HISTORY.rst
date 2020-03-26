@@ -2,14 +2,16 @@
 
 History
 =======
-0.2.4 (????-??-??)
+0.2.5 (????-??-??)
 ------------------
-* Sumo *interpret* now creates three output files:
-    - .tsv file containing matrix (features x clusters), where the value in each cell is the importance of the feature in that cluster;
-    - .hits.tsv file containing features of most importance (number of top hits can be set with '-hits' parameter);
-    - .pickle file containing created sample classifier.
-* Fixed training dataset in *interpret* to contain 80% of every unique class label.
 * Implemented new sumo mode *predict*, that can be used to classify new samples into clusters from sumo *run* using a classifier created by sumo *interpret*.
+
+0.2.4 (2020-03-06)
+------------------
+* Sumo *interpret* now creates two output files:
+    - .tsv file containing matrix (features x clusters), where the value in each cell is the importance of the feature in that cluster;
+    - .hits.tsv file containing features of most importance (number of top hits can be set with '-hits' parameter).
+* Fixed training dataset in *interpret* to contain 80% of every unique class label.
 
 0.2.3 (2020-02-25)
 ------------------

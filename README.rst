@@ -218,12 +218,11 @@ Find features that support clusters separation.
                             in columns and features in rows(supported types of
                             files: ['.txt', '.txt.gz', '.txt.bz2', '.tsv',
                             '.tsv.gz', '.tsv.bz2'])
-      output_prefix         prefix of output files - sumo will create three output
+      output_prefix         prefix of output files - sumo will create two output
                             files (1) .tsv file containing matrix (features x
                             clusters), where the value in each cell is the
                             importance of the feature in that cluster; (2)
-                            .hits.tsv file containing features of most importance;
-                            (3) .pickle file containing created sample classifier)
+                            .hits.tsv file containing features of most importance
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -234,7 +233,8 @@ Find features that support clusters separation.
                             cluster, that are logged in .hits.tsv file
       -max_iter MAX_ITER    maximum number of iterations, while searching through
                             hyperparameter space
-      -n_folds N_FOLDS      number of folds for model cross validation (default of 5)
+      -n_folds N_FOLDS      number of folds for model cross validation (default of
+                            5)
       -t T                  number of threads (default of 1)
       -seed SEED            random state (default of 1)
       -sn SN                index of row with sample names for input files
@@ -251,7 +251,7 @@ Find features that support clusters separation.
 
 .. code:: sh
 
-    sumo interpret results_dir/k3/sumo_results.npz methylation.txt,expression.txt results.tsv
+    sumo interpret results_dir/k3/sumo_results.npz methylation.txt,expression.txt interpret_results
 
 .. inclusion-end-marker-do-not-remove
 

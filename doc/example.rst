@@ -152,12 +152,12 @@ Use SUMO *interpret* mode to investigate which features drive obtained clusterin
 
 ::
 
-    sumo interpret LAML/k4/sumo_results.npz TCGA-LAML.htseq_fpkm.flt.tsv.gz,TCGA-LAML.methylation27.flt.tsv.gz,TCGA-LAML.mirna.flt.tsv.gz features.tsv
+    sumo interpret LAML/k4/sumo_results.npz TCGA-LAML.htseq_fpkm.flt.tsv.gz,TCGA-LAML.methylation27.flt.tsv.gz,TCGA-LAML.mirna.flt.tsv.gz LAML_features
 
 
-The above command generates a file "features.tsv" which reports the importance of each feature in driving each cluster. Briefly, we train a LightGBM model (https://github.com/microsoft/LightGBM) based on the clusters identified by SUMO, and the results from this mode are the SHAP (SHapley Additive exPlanations) feature importance deduced using that model.
+The above command generates a file two files "LAML_features.tsv" and "LAML_features.hits.tsv" which report the importance of each feature in supporting cluster separation. Briefly, we train a LightGBM model (https://github.com/microsoft/LightGBM) based on the clusters identified by SUMO, and the results from this mode are the SHAP (SHapley Additive exPlanations) feature importance deduced using that model.
 
-For example, the results in features.tsv shows that the following top 10 features drive the various clusters:
+For example, here the results shows that the following top 10 features support various clusters:
 
 +----------------------------+-----------------------------+
 | Group 0                    | Group 1                     |
