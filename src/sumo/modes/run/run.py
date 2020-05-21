@@ -119,11 +119,14 @@ class SumoRun(SumoMode):
             if self.h_init >= len(adj_matrices) or self.h_init < 0:
                 raise ValueError("Incorrect value of h_init")
 
+        if self.subsample > sample_names.size / self.n:
+            raise ValueError("Too high value of subsample parameter")
+
         # create multilayer graph
         self.graph = MultiplexNet(adj_matrices=adj_matrices, node_labels=sample_names)
 
         # create solver
-        self.nmf = SumoNMF(graph=self.graph)
+        self.nmf = SumoNMF(graph=self.graph, nbins=self.n, bin_size=self.graph.nodes - self.subsample)
 
         global _sumo_run
         _sumo_run = self  # this solves multiprocessing issue with pickling
@@ -248,7 +251,8 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
             "tol": sumo_run.tol,
             "calc_cost": sumo_run.calc_cost,
             "h_init": sumo_run.h_init,
-            "logger_name": "eta{}_logger".format(sparsity)
+            "logger_name": "eta{}_logger".format(sparsity),
+            "bin_id": repeat
         }
 
         result = sumo_run.nmf.factorize(**opt_args)

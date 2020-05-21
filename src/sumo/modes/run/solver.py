@@ -1,4 +1,5 @@
 from math import sqrt
+from random import shuffle
 from sumo.constants import CLUSTER_METHODS
 from sumo.network import MultiplexNet
 from sumo.utils import extract_max_value, extract_spectral, get_logger, check_matrix_symmetry
@@ -102,7 +103,7 @@ class SumoNMFResults:
     """
 
     def __init__(self, graph: MultiplexNet, h: np.ndarray, s: list, objval: np.ndarray, steps: int,
-                 sparsity_penalty: float, k: int, logger):
+                 sparsity_penalty: float, k: int, logger, sample_ids: np.ndarray):
         self.graph = graph
         self.h = h
         self.s = s
@@ -115,6 +116,7 @@ class SumoNMFResults:
         self.connectivity = None  # samples x samples with 1 if pair of samples is in the same cluster, 0 otherwise
         self.RE = np.sum(self.delta_cost[-1, :self.graph.layers])  # residual error
         self.logger = logger
+        self.sample_ids = sample_ids
 
     def extract_clusters(self, method: str):
         """ Extract cluster labels using selected method
@@ -141,7 +143,8 @@ class SumoNMFResults:
 
         labels = np.zeros(self.h.shape)
         labels[np.arange(self.h.shape[0])[:, None], np.array([self.labels]).T] = 1
-        self.connectivity = labels @ labels.T
+        self.connectivity = np.zeros((self.graph.nodes, self.graph.nodes))
+        self.connectivity[self.sample_ids, self.sample_ids[:, None]] = labels @ labels.T
 
 
 class SumoNMF:
@@ -151,14 +154,19 @@ class SumoNMF:
     Args:
         | graph (MultiplexNet): network object, containing data about connections between nodes in each layer \
             in form of adjacency matrices
-        | k (int): number of nearest neighbours for data imputation of average adjacency matrix
+        | nbins (int): number of bins, to distribute samples into
+        | bin_size (int): size of bin
 
     """
 
-    def __init__(self, graph: MultiplexNet):
+    def __init__(self, graph: MultiplexNet, nbins: int, bin_size: int):
 
         if not isinstance(graph, MultiplexNet):
             raise ValueError("Unrecognized graph object")
+
+        if nbins <= 0 or bin_size < graph.nodes / nbins:
+            # This should never happen due to creation of SumoNMF objects in sumo 'run'
+            raise ValueError("Incorrect number of bins or bin size")
 
         self.graph = graph
 
@@ -178,10 +186,19 @@ class SumoNMF:
         # layer impact balancing parameters
         self.lambdas = [(1. / samples.shape[0]) ** 2 for samples in self.graph.samples]
 
+        # create sample bins
+        sample_ids = list(range(self.graph.nodes))
+        shuffle(sample_ids)
+        self.bins = [sample_ids[i::nbins] for i in range(nbins)]
+        for i in range(len(self.bins)):
+            ms = bin_size - len(self.bins[i])
+            self.bins[i] = np.array(sorted(
+                self.bins[i] + list(np.random.choice(sample_ids, size=ms, replace=False))))  # TODO: add test
+
         self.logger = get_logger()
 
     def factorize(self, sparsity_penalty: float, k: int, max_iter: int = 500, tol: float = 1e-5, calc_cost: int = 1,
-                  h_init: int = None, logger_name: str = None):
+                  h_init: int = None, logger_name: str = None, bin_id: int = None):
         """ Run tri-factorization
 
         Args:
@@ -194,6 +211,8 @@ class SumoNMF:
             h_init (int): index of adjacency matrix to use for H matrix initialization or None for initialization \
                 using average adjacency
             logger_name (str): name of existing logger object, if not supplied new main logger is used
+            bin_id (int): id of sample bin created in SumoNMF constructor (default of None, means clustering \
+                all samples instead of samples in given bin) #TODO: add docstring to sumo run class
 
         Returns:
             h (Numpy.ndarray): result feature matrix / soft cluster indicator matrix
@@ -206,13 +225,19 @@ class SumoNMF:
         if k > self.graph.nodes:
             raise ValueError("Expected number of clusters greater than number of nodes in graph - expected k << nodes!")
 
+        if bin_id is None:
+            sample_ids = np.arange(self.graph.nodes)
+        else:
+            sample_ids = self.bins[bin_id]
+
         # filter missing samples
         for layer in self.graph.adj_matrices:
             layer[np.isnan(layer)] = 0.
 
         wa = []
         for i in range(self.graph.layers):
-            wa.append(self.graph.w[i] * self.graph.adj_matrices[i])
+            wa.append(self.graph.w[i][sample_ids, sample_ids[:, None]] * self.graph.adj_matrices[i][
+                sample_ids, sample_ids[:, None]])
 
         # randomize S matrices for each layer
         s = []
@@ -220,7 +245,7 @@ class SumoNMF:
             s.append(svd_si_init(self.graph.adj_matrices[i], k))
 
         # randomize feature matrix / soft cluster indicator matrix
-        h = svd_h_init(self.graph.adj_matrices[h_init] if h_init is not None else self.avg_adj, k)
+        h = svd_h_init(self.graph.adj_matrices[h_init] if h_init is not None else self.avg_adj, k)[sample_ids, :]
 
         # objective function
         objval = np.zeros((max_iter + 1, self.graph.layers + 2))
@@ -236,22 +261,25 @@ class SumoNMF:
             # update s matrices
             for i in range(len(s)):
                 num = h.T @ wa[i] @ h
-                den = h.T @ (self.graph.w[i] * (h @ s[i] @ h.T)) @ h
+                den = h.T @ (self.graph.w[i][sample_ids, sample_ids[:, None]] * (h @ s[i] @ h.T)) @ h
                 s[i] = s[i] * ((num + eps) / (den + eps))
 
             # update h
-            num, den = np.zeros((self.graph.nodes, k)), np.zeros((self.graph.nodes, k))
+            num, den = np.zeros((sample_ids.size, k)), np.zeros((sample_ids.size, k))
             for i in range(len(s)):
                 num = num + ((self.lambdas[i] * wa[i]) @ h @ s[i])
-                den = den + (self.lambdas[i] * (self.graph.w[i] * (h @ s[i] @ h.T)) @ h @ s[i] +
-                             0.5 * sparsity_penalty * h)
+                den = den + (self.lambdas[i] * (
+                        self.graph.w[i][sample_ids, sample_ids[:, None]] * (h @ s[i] @ h.T)) @ h @ s[
+                                 i] + 0.5 * sparsity_penalty * h)
             h = h * ((num + eps) / (den + eps))
 
             if step % calc_cost == 0 or step == max_iter:
 
                 for i in range(len(s)):
-                    objval[step_recorded, i] = self.lambdas[i] * np.sum(self.graph.w[i] * (
-                        np.nansum(np.dstack((self.graph.adj_matrices[i], -(h @ (s[i] @ h.T)))), 2)) ** 2)
+                    objval[step_recorded, i] = self.lambdas[i] * np.sum(
+                        self.graph.w[i][sample_ids, sample_ids[:, None]] * (np.nansum(np.dstack(
+                            (self.graph.adj_matrices[i][sample_ids, sample_ids[:, None]], -(h @ (s[i] @ h.T)))),
+                            2)) ** 2)
                 objval[step_recorded, self.graph.layers] = sparsity_penalty * np.sum(h ** 2)
                 objval[step_recorded, - 1] = np.sum(objval[step_recorded, :])
 
@@ -294,4 +322,4 @@ class SumoNMF:
                                                                 round(np.sum(objval[-1, :-2]), 6),
                                                                 best_result[0]))
 
-        return SumoNMFResults(self.graph, h, s, objval, step, sparsity_penalty, k, self.logger)
+        return SumoNMFResults(self.graph, h, s, objval, step, sparsity_penalty, k, self.logger, sample_ids)

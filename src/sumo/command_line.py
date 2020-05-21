@@ -127,6 +127,12 @@ def add_run_command_options(subparsers):
                                 help='if objective cost function value fluctuation (|Δℒ|) is smaller than this value' +
                                      ', stop iterations before reaching max_iter (default of %(default)s)')
 
+    cluster_parser.add_argument('-subsample', action='store',
+                                type=int, required=False, default=RUN_DEFAULTS['subsample'],
+                                help='number of samples randomly removed from each run, cannot be greater then number' +
+                                     ' of samples in dataset divided by number of repetitions ["-n"] ' +
+                                     '(default of %(default)s)')
+
     cluster_parser.add_argument('-calc_cost', action='store',
                                 type=int, required=False, default=RUN_DEFAULTS['calc_cost'],
                                 help='number of steps between every calculation of objective cost function ' +
