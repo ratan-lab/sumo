@@ -129,9 +129,8 @@ def add_run_command_options(subparsers):
 
     cluster_parser.add_argument('-subsample', action='store',
                                 type=int, required=False, default=RUN_DEFAULTS['subsample'],
-                                help='number of samples randomly removed from each run, cannot be greater then number' +
-                                     ' of samples in dataset divided by number of repetitions ["-n"] ' +
-                                     '(default of %(default)s)')
+                                help='number of samples randomly removed from each run, cannot be greater then 50% of' +
+                                     ' samples in dataset (default of %(default)s)')
 
     cluster_parser.add_argument('-calc_cost', action='store',
                                 type=int, required=False, default=RUN_DEFAULTS['calc_cost'],

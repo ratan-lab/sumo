@@ -119,7 +119,8 @@ class SumoRun(SumoMode):
             if self.h_init >= len(adj_matrices) or self.h_init < 0:
                 raise ValueError("Incorrect value of h_init")
 
-        if self.subsample > sample_names.size / self.n:
+        if self.subsample > sample_names.size / 2:
+            # do not allow for removal of more then 50% of samples
             raise ValueError("Too high value of subsample parameter")
 
         # create multilayer graph

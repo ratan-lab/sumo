@@ -164,7 +164,7 @@ class SumoNMF:
         if not isinstance(graph, MultiplexNet):
             raise ValueError("Unrecognized graph object")
 
-        if nbins <= 0 or bin_size < graph.nodes / nbins:
+        if nbins <= 0 or bin_size > graph.nodes:
             # This should never happen due to creation of SumoNMF objects in sumo 'run'
             raise ValueError("Incorrect number of bins or bin size")
 
