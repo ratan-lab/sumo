@@ -192,8 +192,8 @@ class SumoNMF:
         self.bins = [sample_ids[i::nbins] for i in range(nbins)]
         for i in range(len(self.bins)):
             ms = bin_size - len(self.bins[i])
-            self.bins[i] = np.array(sorted(
-                self.bins[i] + list(np.random.choice(sample_ids, size=ms, replace=False))))  # TODO: add test
+            self.bins[i] = np.array(sorted(self.bins[i] + list(
+                np.random.choice(list(set(sample_ids) - set(self.bins[i])), size=ms, replace=False))))  # TODO: add test
 
         self.logger = get_logger()
 

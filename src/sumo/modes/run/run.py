@@ -272,14 +272,26 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     minRE, maxRE = min(REs), max(REs)
 
     consensus = np.zeros((sumo_run.graph.nodes, sumo_run.graph.nodes))
-    eps = np.spacing(1)  # epsilon
-    weights = []
-    for run_idx in range(sumo_run.n):
-        weight = (maxRE - results[run_idx].RE + eps) / (maxRE - minRE + eps)
-        weights.append(weight)
-        consensus += results[run_idx].connectivity * weight
+    weights = np.empty((sumo_run.graph.nodes, sumo_run.graph.nodes))
+    weights[:] = np.nan
 
-    consensus = consensus / np.sum(weights)
+    all_equal = np.allclose(minRE, maxRE)
+
+    for run_idx in range(sumo_run.n):
+        weight = np.empty((sumo_run.graph.nodes, sumo_run.graph.nodes))
+        weight[:] = np.nan
+        sample_ids = results[run_idx].sample_ids
+        if all_equal:
+            weight[sample_ids, sample_ids[:, None]] = 1.
+        else:
+            weight[sample_ids, sample_ids[:, None]] = (maxRE - results[run_idx].RE) / (maxRE - minRE)
+
+        weights = np.nansum(np.stack((weights, weight)), axis=0)
+        consensus_run = np.nanprod(np.stack((results[run_idx].connectivity, weight)), axis=0)
+        consensus = np.nansum(np.stack((consensus, consensus_run)), axis=0)
+
+    assert not np.any(np.isnan(consensus))
+    consensus = consensus / weights
     org_con = consensus.copy()
     consensus[consensus < 0.5] = 0
 
