@@ -38,7 +38,7 @@ RUN_DEFAULTS = {
     "log": "INFO",
     "h_init": None,
     "t": 1,
-    "subsample": 1
+    "subsample": 0.05
 }
 RUN_ARGS = ["infile", "k", "outdir"] + list(RUN_DEFAULTS.keys())  # 3 positional args
 

@@ -128,9 +128,9 @@ def add_run_command_options(subparsers):
                                      ', stop iterations before reaching max_iter (default of %(default)s)')
 
     cluster_parser.add_argument('-subsample', action='store',
-                                type=int, required=False, default=RUN_DEFAULTS['subsample'],
-                                help='number of samples randomly removed from each run, cannot be greater then half' +
-                                     ' of samples in dataset (default of %(default)s)')
+                                type=float, required=False, default=RUN_DEFAULTS['subsample'],
+                                help='fraction of samples randomly removed from each run, cannot be greater then 0.5' +
+                                     ' (default of %(default)s)')
 
     cluster_parser.add_argument('-calc_cost', action='store',
                                 type=int, required=False, default=RUN_DEFAULTS['calc_cost'],

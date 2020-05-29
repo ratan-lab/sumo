@@ -65,6 +65,9 @@ class SumoRun(SumoMode):
             raise ValueError("Incorrect value of 'n'")
         if self.t < 1:
             raise ValueError("Incorrect number of threads")
+        if self.subsample > 0.5:
+            # do not allow for removal of more then 50% of samples in each run
+            raise ValueError("Too high value of subsample parameter")
 
         self.logger = setup_logger("main", self.log, self.logfile)
 
@@ -119,15 +122,14 @@ class SumoRun(SumoMode):
             if self.h_init >= len(adj_matrices) or self.h_init < 0:
                 raise ValueError("Incorrect value of h_init")
 
-        if self.subsample > sample_names.size / 2:
-            # do not allow for removal of more then 50% of samples
-            raise ValueError("Too high value of subsample parameter")
-
         # create multilayer graph
         self.graph = MultiplexNet(adj_matrices=adj_matrices, node_labels=sample_names)
+        n_sub_samples = round(sample_names.size * self.subsample)
+        self.logger.info(
+            "#Number of samples randomly removed in each run: {} out of {}".format(n_sub_samples, sample_names.size))
 
         # create solver
-        self.nmf = SumoNMF(graph=self.graph, nbins=self.n, bin_size=self.graph.nodes - self.subsample)
+        self.nmf = SumoNMF(graph=self.graph, nbins=self.n, bin_size=self.graph.nodes - n_sub_samples)
 
         global _sumo_run
         _sumo_run = self  # this solves multiprocessing issue with pickling
