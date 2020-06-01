@@ -1,3 +1,4 @@
+from sumo.constants import RUN_DEFAULTS
 from sumo.modes.run.solver import svd_h_init, svd_si_init, SumoNMF
 from sumo.network import MultiplexNet
 from sumo.utils import check_matrix_symmetry
@@ -41,22 +42,34 @@ def test_init():
     sample_names = ['sample_{}'.format(i) for i in range(10)]
 
     with pytest.raises(ValueError):
-        SumoNMF(a0)
+        SumoNMF(a0, nbins=RUN_DEFAULTS['n'])
 
     graph = MultiplexNet(adj_matrices=[a0, a1], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph)
+    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
     assert np.array_equal((a0 + a1) / 2, nmf.avg_adj)
+    assert all([bin.size == 10 for bin in nmf.bins])
+
+    # different bin size
+    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'], bin_size=9)
+    assert all([bin.size == 9 for bin in nmf.bins])
+
+    with pytest.raises(ValueError):
+        # incorrect number of bins
+        SumoNMF(graph, nbins=0)
+    with pytest.raises(ValueError):
+        # too high bin size
+        SumoNMF(graph, nbins=RUN_DEFAULTS['n'], bin_size=20)
 
     # missing values in one layer
     a0[0, 1], a0[1, 0] = np.nan, np.nan
     graph = MultiplexNet(adj_matrices=[a0, a1], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph)
+    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
     assert np.allclose(nmf.avg_adj[0, 1], a1[0, 1])
 
     # missing values in both layers
     a1[0, 1], a1[1, 0] = np.nan, np.nan
     graph = MultiplexNet(adj_matrices=[a0, a1], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph)
+    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
     assert not np.isnan(nmf.avg_adj[0, 1])
 
 
@@ -68,7 +81,7 @@ def test_factorize():
     sample_names = ['sample_{}'.format(i) for i in range(10)]
 
     graph = MultiplexNet(adj_matrices=[a0, a1], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph)
+    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
 
     # incorrect k value
     with pytest.raises(ValueError):
@@ -83,7 +96,7 @@ def test_extract_clusters():
     sample_names = ['sample_{}'.format(i) for i in range(10)]
 
     graph = MultiplexNet(adj_matrices=[a], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph)
+    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
     res = nmf.factorize(sparsity_penalty=10.0, k=2)
 
     assert res.labels is None

@@ -65,6 +65,15 @@ def test_init(tmpdir):
     with pytest.raises(ValueError):
         SumoRun(**args)
 
+    # incorrect subsample argument
+    args = _get_args(fname, [2], outdir)
+    args['subsample'] = -0.1
+    with pytest.raises(ValueError):
+        SumoRun(**args)
+    args['subsample'] = 0.9
+    with pytest.raises(ValueError):
+        SumoRun(**args)
+
 
 def test_run(tmpdir):
     fname = os.path.join(tmpdir, "data.npz")

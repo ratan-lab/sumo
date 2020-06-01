@@ -155,14 +155,17 @@ class SumoNMF:
         | graph (MultiplexNet): network object, containing data about connections between nodes in each layer \
             in form of adjacency matrices
         | nbins (int): number of bins, to distribute samples into
-        | bin_size (int): size of bin
+        | bin_size (int): size of bin, if None set to number of samples
 
     """
 
-    def __init__(self, graph: MultiplexNet, nbins: int, bin_size: int):
+    def __init__(self, graph: MultiplexNet, nbins: int, bin_size: int = None):
 
         if not isinstance(graph, MultiplexNet):
             raise ValueError("Unrecognized graph object")
+
+        if bin_size is None:
+            bin_size = graph.sample_names.size
 
         if nbins <= 0 or bin_size > graph.nodes:
             # This should never happen due to creation of SumoNMF objects in sumo 'run'
@@ -212,7 +215,7 @@ class SumoNMF:
                 using average adjacency
             logger_name (str): name of existing logger object, if not supplied new main logger is used
             bin_id (int): id of sample bin created in SumoNMF constructor (default of None, means clustering \
-                all samples instead of samples in given bin) #TODO: add docstring to sumo run class
+                all samples instead of samples in given bin)
 
         Returns:
             h (Numpy.ndarray): result feature matrix / soft cluster indicator matrix

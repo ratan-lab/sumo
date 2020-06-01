@@ -33,6 +33,7 @@ class SumoRun(SumoMode):
         | max_iter (int): maximum number of iterations for factorization
         | tol (float): if objective cost function value fluctuation is smaller than this value, stop iterations \
             before reaching max_iter
+        | subsample (float): fraction of samples randomly removed from each run, cannot be greater then 0.5
         | calc_cost (int): number of steps between every calculation of objective cost function
         | logfile (str): path to save log file, if set to None stdout is used
         | log (str): sets the logging level from {log_levels}
@@ -65,9 +66,9 @@ class SumoRun(SumoMode):
             raise ValueError("Incorrect value of 'n'")
         if self.t < 1:
             raise ValueError("Incorrect number of threads")
-        if self.subsample > 0.5:
+        if self.subsample > 0.5 or self.subsample < 0:
             # do not allow for removal of more then 50% of samples in each run
-            raise ValueError("Too high value of subsample parameter")
+            raise ValueError("Incorrect value of subsample parameter")
 
         self.logger = setup_logger("main", self.log, self.logfile)
 
