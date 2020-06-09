@@ -276,12 +276,10 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     for run_idx in range(sumo_run.n):
         all_REs.append(results[run_idx].RE)
 
-    pac_list = []
-    ccc_list = []
+    out_arrays = {'pac': np.array([]), 'cophenet': np.array([])}
 
     for rep in range(sumo_run.rep):
         run_indices = list(np.random.choice(range(len(results)), sumo_run.runs_per_con, replace=False))
-        selected_runs = np.array(results)[run_indices]
         REs = np.array(all_REs)[run_indices]
         minRE, maxRE = min(REs), max(REs)
 
@@ -291,14 +289,14 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
 
         all_equal = np.allclose(minRE, maxRE)
 
-        for run_idx in range(selected_runs.size):
+        for run_idx in run_indices:
             weight = np.empty((sumo_run.graph.nodes, sumo_run.graph.nodes))
             weight[:] = np.nan
-            sample_ids = selected_runs[run_idx].sample_ids
+            sample_ids = results[run_idx].sample_ids
             if all_equal:
                 weight[sample_ids, sample_ids[:, None]] = 1.
             else:
-                weight[sample_ids, sample_ids[:, None]] = (maxRE - selected_runs[run_idx].RE) / (maxRE - minRE)
+                weight[sample_ids, sample_ids[:, None]] = (maxRE - results[run_idx].RE) / (maxRE - minRE)
 
             weights = np.nansum(np.stack((weights, weight)), axis=0)
             consensus_run = np.nanprod(np.stack((results[run_idx].connectivity, weight)), axis=0)
@@ -307,6 +305,10 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
         eta_logger.info("#Creating consensus graphs [{} out of {}]".format(rep + 1, sumo_run.rep))
         assert not np.any(np.isnan(consensus))
         consensus = consensus / weights
+
+        if sumo_run.log == "DEBUG":
+            out_arrays.update({'pac_consensus_{}'.format(rep): consensus,
+                               'runs_{}'.format(rep): np.array(run_indices)})
 
         org_con = consensus.copy()
         consensus[consensus < 0.5] = 0
@@ -319,13 +321,14 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
                                     "your consensus matrix.")
         else:
             ccc = cophenet(linkage(dist, method="complete", metric="correlation"), dist)[0]
-        ccc_list.append(ccc)
 
         # calculate proportion of ambiguous clustering
         den = (sumo_run.graph.nodes ** 2) - sumo_run.graph.nodes
         num = org_con[(org_con > 0.1) & (org_con < 0.9)].size
         pac = num * (1. / den)
-        pac_list.append(pac)
+
+        out_arrays.update({'pac': np.append(out_arrays['pac'], pac),
+                           'cophenet': np.append(out_arrays['cophenet'], ccc)})
 
     eta_logger.info("#Extracting final clustering result, using normalized cut")
     consensus_labels = extract_ncut(consensus, k=k)
@@ -344,14 +347,12 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     # calculate quality of clustering for given sparsity
     quality = sumo_run.graph.get_clustering_quality(labels=cluster_array[:, 1])
     # create output file
-    out_arrays = {
+    out_arrays.update({
         "clusters": cluster_array,
         "consensus": consensus,
         "unfiltered_consensus": org_con,
-        "quality": np.array(quality),
-        "cophenet": np.array(ccc_list),
-        "pac": np.array(pac_list)
-    }
+        "quality": np.array(quality)
+    })
 
     if sumo_run.log == "DEBUG":
         for i in range(len(results)):
