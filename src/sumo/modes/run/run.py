@@ -63,12 +63,16 @@ class SumoRun(SumoMode):
         if not os.path.exists(self.infile):
             raise FileNotFoundError("Input file not found")
         if self.n < 1:
-            raise ValueError("Incorrect value of 'n'")
+            raise ValueError("Incorrect value of 'n' parameter")
         if self.t < 1:
             raise ValueError("Incorrect number of threads")
         if self.subsample > 0.5 or self.subsample < 0:
             # do not allow for removal of more then 50% of samples in each run
-            raise ValueError("Incorrect value of subsample parameter")
+            raise ValueError("Incorrect value of 'subsample' parameter")
+        if self.rep < 1:
+            # number of times additional consensus matrix will be created
+            raise ValueError("Incorrect value of 'rep' parameter")
+        self.runs_per_con = max(round(self.n * 0.8), 1)  # number of runs per consensus matrix creation
 
         self.logger = setup_logger("main", self.log, self.logfile)
 
@@ -267,55 +271,61 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
 
     # consensus graph
     assert len(results) > 0
-    eta_logger.info("#Creating consensus graph")
 
-    REs = []  # residual errors
+    all_REs = []  # residual errors
     for run_idx in range(sumo_run.n):
-        REs.append(results[run_idx].RE)
-    minRE, maxRE = min(REs), max(REs)
+        all_REs.append(results[run_idx].RE)
 
-    consensus = np.zeros((sumo_run.graph.nodes, sumo_run.graph.nodes))
-    weights = np.empty((sumo_run.graph.nodes, sumo_run.graph.nodes))
-    weights[:] = np.nan
+    pac_list = []
+    ccc_list = []
 
-    all_equal = np.allclose(minRE, maxRE)
+    for rep in range(sumo_run.rep):
+        run_indices = list(np.random.choice(range(len(results)), sumo_run.runs_per_con, replace=False))
+        selected_runs = np.array(results)[run_indices]
+        REs = np.array(all_REs)[run_indices]
+        minRE, maxRE = min(REs), max(REs)
 
-    for run_idx in range(sumo_run.n):
-        weight = np.empty((sumo_run.graph.nodes, sumo_run.graph.nodes))
-        weight[:] = np.nan
-        sample_ids = results[run_idx].sample_ids
-        if all_equal:
-            weight[sample_ids, sample_ids[:, None]] = 1.
+        consensus = np.zeros((sumo_run.graph.nodes, sumo_run.graph.nodes))
+        weights = np.empty((sumo_run.graph.nodes, sumo_run.graph.nodes))
+        weights[:] = np.nan
+
+        all_equal = np.allclose(minRE, maxRE)
+
+        for run_idx in range(selected_runs.size):
+            weight = np.empty((sumo_run.graph.nodes, sumo_run.graph.nodes))
+            weight[:] = np.nan
+            sample_ids = selected_runs[run_idx].sample_ids
+            if all_equal:
+                weight[sample_ids, sample_ids[:, None]] = 1.
+            else:
+                weight[sample_ids, sample_ids[:, None]] = (maxRE - selected_runs[run_idx].RE) / (maxRE - minRE)
+
+            weights = np.nansum(np.stack((weights, weight)), axis=0)
+            consensus_run = np.nanprod(np.stack((results[run_idx].connectivity, weight)), axis=0)
+            consensus = np.nansum(np.stack((consensus, consensus_run)), axis=0)
+
+        eta_logger.info("#Creating consensus graphs [{} out of {}]".format(rep + 1, sumo_run.rep))
+        assert not np.any(np.isnan(consensus))
+        consensus = consensus / weights
+
+        org_con = consensus.copy()
+        consensus[consensus < 0.5] = 0
+
+        # calculate cophenetic correlation coefficient
+        dist = pdist(org_con, metric="correlation")
+        if np.any(np.isnan(dist)):
+            ccc = np.nan
+            sumo_run.logger.warning("Cannot calculate cophenetic correlation coefficient! Please inspect values in " +
+                                    "your consensus matrix.")
         else:
-            weight[sample_ids, sample_ids[:, None]] = (maxRE - results[run_idx].RE) / (maxRE - minRE)
+            ccc = cophenet(linkage(dist, method="complete", metric="correlation"), dist)[0]
+        ccc_list.append(ccc)
 
-        weights = np.nansum(np.stack((weights, weight)), axis=0)
-        consensus_run = np.nanprod(np.stack((results[run_idx].connectivity, weight)), axis=0)
-        consensus = np.nansum(np.stack((consensus, consensus_run)), axis=0)
-
-    assert not np.any(np.isnan(consensus))
-    consensus = consensus / weights
-    org_con = consensus.copy()
-    consensus[consensus < 0.5] = 0
-
-    # calculate cophenetic correlation coefficient
-    dist = pdist(org_con, metric="correlation")
-    if np.any(np.isnan(dist)):
-        ccc = np.nan
-        sumo_run.logger.warning("Cannot calculate cophenetic correlation coefficient! Please inspect values in " +
-                                "your consensus matrix.")
-    else:
-        ccc = cophenet(linkage(dist, method="complete", metric="correlation"), dist)[0]
-
-    # calculate proportion of ambiguous clustering
-    den = (sumo_run.graph.nodes ** 2) - sumo_run.graph.nodes
-    num = org_con[(org_con > 0.1) & (org_con < 0.9)].size
-    pac = num * (1. / den)
-
-    # calculate proportion of ambiguous clustering
-    den = (sumo_run.graph.nodes ** 2) - sumo_run.graph.nodes
-    num = org_con[(org_con > 0.1) & (org_con < 0.9)].size
-    pac = num * (1. / den)
+        # calculate proportion of ambiguous clustering
+        den = (sumo_run.graph.nodes ** 2) - sumo_run.graph.nodes
+        num = org_con[(org_con > 0.1) & (org_con < 0.9)].size
+        pac = num * (1. / den)
+        pac_list.append(pac)
 
     eta_logger.info("#Extracting final clustering result, using normalized cut")
     consensus_labels = extract_ncut(consensus, k=k)
@@ -339,8 +349,8 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
         "consensus": consensus,
         "unfiltered_consensus": org_con,
         "quality": np.array(quality),
-        "cophenet": np.array([ccc]),
-        "pac": np.array([pac])
+        "cophenet": np.array(ccc_list),
+        "pac": np.array(pac_list)
     }
 
     if sumo_run.log == "DEBUG":

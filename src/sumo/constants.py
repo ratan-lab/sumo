@@ -29,7 +29,7 @@ PREPARE_ARGS = ["infiles", "outfile"] + list(PREPARE_DEFAULTS.keys())  # 3 posit
 CLUSTER_METHODS = ["max_value", "spectral"]
 RUN_DEFAULTS = {
     "sparsity": [0.1],
-    "n": 50,
+    "n": 60,
     "method": "max_value",
     "max_iter": 500,
     "tol": 1e-5,
@@ -38,7 +38,8 @@ RUN_DEFAULTS = {
     "log": "INFO",
     "h_init": None,
     "t": 1,
-    "subsample": 0.05
+    "subsample": 0.05,
+    "rep": 5
 }
 RUN_ARGS = ["infile", "k", "outdir"] + list(RUN_DEFAULTS.keys())  # 3 positional args
 
