@@ -1,5 +1,5 @@
 # command_line
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 SUMO_COMMANDS = ["prepare", "run", "evaluate", "interpret"]
 
 # prepare

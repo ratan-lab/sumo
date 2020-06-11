@@ -2,14 +2,15 @@
 
 History
 =======
-0.2.5 (2020-??-??)
+0.2.5 (2020-06-11)
 ------------------
-* Added Docerfile.
+* Added Dockerfile.
 * Improved clustering quality assessment by better utilization of consensus clustering in sumo *run*:
     - introduced clustering different random of subsets of samples in each run of factorization (fraction of samples removed in each run can be set with '-subsample' parameter);
     - increased default number of runs and introduced creation of multiple consensus matrices based on subsets of runs;
     - results .npz file now contains multiple PAC and CCC values (which are calculated for each consensus matrix);
     - updated plotting of PAC and CCC curves to show error bars.
+* Updated scikit-learn version requirement.
 
 0.2.4 (2020-03-06)
 ------------------
