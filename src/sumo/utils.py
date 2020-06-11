@@ -2,7 +2,7 @@ from matplotlib import rcParams
 from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.metrics import adjusted_rand_score, mutual_info_score
 from sklearn.metrics.cluster import entropy
-from .constants import LOG_LEVELS, CLUSTER_METRICS
+from .constants import LOG_LEVELS, CLUSTER_METRICS, COLOR_CODES
 from sys import stdout
 from typing import Union
 import logging
@@ -145,17 +145,26 @@ def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray = None, title: str = 
         plt.close()
 
 
-def plot_line(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: str = None):
-    """ Create line plot from vectors of x and y values """
+def plot_metric(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: str = None, color="blue"):
+    """ Create plot of median metric values, with ribbon between min and max values for each x"""
+    if color not in COLOR_CODES.keys():
+        raise ValueError("Color not found.")
+
     fig = plt.figure()
 
-    # remove missing values
-    indices = ~np.isnan(y)
-    y = np.array(y)[indices]
+    data = np.array(y)
+    medians = np.nanmedian(data, axis=1)
+    indices = ~np.isnan(medians)
+
+    medians = medians[indices]
+    mins = np.nanmin(data, axis=1)[indices]
+    maxes = np.nanmax(data, axis=1)[indices]
+
     org_x = x
     x = np.array(x)[indices]
 
-    plt.plot(x, y, marker='o')
+    plt.plot(x, medians, marker='o', color=COLOR_CODES[color]['dark'])
+    plt.fill_between(x, mins, maxes, color=COLOR_CODES[color]['light'], alpha=0.25)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)

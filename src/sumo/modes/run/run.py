@@ -5,7 +5,7 @@ from sumo.modes.mode import SumoMode
 from sumo.modes.run.solver import SumoNMF
 from sumo.network import MultiplexNet
 from sumo.utils import extract_ncut, load_npz, save_arrays_to_npz, setup_logger, docstring_formatter, \
-    plot_heatmap_seaborn, plot_line, close_logger
+    plot_heatmap_seaborn, plot_metric, close_logger
 import multiprocessing as mp
 import numpy as np
 import os
@@ -178,8 +178,8 @@ class SumoRun(SumoMode):
             self.logger.info("Selected eta: {}".format(best_eta))
             out_arrays = load_npz(best_result[1])
 
-            cophenet_list.append(out_arrays["cophenet"][0])
-            pac_list.append(out_arrays["pac"][0])
+            cophenet_list.append(out_arrays["cophenet"])
+            pac_list.append(out_arrays["pac"])
 
             # create text file with cluster labels
             clusters = out_arrays['clusters']
@@ -209,14 +209,15 @@ class SumoRun(SumoMode):
 
         if len(cophenet_list) > 1 and len(pac_list) > 1:
             cophenet_plot_path = os.path.join(self.plot_dir, "cophenet.png")
-            plot_line(x=self.k, y=cophenet_list, xlabel="K", ylabel="cophenetic correlation coefficient",
-                      title="Cluster stability for different K values", file_path=cophenet_plot_path)
+            plot_metric(x=self.k, y=cophenet_list, xlabel="K", ylabel="cophenetic correlation coefficient",
+                        title="Cluster stability for different K values", file_path=cophenet_plot_path, color="red")
             self.logger.info("#Cophentic correlation coefficient plot for different K values has " +
                              "been saved to {}".format(cophenet_plot_path))
 
             pac_plot_path = os.path.join(self.plot_dir, "pac.png")
-            plot_line(x=self.k, y=pac_list, xlabel="K", ylabel="PAC",
-                      title="Proportion of ambiguous clusterings for different K values", file_path=pac_plot_path)
+            plot_metric(x=self.k, y=pac_list, xlabel="K", ylabel="PAC",
+                        title="Proportion of ambiguous clusterings for different K values", file_path=pac_plot_path,
+                        color="blue")
             self.logger.info("#Proportion of ambiguous clusterings plot for different K values has " +
                              "been saved to {}".format(pac_plot_path))
 

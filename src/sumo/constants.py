@@ -70,3 +70,8 @@ INTERPRET_ARGS = ['sumo_results', 'infiles', 'output_prefix'] + list(INTERPRET_D
 # utils
 LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING']
 CLUSTER_METRICS = ['NMI', 'purity', 'ARI']
+COLOR_CODES = {
+    "blue": {"light": "#3C548899", "dark": "#3C5488FF"},
+    "red": {"light": "#DC000099", "dark": "#DC0000FF"},
+    "green": {"light": "#00A08799", "dark": "#00A087FF"}
+}
