@@ -17,7 +17,7 @@ _config = {
     "packages": find_packages("src"),
     "install_requires": [
         "seaborn",
-        "scikit-learn",
+        "scikit-learn>=0.22",
         "scipy",
         "matplotlib",
         "numpy",
