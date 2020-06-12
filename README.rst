@@ -124,8 +124,9 @@ Cluster multiplex network using non-negative matrix tri-factorization to identif
 
     usage: sumo run [-h] [-sparsity SPARSITY] [-n N]
                     [-method {max_value,spectral}] [-max_iter MAX_ITER] [-tol TOL]
-                    [-calc_cost CALC_COST] [-logfile LOGFILE]
-                    [-log {DEBUG,INFO,WARNING}] [-h_init H_INIT] [-t T]
+                    [-subsample SUBSAMPLE] [-calc_cost CALC_COST]
+                    [-logfile LOGFILE] [-log {DEBUG,INFO,WARNING}]
+                    [-h_init H_INIT] [-t T] [-rep REP]
                     infile.npz k outdir
 
     positional arguments:
@@ -146,7 +147,7 @@ Cluster multiplex network using non-negative matrix tri-factorization to identif
       -sparsity SPARSITY    either one value or coma-delimited list of sparsity
                             penalty values for H matrix (sumo will try different
                             values and select the best results; default of [0.1])
-      -n N                  number of repetitions (default of 50)
+      -n N                  number of repetitions (default of 60)
       -method {max_value,spectral}
                             method of cluster extraction (default of "max_value")
       -max_iter MAX_ITER    maximum number of iterations for factorization
@@ -154,6 +155,8 @@ Cluster multiplex network using non-negative matrix tri-factorization to identif
       -tol TOL              if objective cost function value fluctuation (|Δℒ|) is
                             smaller than this value, stop iterations before
                             reaching max_iter (default of 1e-05)
+      -subsample SUBSAMPLE  fraction of samples randomly removed from each run,
+                            cannot be greater then 0.5 (default of 0.05)
       -calc_cost CALC_COST  number of steps between every calculation of objective
                             cost function (default of 20)
       -logfile LOGFILE      path to save log file (by default printed to stdout)
@@ -162,6 +165,8 @@ Cluster multiplex network using non-negative matrix tri-factorization to identif
       -h_init H_INIT        index of adjacency matrix to use for H matrix
                             initialization (by default using average adjacency)
       -t T                  number of threads (default of 1)
+      -rep REP              number of times consensus matrix is created for the
+                            purpose of assessing clustering quality (default of 5)
 
 **Example**
 

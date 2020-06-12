@@ -40,6 +40,7 @@ class SumoRun(SumoMode):
         | h_init (int): index of adjacency matrix to use for H matrix initialization, if set to None average adjacency \
             matrix is used
         | t (int): number of threads
+        | rep (int): number of times consensus matrix is created for the purpose of assessing clustering quality
 
     """
 
