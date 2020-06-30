@@ -279,11 +279,10 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
         all_REs.append(results[run_idx].RE)
 
     out_arrays = {'pac': np.array([]), 'cophenet': np.array([])}
+    minRE, maxRE = min(all_REs), max(all_REs)
 
     for rep in range(sumo_run.rep):
         run_indices = list(np.random.choice(range(len(results)), sumo_run.runs_per_con, replace=False))
-        REs = np.array(all_REs)[run_indices]
-        minRE, maxRE = min(REs), max(REs)
 
         consensus = np.zeros((sumo_run.graph.nodes, sumo_run.graph.nodes))
         weights = np.empty((sumo_run.graph.nodes, sumo_run.graph.nodes))

@@ -154,7 +154,7 @@ def add_run_command_options(subparsers):
 
     cluster_parser.add_argument('-rep', action='store', type=int, default=RUN_DEFAULTS['rep'], required=False,
                                 help='number of times consensus matrix is created for the purpose of assessing ' +
-                                     'clustering quality (default of %(default)s)')  # TODO: change wording
+                                     'clustering quality (default of %(default)s)')
 
 
 def add_evaluate_command_options(subparsers):
