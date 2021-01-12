@@ -352,13 +352,15 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
         "clusters": cluster_array,
         "consensus": consensus,
         "unfiltered_consensus": org_con,
-        "quality": np.array(quality)
+        "quality": np.array(quality),
+        "samples": sumo_run.graph.sample_names
     })
 
     if sumo_run.log == "DEBUG":
         for i in range(len(results)):
             out_arrays["cost{}".format(i)] = results[i].delta_cost[-1, :]
             out_arrays["h{}".format(i)] = results[i].h
+            out_arrays["samples{}".format(i)] = results[i].graph.sample_names[results[i].sample_ids]
             for si in range(len(results[i].s)):
                 out_arrays["s{}{}".format(si, i)] = results[i].s[si]
 

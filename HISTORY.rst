@@ -2,6 +2,11 @@
 
 History
 =======
+0.2.6 (20??-??-??)
+------------------
+* Updated REs scaling for consensus matrix creation.
+* Add sample identifiers to sumo *run* result files.
+
 0.2.5 (2020-06-11)
 ------------------
 * Added Dockerfile.
