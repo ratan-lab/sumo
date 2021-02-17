@@ -364,8 +364,7 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
             for si in range(len(results[i].s)):
                 out_arrays["s{}{}".format(si, i)] = results[i].s[si]
 
-    save_arrays_to_npz(data=out_arrays,
-                       file_path=outfile)  # TODO: add detailed output files description in documentation
+    save_arrays_to_npz(data=out_arrays, file_path=outfile)
     eta_logger.info("#Output file {} created".format(outfile))
     close_logger(eta_logger)
 

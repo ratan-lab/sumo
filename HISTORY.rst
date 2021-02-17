@@ -6,6 +6,7 @@ History
 ------------------
 * Updated REs scaling for consensus matrix creation.
 * Add sample identifiers to sumo *run* result files.
+* Updated documentation to include the detailed description of arrays in each .npz result file and an example of integration of somatic mutation data into SUMO workflow.
 
 0.2.5 (2020-06-11)
 ------------------

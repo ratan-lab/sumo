@@ -4,7 +4,7 @@ Example usage
 
 In this example, we will use SUMO to stratify patients diagnosed with Acute Myeloid Leukemia (LAML) into sub-groups based on gene-expression, micro-RNA expression, and methylation datasets. We will describe steps that should be taken for pre-processing of these data, use SUMO to detect the various sub-groups of patients, and identify the features e.g., genes and methylation probes, that drive each of those subgroups.
 
-We will use `gene expression <https://gdc.xenahubs.net/download/TCGA-LAML.htseq_fpkm.tsv.gz>`_, `methylation <https://gdc.xenahubs.net/download/TCGA-LAML.methylation27.tsv.gz>`_ and `miRNA expression <https://gdc.xenahubs.net/download/TCGA-LAML.mirna.tsv.gz>`_ data from UCSC XENA browser in this vignette.
+We will use `gene expression <https://gdc.xenahubs.net/download/TCGA-LAML.htseq_fpkm.tsv.gz>`_, `methylation <https://gdc.xenahubs.net/download/TCGA-LAML.methylation27.tsv.gz>`_ and `miRNA expression <https://gdc.xenahubs.net/download/TCGA-LAML.mirna.tsv.gz>`_ data from UCSC XENA browser in this python vignette.
 
 ==================
 Data preprocessing
@@ -14,7 +14,7 @@ While preprocessing data for SUMO analysis we strongly suggest the following ste
 
  1. **Filtering your data** - SUMO handles missing values to some extent, however removing features and samples with a large fraction of missing values (>10%) has been shown to improve the classification. You can additionally choose to remove features that are likely to be noise e.g., low expressed genes in all samples.
 
- 2. **Data normalization/transformation** - We advise the use of a log transform or a variant stabilizing transform when using count data as input. This step is omitted in the code below, as the downloaded data is already log normalized. When using methylation data, we prefer the use of M-values over beta values.  
+ 2. **Data normalization/transformation** - We advise the use of a log transform or a variant stabilizing transform when using count data as input. This step is omitted in the code below, as the downloaded data is already log normalized. When using methylation data, we prefer the use of M-values over beta values.
 
  3. **Data standardization** - Lastly, each feature should be standardized before being input to SUMO.
 
@@ -25,14 +25,14 @@ Here is code in python that we can use to perform the preprocessing for the RNA-
     import numpy as np
     import pandas as pd
     from sklearn import preprocessing
-    
+
     def preprocess_logfpkm(inputfile, outputfile):
         """Filter the input log2(fpkm+1) values and write the output"""
 
         # read the log2(fpkm+1) values
         norm_fpkm = pd.read_csv(inputfile, sep='\t', header=0, index_col=0)
         print("Read %s" % inputfile)
-    
+
         # remove genes where less then two samples have FPKM higher then zero
         norm_fpkm = norm_fpkm[np.sum(norm_fpkm > 1, axis=1) > 1]
 
@@ -44,7 +44,7 @@ Here is code in python that we can use to perform the preprocessing for the RNA-
             # write the file
             scaled_fpkm.to_csv(outputfile, sep='\t', index=True, na_rep="NA")
             print("Wrote %s" % outputfile)
-        
+
     preprocess_logfpkm("TCGA-LAML.htseq_fpkm.tsv.gz", "TCGA-LAML.htseq_fpkm.flt.tsv.gz")
     preprocess_logfpkm("TCGA-LAML.mirna.tsv.gz", "TCGA-LAML.mirna.flt.tsv.gz")
 
@@ -56,27 +56,27 @@ Here is the python code to perform preprocessing of the methylation dataset.
     import numpy as np
     import pandas as pd
     from sklearn import preprocessing
-    
+
     # read in the beta values
     beta = pd.read_csv("TCGA-LAML.methylation27.tsv.gz", sep='\t', header=0, index_col=0)
-    
+
     # remove rows where we do not have information from any sample
     beta = beta.dropna(axis=0, how='all')
-    
+
     # convert each beta value to the corresponding M values
     def convert(B):
         eps = np.spacing(1)
         return(np.log2((B + eps)/(1. - B + eps)))
-        
+
     M = beta.applymap(convert)
     print("Converted to M values")
-    
+
     scaler = preprocessing.StandardScaler()
     scaled_M = scaler.fit_transform(M.T)
     scaled_M = scaled_M.T
     scaled_M = pd.DataFrame(scaled_M, index=list(M.index), columns=list(M.columns))
     print("Standardization complete")
-    
+
     scaled_M.to_csv("TCGA-LAML.methylation27.flt.tsv.gz", sep='\t', index=True, na_rep="NA")
 
 
@@ -96,19 +96,25 @@ SUMO provides four modes allowing for molecular subtyping of multi-omic data (*p
 sumo prepare
 ------------
 
-In this mode, SUMO calculates the pairwise similarity between the samples using each of the input omic datatypes (in this case gene expression, methylation and miRNA expression).
+In this mode, SUMO calculates the pairwise similarity between the samples for each separate input file containing a feature matrix with omic data (in this case gene expression, methylation and miRNA expression).
 
 ::
 
     sumo prepare -plot LAML.png TCGA-LAML.htseq_fpkm.flt.tsv.gz,TCGA-LAML.methylation27.flt.tsv.gz,TCGA-LAML.mirna.flt.tsv.gz prepared.LAML.npz
 
-The above creates 'prepared.LAML.npz' file that contains the pairwise similarities organized as adjacency matrices, and three .png files with plots of the adjacency matrices for each omic datatype.
+The above command creates a multiplex network file 'prepared.LAML.npz' containing:
+
+* the pairwise similarities organized as network adjacency matrices in order of input files (arrays: '0', '1', '2')
+* input feature matrices (arrays: 'f0', 'f1', 'f2')
+* list of sample identifiers in order corresponding to rows/columns of adjacency matrices ('sample' array)
+
+Thanks to the -plot flag SUMO also creates three .png files with plots of the adjacency matrices for each omic datatype.
 
 --------
 sumo run
 --------
 
-In this mode, SUMO applies symmetric non-negative matrix tri-factorization on the similarity matrices to identify the clusters of samples. Estimating the best number of clusters remains a challenging problem, but we recommend that the user supply a range of values to use with SUMO. 
+In this mode, SUMO applies symmetric non-negative matrix tri-factorization on the similarity matrices to identify the clusters of samples. Estimating the best number of clusters remains a challenging problem, but we recommend that the user supply a range of values to use with SUMO.
 
 ::
 
@@ -143,6 +149,23 @@ The complete directory structure generated after running the above command is sh
         ├── cophenet.png
         └── pac.png
 
+To make subtyping results more robust SUMO uses a resampling-based approach in conjunction with consensus clustering. In this mode, the factorization is repeated multiple times (set by -n flag), with a fraction of samples (set by -subsample flag) removed from each run. Next, we use random subsets of runs to create multiple (set by -rep flag) weighted consensus matrices, that are utilized for the robust assessment of the factorization results and derivation of final clustering labels.
+
+As presented in the directory structure above SUMO creates an .npz result file for each (k, eta) pair, where k is a set number of clusters and eta is a factorization sparsity value (can be modified by -sparsity flag). Each such file contains:
+
+* calculated clustering stability metrics for each consensus matrix: the proportion of ambiguous clusterings and cophenetic correlation coefficient ('pac' and 'cophenet' arrays respectively)
+* quality metric assessing the within-cluster similarities based on final sample labels, used for sparsity parameter selection ('quality' array)
+* selected consensus matrix ('unfiltered_consensus' array) and its copy used for final sample label assignment after the noise filtering ('consensus' array)
+* final sample labels ('clusters' array)
+
+Adding -log DEBUG flag when running SUMO 'run' mode, results in saving additional arrays in each .npz file:
+
+* every weighted consensus matrix used for the calculation of stability metrics (arrays: 'pac_consensus_0', 'pac_consensus_1'...)
+* indices of solver runs used to create each consensus matrix (arrays: 'runs_0', 'runs_1', ...)
+* results of each factorization run:
+    * final cost function value (array 'costi' for run 'i')
+    * final H matrix (array 'hi' for run 'i')
+    * final S matrix for each data type (array 'sij' for data type 'i' and run 'j')
 
 --------------
 sumo interpret
@@ -159,52 +182,151 @@ The above command generates a file two files "LAML_features.tsv" and "LAML_featu
 
 For example, here the results shows that the following top 10 features support various clusters:
 
++----------------------------+-----------------------------+
+| Group 0                    | Group 1                     |
++====================+=======+====================+========+
+| cg27497900         | 30.21 | cg21299958         | 36.01  |
++--------------------+-------+--------------------+--------+
+| cg05934874         | 21.77 | cg16907075         | 13.5   |
++--------------------+-------+--------------------+--------+
+| hsa-mir-574        | 17.65 | cg14142521         | 12.92  |
++--------------------+-------+--------------------+--------+
+| hsa-mir-450a-1     | 12.71 | ENSG00000135404.10 | 11.87  |
++--------------------+-------+--------------------+--------+
+| ENSG00000173599.12 | 7.795 | ENSG00000185875.11 | 9.78   |
++--------------------+-------+--------------------+--------+
+| cg23705973         | 6.13  | cg24995240         | 4.21   |
++--------------------+-------+--------------------+--------+
+| cg26450541         | 4.56  | ENSG00000114942.12 | 3.97   |
++--------------------+-------+--------------------+--------+
+| ENSG00000173482.15 | 4.5   | ENSG00000271270.4  | 3.59   |
++--------------------+-------+--------------------+--------+
+| hsa-mir-450b       | 2.76  | ENSG00000113272.12 | 3.51   |
++--------------------+-------+--------------------+--------+
+| ENSG00000154122.11 | 1.96  | cg06540636         | 3.175  |
++--------------------+-------+--------------------+--------+
 
+\
 
-+----------------------------------+----------------------------------+
-| Group 1                          | Group 2                          |
-+====================+=============+====================+=============+
-| hsa-mir-22         | 75.3233574  | cg18979819         | 52.90086054 |
-+--------------------+-------------+--------------------+-------------+
-| cg25076881         | 54.68371529 | cg14325649         | 45.66930331 |
-+--------------------+-------------+--------------------+-------------+
-| ENSG00000170584.9  | 29.78108163 | hsa-mir-199a-2     | 40.69787094 |
-+--------------------+-------------+--------------------+-------------+
-| cg14027234         | 22.89081537 | cg23705973         | 40.62359106 |
-+--------------------+-------------+--------------------+-------------+
-| cg04109382         | 20.48871007 | cg19346899         | 34.96037943 |
-+--------------------+-------------+--------------------+-------------+
-| cg01110312         | 17.64408184 | ENSG00000148672.8  | 30.14950394 |
-+--------------------+-------------+--------------------+-------------+
-| cg25645748         | 16.85100694 | cg20340596         | 25.47572752 |
-+--------------------+-------------+--------------------+-------------+
-| ENSG00000213468.3  | 16.76245821 | cg14576628         | 22.37044065 |
-+--------------------+-------------+--------------------+-------------+
-| ENSG00000131778.16 | 15.58228512 | hsa-mir-574        | 20.81683191 |
-+--------------------+-------------+--------------------+-------------+
-| ENSG00000005238.18 | 12.45771289 | hsa-mir-193a       | 19.25008652 |
-+--------------------+-------------+--------------------+-------------+
++----------------------------+-----------------------------+
+| Group 2                    | Group 3                     |
++====================+=======+====================+========+
+| hsa-mir-199a-2     | 24.34 | cg14178895         | 18.385 |
++--------------------+-------+--------------------+--------+
+| ENSG00000153786.11 | 14.95 | cg00617305         | 12.89  |
++--------------------+-------+--------------------+--------+
+| hsa-let-7e         | 10.81 | ENSG00000269845.1  | 11.81  |
++--------------------+-------+--------------------+--------+
+| ENSG00000229816.1  | 9.43  | ENSG00000196705.7  | 11.61  |
++--------------------+-------+--------------------+--------+
+| ENSG00000281016.1  | 8.96  | cg09891761         | 11.535 |
++--------------------+-------+--------------------+--------+
+| ENSG00000177731.14 | 7.75  | ENSG00000160229.10 | 7.88   |
++--------------------+-------+--------------------+--------+
+| cg18959422         | 7.57  | ENSG00000255730.3  | 4.84   |
++--------------------+-------+--------------------+--------+
+| ENSG00000206841.1  | 4.71  | ENSG00000269399.2  | 2.88   |
++--------------------+-------+--------------------+--------+
+| hsa-mir-128-2      | 4.63  | hsa-mir-4473       | 2.735  |
++--------------------+-------+--------------------+--------+
+| hsa-mir-106a       | 3.645 | ENSG00000270876.1  | 2.68   |
++--------------------+-------+--------------------+--------+
 
-+----------------------------------+----------------------------------+
-| Group 1                          | Group 2                          |
-+====================+=============+====================+=============+
-| hsa-mir-26a-1      | 62.81218414 | ENSG00000281162.1  | 89.15823387 |
-+--------------------+-------------+--------------------+-------------+
-| cg10957584         | 40.31222349 | ENSG00000139318.7  | 51.8247784  |
-+--------------------+-------------+--------------------+-------------+
-| hsa-mir-146a       | 39.65185698 | ENSG00000198585.10 | 41.81821387 |
-+--------------------+-------------+--------------------+-------------+
-| hsa-mir-9-1        | 31.29804593 | hsa-mir-181c       | 27.85737717 |
-+--------------------+-------------+--------------------+-------------+
-| hsa-mir-26a-2      | 25.79902879 | hsa-mir-335        | 26.22691472 |
-+--------------------+-------------+--------------------+-------------+
-| cg07656391         | 23.58458233 | hsa-mir-6503       | 23.9870722  |
-+--------------------+-------------+--------------------+-------------+
-| hsa-mir-139        | 23.49122814 | cg03387497         | 21.45016846 |
-+--------------------+-------------+--------------------+-------------+
-| cg00795268         | 23.33766879 | hsa-mir-3913-1     | 18.55877291 |
-+--------------------+-------------+--------------------+-------------+
-| cg18403361         | 23.31470381 | ENSG00000101160.12 | 17.26709816 |
-+--------------------+-------------+--------------------+-------------+
-| cg16108132         | 21.16833145 | cg21402071         | 17.20317828 |
-+--------------------+-------------+--------------------+-------------+
+============================================
+Including somatic mutations in SUMO analysis
+============================================
+
+Although the SUMO subtyping results are robust even for noisy continuous datasets the inclusion of highly sparse data matrix such as binary somatic mutation, may cause the method to become sensitive to the feature selection step. This obstacle can be overcome by converting the data into the continuous data matrix appropriate for SUMO.
+
+One way to efficiently convert somatic mutation data into a continuous matrix is to not only consider the gene's self-characteristic (in this case a mutation presence/absence) but also its influence on the regulatory network.
+
+In this example, we apply the Random Walk method on somatic mutation data from LAML patients (see the previous example), using the protein-protein interaction network to create the synergistic data type that can be included in the SUMO data integration workflow.
+
+In the below R vignettes we use `MC3 public somatic mutation data <https://gdc.cancer.gov/about-data/publications/mc3-2017>`_. The file was subsetted to contain only LAML samples.
+
+.. code-block:: R
+
+    library(biomaRt)
+    library(igraph)
+    library(STRINGdb)
+    library(annotables)
+    library(RandomWalkRestartMH)
+    library(tidyverse)
+    library(ComplexHeatmap)
+
+    # Load the somatic mutation data
+    mutations <- read_tsv("mc3.v0.2.8.PUBLIC.LAML.maf.gz", guess_max=1000000)
+    patient_ids <- sapply(mutations$Tumor_Sample_Barcode,
+                      function(x){spx = strsplit(x, '-')[[1]]; paste(spx[1], spx[2], spx[3],sep="-")})
+    mutations$patient_id <- patient_ids
+
+Fetch the protein-protein interactions for H. Sapiens from the `STRING data base <https://string-db.org>`_.
+
+.. code-block:: R
+
+    string_db <- STRINGdb$new( version="10", species=9606, score_threshold=400, input_directory="")
+    db <- string_db$get_graph()
+
+Create the gene-peptide identifier mapping with BioMart.
+
+.. code-block:: R
+
+    mart <- useMart(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+    mapping <- getBM(attributes=c("ensembl_gene_id", "ensembl_transcript_id", "ensembl_peptide_id"), mart=mart) %>%
+               mutate(ensembl_peptide_id = paste0("9606.", ensembl_peptide_id)) %>%
+               filter(ensembl_peptide_id %in% names(V(db)))
+
+Here we apply an exemplary filtering of the mutation types and possible artifacts based on the `MC3 filters <https://www.synapse.org/#!Synapse:syn7214402/wiki/406007>`_.
+
+.. code-block:: R
+
+    classes_toignore <- c("Intron", "Silent", "5'Flank", "3'UTR", "5'UTR", "3'Flank", "IGR", "RNA")
+    mutations <- mutations %>%
+        filter(!Variant_Classification %in% classes_toignore) %>% # subset the mutation types
+        filter(FILTER != "oxog,wga") # filter out possible artifacts
+
+Create one layer protein-protein interaction (PPI) network.
+
+.. code-block:: R
+
+    PPI_MultiplexObject <- create.multiplex(db,Layers_Name=c("PPI"))
+    # To apply the Random Walk with Restart (RWR) on this monoplex network,
+    # we need to compute the adjacency matrix of the network and normalize it by column.
+    AdjMatrix_PPI <- compute.adjacency.matrix(PPI_MultiplexObject)
+    AdjMatrixNorm_PPI <- normalize.multiplex.adjacency(AdjMatrix_PPI)
+
+Apply the Random Walk with Restart (RWR) for each patient based on PPI network with seeds set according to somatic mutation data.
+
+.. code-block:: R
+
+    score_patient <- function(tbl) {
+        seedgenes <- tbl$ensembl_peptide_id
+        RWR_PPI_Results <- Random.Walk.Restart.Multiplex(AdjMatrixNorm_PPI, PPI_MultiplexObject,seedgenes)
+        seeddf <- tibble(NodeNames = seedgenes, Score = 1/length(seedgenes))
+        outdf <- RWR_PPI_Results$RWRM_Results %>% as_tibble()
+        outdf <- bind_rows(outdf, seeddf)
+        return(outdf)
+    }
+
+    scores <- mutations %>%
+        select(patient_id, Gene) %>%
+        distinct() %>%
+        left_join(mapping, by=c("Gene"="ensembl_gene_id")) %>%
+        select(patient_id, ensembl_peptide_id) %>%
+        na.omit() %>%
+        group_by(patient_id) %>%
+        nest() %>%
+        mutate(df = map(data, score_patient)) %>%
+        select(-data) %>%
+        unnest(cols=c(df)) %>%
+        ungroup()
+
+Save the result.
+
+.. code-block:: R
+
+    df <- scores %>% spread(NodeNames, Score, fill=0)
+    mat <- data.matrix(df %>% select(-patient_id))
+    rownames(mat) <- df$patient_id
+
+    write.table(t(mat), file="mutation_scores.tsv", quote=F, sep="\t")
