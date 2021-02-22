@@ -26,7 +26,7 @@ sumo: subtyping tool for multi-omic data
 
 .. short-description-start-marker-do-not-remove
 
-**sumo** is a command-line tool to identify molecular subtypes in multi-omics datasets. It implements a novel nonnegative matrix factorization (NMF) algorithm to identify groups of samples that share molecular signatures, and provides tools to evaluate such assignments.
+**sumo** is a command-line tool to identify molecular subtypes in multi-omics datasets. It implements a novel nonnegative matrix factorization (NMF) algorithm to identify groups of samples that share molecular signatures, and provides additional modules to evaluate such assignments and identify features that drive the classification.
 
 .. short-description-end-marker-do-not-remove
 
@@ -50,9 +50,7 @@ License
 Usage
 -----
 
-Typical workflow includes running *prepare* mode for preparation of similarity
-matrices from feature matrices, followed by factorization of produced multiplex network (mode *run*).
-Third mode *evaluate* can be used for comparison of created cluster labels against biologically significant labels.
+**sumo** consists of four subroutines. A typical workflow includes running *prepare* mode for preparation of similarity matrices from feature matrices, followed by factorization of produced multiplex network (mode *run*). Third mode *evaluate* can be used for comparison of created cluster labels against biologically significant labels. A fourth mode *interpret* can be used to detect the importance of each feature in driving the classification.
 
 prepare
 ^^^^^^^

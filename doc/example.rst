@@ -236,11 +236,11 @@ For example, here the results shows that the following top 10 features support v
 Including somatic mutations in SUMO analysis
 ============================================
 
-Although the SUMO subtyping results are robust even for noisy continuous datasets the inclusion of highly sparse data matrix such as binary somatic mutation, may cause the method to become sensitive to the feature selection step. This obstacle can be overcome by converting the data into the continuous data matrix appropriate for SUMO.
+Calculation of similarity distances is challenging for sparse data types such as somatic mutation. Feature selection e.g., limiting to the genes that are known to play a role in the disease, or feature transformation, e.g. mapping to known pathways instead of individual genes can reduce sparsity and improve distance calculations. Another approach is to convert the somatic data into a continuous data matrix appropriate for SUMO.
 
-One way to efficiently convert somatic mutation data into a continuous matrix is to not only consider the gene's self-characteristic (in this case a mutation presence/absence) but also its influence on the regulatory network.
+One way to efficiently convert somatic mutation data into a continuous matrix is to not only consider the gene's self-characteristic (in this case a mutation presence/absence) but also its influence on the regulatory/interaction network.
 
-In this example, we apply the Random Walk method on somatic mutation data from LAML patients (see the previous example), using the protein-protein interaction network to create the synergistic data type that can be included in the SUMO data integration workflow.
+In this example, we use a random walk with restart on the somatic mutation data from LAML patients (see the previous example) on a protein-protein interaction network, creating a continuous matrix that can be included in the SUMO data integration workflow.
 
 In the below R vignettes we use `MC3 public somatic mutation data <https://gdc.cancer.gov/about-data/publications/mc3-2017>`_. The file was subsetted to contain only LAML samples.
 
@@ -330,3 +330,5 @@ Save the result.
     rownames(mat) <- df$patient_id
 
     write.table(t(mat), file="mutation_scores.tsv", quote=F, sep="\t")
+
+We now have a continuous matrix that can be used as input to *sumo prepare*. The choice of the interaction network can be important, and tissue-specific networks such as those from `HumanBase <https://hb.flatironinstitute.org/>`_ lead to an improvement in results.
