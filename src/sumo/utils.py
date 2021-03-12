@@ -347,24 +347,17 @@ def filter_features_and_samples(data: pd.DataFrame, drop_features: float = 0.1, 
     if drop_samples < 0 or drop_samples >= 1:
         raise ValueError("Incorrect value od 'drop_samples', expected value in range [0,1)")
 
+    before = data.shape
     # drop features if needed
     nans = pd.isna(data).values
-    remove_feature = []
-    for i in range(nans.shape[0]):
-        if list(nans[i, :]).count(True) / nans.shape[1] > drop_features:
-            remove_feature.append(i)
-    data.drop(data.index[remove_feature], axis=0, inplace=True)
+    data.drop(data.index[np.sum(nans, axis=1) / nans.shape[1] > drop_features], axis=0, inplace=True)
 
     # drop samples if needed
     nans = pd.isna(data).values
-    remove_sample = []
-    for i in range(nans.shape[1]):
-        if list(nans[:, i]).count(True) / nans.shape[0] > drop_samples:
-            remove_sample.append(i)
-    data.drop(data.columns[remove_sample], axis=1, inplace=True)
+    data.drop(data.columns[np.sum(nans, axis=0) / nans.shape[0] > drop_samples], axis=1, inplace=True)
 
-    logger.info("Number of dropped rows/features: {}".format(len(remove_feature)))
-    logger.info("Number of dropped columns/samples: {}".format(len(remove_sample)))
+    logger.info("Number of dropped rows/features: {}".format(before[0] - data.shape[0]))
+    logger.info("Number of dropped columns/samples: {}".format(before[1] - data.shape[1]))
     logger.info("Data shape: {}".format(data.values.shape))
 
     return data

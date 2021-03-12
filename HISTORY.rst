@@ -2,11 +2,13 @@
 
 History
 =======
-0.2.6 (20??-??-??)
+0.2.6 (2021-03-12)
 ------------------
 * Updated REs scaling for consensus matrix creation.
 * Add sample identifiers to sumo *run* result files.
 * Updated documentation to include the detailed description of arrays in each .npz result file and an example of integration of somatic mutation data into SUMO workflow.
+* Improved execution speed of sumo *prepare* by updating the filtering of loaded datasets and incorporating numba for euclidean distance calculation.
+* Improved execution speed of sumo *run* by updating the resampling during the factorization.
 
 0.2.5 (2020-06-11)
 ------------------

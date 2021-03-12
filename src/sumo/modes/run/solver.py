@@ -1,4 +1,5 @@
 from math import sqrt
+from numba import njit
 from random import shuffle
 from sumo.constants import CLUSTER_METHODS
 from sumo.network import MultiplexNet
@@ -237,15 +238,12 @@ class SumoNMF:
         for layer in self.graph.adj_matrices:
             layer[np.isnan(layer)] = 0.
 
-        wa = []
-        for i in range(self.graph.layers):
-            wa.append(self.graph.w[i][sample_ids, sample_ids[:, None]] * self.graph.adj_matrices[i][
-                sample_ids, sample_ids[:, None]])
+        a = np.array([self.graph.adj_matrices[i][sample_ids, sample_ids[:, None]] for i in range(self.graph.layers)])
+        w = np.array([self.graph.w[i][sample_ids, sample_ids[:, None]] for i in range(self.graph.layers)])
+        wa = np.array([w[i] * a[i] for i in range(self.graph.layers)])
 
         # randomize S matrices for each layer
-        s = []
-        for i in range(self.graph.layers):
-            s.append(svd_si_init(self.graph.adj_matrices[i], k))
+        s = np.array([svd_si_init(self.graph.adj_matrices[i], k) for i in range(self.graph.layers)])
 
         # randomize feature matrix / soft cluster indicator matrix
         h = svd_h_init(self.graph.adj_matrices[h_init] if h_init is not None else self.avg_adj, k)[sample_ids, :]
@@ -264,25 +262,21 @@ class SumoNMF:
             # update s matrices
             for i in range(len(s)):
                 num = h.T @ wa[i] @ h
-                den = h.T @ (self.graph.w[i][sample_ids, sample_ids[:, None]] * (h @ s[i] @ h.T)) @ h
+                den = h.T @ (w[i] * (h @ s[i] @ h.T)) @ h
                 s[i] = s[i] * ((num + eps) / (den + eps))
 
             # update h
             num, den = np.zeros((sample_ids.size, k)), np.zeros((sample_ids.size, k))
             for i in range(len(s)):
                 num = num + ((self.lambdas[i] * wa[i]) @ h @ s[i])
-                den = den + (self.lambdas[i] * (
-                        self.graph.w[i][sample_ids, sample_ids[:, None]] * (h @ s[i] @ h.T)) @ h @ s[
-                                 i] + 0.5 * sparsity_penalty * h)
+                den = den + (self.lambdas[i] * (w[i] * (h @ s[i] @ h.T)) @ h @ s[i] + 0.5 * sparsity_penalty * h)
             h = h * ((num + eps) / (den + eps))
 
             if step % calc_cost == 0 or step == max_iter:
 
                 for i in range(len(s)):
                     objval[step_recorded, i] = self.lambdas[i] * np.sum(
-                        self.graph.w[i][sample_ids, sample_ids[:, None]] * (np.nansum(np.dstack(
-                            (self.graph.adj_matrices[i][sample_ids, sample_ids[:, None]], -(h @ (s[i] @ h.T)))),
-                            2)) ** 2)
+                        w[i] * (np.nansum(np.dstack((a[i], -(h @ (s[i] @ h.T)))), 2)) ** 2)
                 objval[step_recorded, self.graph.layers] = sparsity_penalty * np.sum(h ** 2)
                 objval[step_recorded, - 1] = np.sum(objval[step_recorded, :])
 

@@ -38,6 +38,8 @@ You can install **sumo** from PyPI, by executing command below. Please note that
 
     pip install python-sumo
 
+(March 2021): We have noted an installation issue with the *llvmlite* package (required for one of **sumo** dependencies). To avoid errors with installation, **upgrade pip to a >19.0 version**.
+
 Documentation
 -------------
 The official documentation is available at https://python-sumo.readthedocs.io

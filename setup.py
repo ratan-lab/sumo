@@ -24,7 +24,8 @@ _config = {
         "pandas",
         "lightgbm",
         "hyperopt",
-        "shap"
+        "shap",
+        "numba"
     ],
     "entry_points": {
         "console_scripts": ("sumo = sumo.run:main",),

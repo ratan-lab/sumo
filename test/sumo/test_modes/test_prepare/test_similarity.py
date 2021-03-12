@@ -1,3 +1,4 @@
+from numba.core.errors import TypingError
 from sumo.modes.prepare import similarity
 from sumo.utils import check_matrix_symmetry
 from sumo.constants import SIMILARITY_METHODS
@@ -5,11 +6,20 @@ import numpy as np
 import pytest
 
 
-def _test_assumptions(func):
+def _test_assumptions_no_numba(func):
     with pytest.raises(AssertionError):
         func(np.array([1]), np.array([1, 1]), missing=0.1)
 
     with pytest.raises(AttributeError):
+        func([2], [3], missing=0.1)
+
+
+def _test_assumptions_numba(func):
+    with pytest.raises(AssertionError):
+        func(np.array([1]), np.array([1, 1]), missing=0.1)
+
+    with pytest.raises(TypingError):
+        # running a function in nopython numba mode with incorrect attribute types raises numba specific error
         func([2], [3], missing=0.1)
 
 
@@ -29,7 +39,7 @@ def test_euclidean_dist():
     assert np.allclose(similarity.euclidean_dist(np.array([1, np.nan, 1]), np.array([1, np.nan, 2]), missing=0.1), 0.5)
     assert np.allclose(similarity.euclidean_dist(np.array([np.nan, 1, 1]), np.array([1, np.nan, 2]), missing=0.1), 1)
 
-    _test_assumptions(similarity.euclidean_dist)
+    _test_assumptions_numba(similarity.euclidean_dist)
     _test_threshold(similarity.euclidean_dist)
 
 
@@ -37,12 +47,12 @@ def test_cosine_sim():
     assert np.allclose(similarity.cosine_sim(np.array([1, 0, 0]), np.array([0, 1, 0]), missing=0.1), 0)
     assert np.allclose(similarity.cosine_sim(np.array([1, 1, 0]), np.array([1, 1, 0]), missing=0.1), 1)
 
-    _test_assumptions(similarity.cosine_sim)
+    _test_assumptions_no_numba(similarity.cosine_sim)
     _test_threshold(similarity.cosine_sim)
 
 
 def test_correlation():
-    _test_assumptions(similarity.correlation)
+    _test_assumptions_no_numba(similarity.correlation)
     with pytest.raises(AssertionError):
         similarity.correlation(np.array([1]), np.array([1, 1]), missing=0.1, method="method")
 

@@ -1,4 +1,5 @@
 from math import sqrt
+from numba import njit
 from scipy.spatial.distance import cosine
 from scipy.stats import pearsonr, spearmanr
 from sumo.constants import SIMILARITY_METHODS, PREPARE_DEFAULTS, CORR_METHODS
@@ -6,6 +7,7 @@ from sumo.utils import docstring_formatter
 import numpy as np
 
 
+@njit
 def euclidean_dist(a: np.ndarray, b: np.ndarray, missing: float):
     """ Calculate euclidean distance between two vectors of continuous variables """
     assert a.shape == b.shape
