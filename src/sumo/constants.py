@@ -39,7 +39,8 @@ RUN_DEFAULTS = {
     "h_init": None,
     "t": 1,
     "subsample": 0.05,
-    "rep": 5
+    "rep": 5,
+    "seed": None
 }
 RUN_ARGS = ["infile", "k", "outdir"] + list(RUN_DEFAULTS.keys())  # 3 positional args
 

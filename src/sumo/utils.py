@@ -145,7 +145,8 @@ def plot_heatmap_seaborn(a: np.ndarray, labels: np.ndarray = None, title: str = 
         plt.close()
 
 
-def plot_metric(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: str = None, color="blue"):
+def plot_metric(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: str = None, color="blue",
+                allow_omit_xticks: bool = False):
     """ Create plot of median metric values, with ribbon between min and max values for each x"""
     if color not in COLOR_CODES.keys():
         raise ValueError("Color not found.")
@@ -153,12 +154,15 @@ def plot_metric(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: s
     fig = plt.figure()
 
     data = np.array(y)
-    medians = np.nanmedian(data, axis=1)
-    indices = ~np.isnan(medians)
-
-    medians = medians[indices]
-    mins = np.nanmin(data, axis=1)[indices]
-    maxes = np.nanmax(data, axis=1)[indices]
+    if len(data.shape) > 1:
+        medians = np.nanmedian(data, axis=1)
+        indices = ~np.isnan(medians)
+        medians = medians[indices]
+        mins = np.nanmin(data, axis=1)[indices]
+        maxes = np.nanmax(data, axis=1)[indices]
+    else:
+        indices = ~np.isnan(data)
+        medians, mins, maxes = data[indices], data[indices], data[indices]
 
     org_x = x
     x = np.array(x)[indices]
@@ -168,7 +172,8 @@ def plot_metric(x: list, y: list, xlabel="x", ylabel="y", title="", file_path: s
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
-    plt.xticks(org_x)
+    if not allow_omit_xticks:
+        plt.xticks(org_x)
 
     if not file_path:
         plt.show()

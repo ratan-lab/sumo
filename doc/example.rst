@@ -157,6 +157,8 @@ As presented in the directory structure above SUMO creates an .npz result file f
 * quality metric assessing the within-cluster similarities based on final sample labels, used for sparsity parameter selection ('quality' array)
 * selected consensus matrix ('unfiltered_consensus' array) and its copy used for final sample label assignment after the noise filtering ('consensus' array)
 * final sample labels ('clusters' array)
+* number of iterations/steps reached in each solver run ('steps' array)
+* simulation parameters ('config' array)
 
 Adding -log DEBUG flag when running SUMO 'run' mode, results in saving additional arrays in each .npz file:
 

@@ -16,7 +16,6 @@ def euclidean_dist(a: np.ndarray, b: np.ndarray, missing: float):
     vec = np.power(a - b, 2)
     common = ~np.isnan(vec)  # common / not missing values
     dist = (sqrt(np.sum(vec[common])) + eps) / (np.sum(common) + eps) if np.sum(common) > threshold else np.nan
-    assert np.isnan(dist) or (1 >= dist >= 0)
     return dist
 
 

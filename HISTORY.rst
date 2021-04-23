@@ -2,6 +2,17 @@
 
 History
 =======
+0.2.7 (2021-??-??)
+------------------
+* Add random seed parameter for sumo *run*.
+* Add more arrays in sumo_results.npz files:
+    - 'steps' array, with number of iterations/steps reached in each repetition of the factorization;
+    - 'config' array with simulation parameters (including sparsity).
+* Add warning in eta*.log files if more then 90% of factorization repetitions finished in reaching set maximum number of iterations.
+* Update plotting function and add 'steps' plot, produced when using the -DEBUG flag,
+* Remove incorrect assertion about Euclidean Distance being bound to [0,1] range.
+
+
 0.2.6 (2021-03-12)
 ------------------
 * Updated REs scaling for consensus matrix creation.

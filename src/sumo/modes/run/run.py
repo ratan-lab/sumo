@@ -73,6 +73,8 @@ class SumoRun(SumoMode):
         if self.rep < 1:
             # number of times additional consensus matrix will be created
             raise ValueError("Incorrect value of 'rep' parameter")
+        if self.seed is not None and self.seed < 0:
+            raise ValueError("Seed value cannot be negative")
         self.runs_per_con = max(round(self.n * 0.8), 1)  # number of runs per consensus matrix creation
 
         self.logger = setup_logger("main", self.log, self.logfile)
@@ -135,7 +137,7 @@ class SumoRun(SumoMode):
             "#Number of samples randomly removed in each run: {} out of {}".format(n_sub_samples, sample_names.size))
 
         # create solver
-        self.nmf = SumoNMF(graph=self.graph, nbins=self.n, bin_size=self.graph.nodes - n_sub_samples)
+        self.nmf = SumoNMF(graph=self.graph, nbins=self.n, bin_size=self.graph.nodes - n_sub_samples, rseed=self.seed)
 
         global _sumo_run
         _sumo_run = self  # this solves multiprocessing issue with pickling
@@ -249,6 +251,9 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     outfile = os.path.join(k_dir, "eta_{}.npz".format(sparsity))
     eta_logger = setup_logger("eta{}_logger".format(sparsity), level=sumo_run.log, log_file=log_file)
 
+    if sumo_run.seed is not None:
+        np.random.seed(sumo_run.seed)
+
     # run factorization N times
     results = []
     for repeat in range(sumo_run.n):
@@ -348,13 +353,26 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     # calculate quality of clustering for given sparsity
     quality = sumo_run.graph.get_clustering_quality(labels=cluster_array[:, 1])
     # create output file
+    conf_array = np.empty((9, 2), dtype=object)
+    conf_array[:, 0] = ['method', 'n', 'max_iter', 'tol', 'subsample', 'calc_cost', 'h_init', 'seed', 'sparsity']
+    conf_array[:, 1] = [sumo_run.method, sumo_run.n, sumo_run.max_iter, sumo_run.tol, sumo_run.subsample,
+                        sumo_run.calc_cost, np.nan if sumo_run.h_init is None else sumo_run.h_init,
+                        np.nan if sumo_run.seed is None else sumo_run.seed, sparsity]
     out_arrays.update({
         "clusters": cluster_array,
         "consensus": consensus,
         "unfiltered_consensus": org_con,
         "quality": np.array(quality),
-        "samples": sumo_run.graph.sample_names
+        "samples": sumo_run.graph.sample_names,
+        "config": conf_array
     })
+
+    steps_reached = [results[i].steps for i in range(len(results))]
+    maxiter_proc = round((sum([step == sumo_run.max_iter for step in steps_reached]) / len(steps_reached)) * 100, 3)
+    eta_logger.info("#Reached maximum number of iterations in {}% of runs".format(maxiter_proc))
+    if maxiter_proc >= 90:
+        eta_logger.warning("Consider increasing -max_iter and deacreasing -tol to achieve better accuracy")
+    out_arrays['steps'] = np.array([steps_reached])
 
     if sumo_run.log == "DEBUG":
         for i in range(len(results)):
@@ -363,6 +381,13 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
             out_arrays["samples{}".format(i)] = results[i].graph.sample_names[results[i].sample_ids]
             for si in range(len(results[i].s)):
                 out_arrays["s{}{}".format(si, i)] = results[i].s[si]
+        steps_plot_path = os.path.join(sumo_run.plot_dir, "steps_k{}.png".format(k))
+        plot_metric(x=list(range(1, len(steps_reached) + 1)), y=[np.array(x) for x in steps_reached],
+                    xlabel="factorization repetition", ylabel="number of iterations/steps",
+                    title="Number of iterations reached by solver",
+                    file_path=steps_plot_path, color="green", allow_omit_xticks=True)
+        eta_logger.info("#Number of iterations reached for each factorization repetition has " +
+                        "been saved to {}".format(steps_plot_path))
 
     save_arrays_to_npz(data=out_arrays, file_path=outfile)
     eta_logger.info("#Output file {} created".format(outfile))

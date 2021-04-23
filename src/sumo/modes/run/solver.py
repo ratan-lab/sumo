@@ -1,6 +1,6 @@
 from math import sqrt
 from numba import njit
-from random import shuffle
+from random import shuffle, seed
 from sumo.constants import CLUSTER_METHODS
 from sumo.network import MultiplexNet
 from sumo.utils import extract_max_value, extract_spectral, get_logger, check_matrix_symmetry
@@ -160,7 +160,11 @@ class SumoNMF:
 
     """
 
-    def __init__(self, graph: MultiplexNet, nbins: int, bin_size: int = None):
+    def __init__(self, graph: MultiplexNet, nbins: int, bin_size: int = None, rseed: int = None):
+
+        if rseed is not None:
+            np.random.seed(rseed)
+            seed(rseed)
 
         if not isinstance(graph, MultiplexNet):
             raise ValueError("Unrecognized graph object")
@@ -319,4 +323,4 @@ class SumoNMF:
                                                                 round(np.sum(objval[-1, :-2]), 6),
                                                                 best_result[0]))
 
-        return SumoNMFResults(self.graph, h, s, objval, step, sparsity_penalty, k, self.logger, sample_ids)
+        return SumoNMFResults(self.graph, h, s, objval, step - 1, sparsity_penalty, k, self.logger, sample_ids)
