@@ -110,6 +110,14 @@ def add_run_command_options(subparsers):
                                      ' (sumo will try different values and select the best results; ' +
                                      'default of  %(default)s)')
 
+    cluster_parser.add_argument('-labels', action='store', metavar="labels.tsv",
+                                type=str, required=False, default=RUN_DEFAULTS['labels'],
+                                help="optional path to .tsv file containg some of known sample labels to be included " +
+                                     "as prior knowledge during the factorization (inclusion of this parameter " +
+                                     "enables the 'supervised' mode of sumo), the file should contain sample names in" +
+                                     "'sample' and labels in 'label' column")
+    # TODO add supervised example to documentation
+
     cluster_parser.add_argument('-n', action='store',
                                 type=int, required=False, default=RUN_DEFAULTS['n'],
                                 help='number of repetitions (default of %(default)s)')
@@ -147,7 +155,8 @@ def add_run_command_options(subparsers):
     cluster_parser.add_argument('-h_init', action='store',
                                 type=int, required=False, default=RUN_DEFAULTS['h_init'],
                                 help='index of adjacency matrix to use for H matrix initialization (by default ' +
-                                     'using average adjacency)')
+                                     'using average adjacency), only for unsupervised classification ' +
+                                     '(when no "-labels" are set)')
 
     cluster_parser.add_argument('-t', action='store', type=int, default=RUN_DEFAULTS['t'], required=False,
                                 help='number of threads (default of %(default)s)')
@@ -156,7 +165,7 @@ def add_run_command_options(subparsers):
                                 help='number of times consensus matrix is created for the purpose of assessing ' +
                                      'clustering quality (default of %(default)s)')
     cluster_parser.add_argument('-seed', action='store',
-                                  type=int, required=False, default=RUN_DEFAULTS['seed'],
+                                type=int, required=False, default=RUN_DEFAULTS['seed'],
                                 help='random state (none by default)')
 
 

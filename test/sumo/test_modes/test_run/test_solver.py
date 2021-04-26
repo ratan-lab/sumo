@@ -1,109 +1,65 @@
 from sumo.constants import RUN_DEFAULTS
-from sumo.modes.run.solver import svd_h_init, svd_si_init, SumoNMF
+from sumo.modes.run import solver
+from sumo.modes.run.solvers.supervised_sumo import SupervisedSumoNMF
+from sumo.modes.run.solvers.unsupervised_sumo import UnsupervisedSumoNMF
 from sumo.network import MultiplexNet
-from sumo.utils import check_matrix_symmetry
 import numpy as np
 import pytest
 
 
-def test_svd_si_init():
-    a = np.random.random((20, 20))
+def _create_test_graph(nsamples):
+    a = np.random.random((nsamples, nsamples))
     a = (a * a.T) / 2
-
-    s = svd_si_init(a, k=3)
-    assert check_matrix_symmetry(s)
-    assert s.shape == (3, 3)
-
-    a[0, 1], a[1, 0] = 0, 1
-    with pytest.raises(ValueError):
-        svd_si_init(a, k=3)
-
-
-def test_svd_h_init():
-    a = np.random.random((20, 20))
-    a = (a * a.T) / 2
-
-    h = svd_h_init(a, k=3)
-    assert h.shape == (20, 3)
-
-    h = svd_h_init(a, k=5)
-    assert h.shape == (20, 5)
-
-    a[0, 1], a[1, 0] = 0, 1
-    with pytest.raises(ValueError):
-        svd_h_init(a, k=3)
-
-
-def test_init():
-    a0 = np.random.random((10, 10))
-    a0 = (a0 * a0.T) / 2
-    a1 = np.random.random((10, 10))
-    a1 = (a1 * a1.T) / 2
-    sample_names = ['sample_{}'.format(i) for i in range(10)]
-
-    with pytest.raises(ValueError):
-        SumoNMF(a0, nbins=RUN_DEFAULTS['n'])
-
-    graph = MultiplexNet(adj_matrices=[a0, a1], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
-    assert np.array_equal((a0 + a1) / 2, nmf.avg_adj)
-    assert all([bin.size == 10 for bin in nmf.bins])
-
-    # different bin size
-    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'], bin_size=9)
-    assert all([bin.size == 9 for bin in nmf.bins])
-
-    with pytest.raises(ValueError):
-        # incorrect number of bins
-        SumoNMF(graph, nbins=0)
-    with pytest.raises(ValueError):
-        # too high bin size
-        SumoNMF(graph, nbins=RUN_DEFAULTS['n'], bin_size=20)
-
-    # missing values in one layer
-    a0[0, 1], a0[1, 0] = np.nan, np.nan
-    graph = MultiplexNet(adj_matrices=[a0, a1], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
-    assert np.allclose(nmf.avg_adj[0, 1], a1[0, 1])
-
-    # missing values in both layers
-    a1[0, 1], a1[1, 0] = np.nan, np.nan
-    graph = MultiplexNet(adj_matrices=[a0, a1], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
-    assert not np.isnan(nmf.avg_adj[0, 1])
+    sample_names = ['sample_{}'.format(i) for i in range(nsamples)]
+    return MultiplexNet(adj_matrices=[a], node_labels=np.array(sample_names))
 
 
 def test_factorize():
-    a0 = np.random.random((10, 10))
-    a0 = (a0 * a0.T) / 2
-    a1 = np.random.random((10, 10))
-    a1 = (a1 * a1.T) / 2
-    sample_names = ['sample_{}'.format(i) for i in range(10)]
+    class SomeSolver(solver.SumoSolver):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
 
-    graph = MultiplexNet(adj_matrices=[a0, a1], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
+        def factorize(self, **kwargs):
+            super(SomeSolver, self).factorize(**kwargs)
 
-    # incorrect k value
-    with pytest.raises(ValueError):
-        nmf.factorize(sparsity_penalty=10.0, k=20)
+    with pytest.raises(TypeError):
+        SomeSolver()
 
-    nmf.factorize(sparsity_penalty=10.0, k=5)
+    graph = _create_test_graph(nsamples=10)
+    some_solver = SomeSolver(graph=graph, nbins=RUN_DEFAULTS['n'])
+    with pytest.raises(TypeError):
+        some_solver.factorize()
+    with pytest.raises(NotImplementedError):
+        some_solver.factorize(sparsity_penalty=0.1, k=2, max_iter=RUN_DEFAULTS['max_iter'],
+                              tol=RUN_DEFAULTS['tol'], calc_cost=RUN_DEFAULTS['calc_cost'],
+                              logger_name=None, bin_id=None)
 
 
 def test_extract_clusters():
-    a = np.random.random((10, 10))
-    a = (a * a.T) / 2
-    sample_names = ['sample_{}'.format(i) for i in range(10)]
+    graph = _create_test_graph(nsamples=10)
+    priors = np.zeros((10, 2))
+    priors[:5, 0] = 1
+    priors[5:, 1] = 1
 
-    graph = MultiplexNet(adj_matrices=[a], node_labels=np.array(sample_names))
-    nmf = SumoNMF(graph, nbins=RUN_DEFAULTS['n'])
-    res = nmf.factorize(sparsity_penalty=10.0, k=2)
+    for nmf in [UnsupervisedSumoNMF(graph, nbins=RUN_DEFAULTS['n']),
+                SupervisedSumoNMF(graph, nbins=RUN_DEFAULTS['n'], priors=priors)]:
+        res = nmf.factorize(sparsity_penalty=10.0, k=2)
 
-    assert res.labels is None
-    res.extract_clusters(method="max_value")
-    assert res.labels.shape[0] == 10
-    assert all(res.labels < 2)
+        assert res.labels is None
+        res.extract_clusters(method="max_value")
+        assert res.labels.shape[0] == 10
+        assert all(res.labels < 2)
 
-    # incorrect method
-    with pytest.raises(ValueError):
-        res.extract_clusters(method="method")
+        # incorrect method
+        with pytest.raises(ValueError):
+            res.extract_clusters(method="method")
+
+
+def test_calculate_avg_adjacency():
+    a1 = np.array([[1, 0, 0.5], [0, 1, 1], [0.5, 1, 1]])
+    a2 = np.array([[1, 0.5, np.nan], [0.5, 1, 1], [np.nan, 1, 1]])
+
+    graph = MultiplexNet(adj_matrices=[a1, a2], node_labels=np.array(['sample_1', 'sample_2']))
+    nmf = UnsupervisedSumoNMF(graph, nbins=RUN_DEFAULTS['n'])
+    adj = nmf.calculate_avg_adjacency()
+    assert np.allclose(adj, np.array([[1, 0.25, 0.5], [0.25, 1, 1], [0.5, 1, 1]]))
