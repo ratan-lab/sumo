@@ -1,3 +1,5 @@
+from operator import add
+from random import shuffle
 from sumo.modes.run.solver import SumoSolver, SumoNMFResults
 from sumo.modes.run.utils import svd_si_init
 from sumo.network import MultiplexNet
@@ -12,13 +14,63 @@ class SupervisedSumoNMF(SumoSolver):
 
         super(SupervisedSumoNMF, self).__init__(graph=graph, nbins=nbins, bin_size=bin_size, rseed=rseed)
 
+        self.priors = priors
+
         # create average adjacency matrix
         self.avg_adj = self.calculate_avg_adjacency()
+
+        # create sample bins
+        self.bins = self.create_sample_bins()
 
         # layer impact balancing parameters
         self.lambdas = [(1. / samples.shape[0]) ** 2 for samples in self.graph.samples]
 
-        self.priors = priors
+    def _get_bins(self, label=None) -> list:
+        """ Returns list of bins, each in form of a list containing sample indices, randomly sampled from
+        set of samples of given prior label. Mintains the ratio of labelled and unlabelled samples in the dataset. """
+        # separate samples with given prior label between bins
+        # (this make sure that all samples will be classified at least once)
+        if label is not None:
+            sample_ids = list(np.where(self.priors[:, label] == 1)[0])
+        else:
+            sample_ids = list(np.where(np.sum(self.priors, axis=1) == 0)[0])
+
+        prop = round(len(sample_ids) * (self.bin_size / self.graph.nodes))
+        shuffle(sample_ids)
+
+        bins_label = [sample_ids[i::self.nbins] for i in range(self.nbins)]
+        for i in range(self.nbins):
+            # add random samples with given prior label (without doubles, while maintaining prior ratio in dataset)
+            ms = prop - len(bins_label[i])  # number of samples to add
+            remaining = list(set(sample_ids) - set(bins_label[i]))
+            if ms < 0:
+                # this should not happen due to allowed ranges set for '-n' and '-subsample' parameters
+                raise ValueError("Prior label ratio in bins is disturbed!")
+            bins_label[i] = bins_label[i] + list(np.random.choice(remaining, size=ms, replace=False))
+
+        return bins_label
+
+    def _get_bins_unlabelled(self) -> list:
+        """ Wrapper around bins generation for unlabelled samples """
+        return self._get_bins(label=None)
+
+    def _get_bins_labelled(self) -> list:
+        """ Wrapper around bins generation for all samples, with known prior labels"""
+        bins = [[] for x in range(self.nbins)]
+        for label in range(self.priors.shape[1]):
+            bins = list(map(add, bins, self._get_bins(label=label)))
+        return bins
+
+    def create_sample_bins(self) -> list:
+        """  Separate samples randomly into bins of set size, while making sure that each sample is allocated
+        in at least one bin and each prior label in represented equally.
+
+        Returns: list of arrays containing indices of samples allocated to the bin
+
+        """
+        if any([x is None for x in [self.graph, self.nbins, self.bin_size, self.priors]]):
+            raise ValueError("Solver parameters not set!")
+        return [np.array(x) for x in map(add, self._get_bins_unlabelled(), self._get_bins_labelled())]
 
     def factorize(self, sparsity_penalty: float, k: int, max_iter: int = 500, tol: float = 1e-5, calc_cost: int = 1,
                   logger_name: str = None, bin_id: int = None) -> SumoNMFResults:
@@ -106,8 +158,8 @@ class SupervisedSumoNMF(SumoSolver):
             for i in range(len(s)):
                 num = num + ((self.lambdas[i] * wa[i]) @ h @ s[i])
                 den = den + (self.lambdas[i] * (w[i] * (h @ s[i] @ h.T)) @ h @ s[i])
-            h = h * (((2 * num + sparsity_penalty * (v @ d @ h0)) + eps) / (
-                    (2 * den + sparsity_penalty * (v @ h)) + eps))
+            h = h * (((2 * num + (sparsity_penalty ** 2) * (v @ d @ h0)) + eps) / (
+                    (2 * den + (sparsity_penalty ** 2) * (v @ h)) + eps))
 
             if step % calc_cost == 0 or step == max_iter:
 

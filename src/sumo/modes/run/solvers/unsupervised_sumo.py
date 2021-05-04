@@ -15,6 +15,9 @@ class UnsupervisedSumoNMF(SumoSolver):
         # create average adjacency matrix
         self.avg_adj = self.calculate_avg_adjacency()
 
+        # create sample bins
+        self.bins = self.create_sample_bins()
+
         # layer impact balancing parameters
         self.lambdas = [(1. / samples.shape[0]) ** 2 for samples in self.graph.samples]
 

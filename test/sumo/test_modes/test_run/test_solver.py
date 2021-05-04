@@ -1,3 +1,4 @@
+from collections import Counter
 from sumo.constants import RUN_DEFAULTS
 from sumo.modes.run import solver
 from sumo.modes.run.solvers.supervised_sumo import SupervisedSumoNMF
@@ -63,3 +64,17 @@ def test_calculate_avg_adjacency():
     nmf = UnsupervisedSumoNMF(graph, nbins=RUN_DEFAULTS['n'])
     adj = nmf.calculate_avg_adjacency()
     assert np.allclose(adj, np.array([[1, 0.25, 0.5], [0.25, 1, 1], [0.5, 1, 1]]))
+
+
+def test_create_sample_bins():
+    s = UnsupervisedSumoNMF(graph=_create_test_graph(nsamples=12), nbins=RUN_DEFAULTS['n'])
+    assert s.bin_size == round(12 * (1 - RUN_DEFAULTS['subsample']))
+
+    bins = s.create_sample_bins()
+    assert all([bin.size == s.bin_size for bin in bins])
+    counter = Counter(x for xs in bins for x in set(xs))
+    assert all([x in counter.keys() for x in range(12)])  # all samples represented
+
+    s.nbins = None
+    with pytest.raises(ValueError):
+        s.create_sample_bins()

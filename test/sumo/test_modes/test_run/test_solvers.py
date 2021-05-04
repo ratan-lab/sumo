@@ -1,3 +1,4 @@
+from collections import Counter
 from sumo.constants import RUN_DEFAULTS
 from sumo.modes.run.solvers.supervised_sumo import SupervisedSumoNMF
 from sumo.modes.run.solvers.unsupervised_sumo import UnsupervisedSumoNMF
@@ -64,3 +65,37 @@ def test_supervised_factorize():
 
     res = nmf.factorize(sparsity_penalty=10, k=3)
     assert res.d is not None and res.h0 is not None
+
+
+def test_create_sample_bins():
+    nsamples = 12
+    a = np.random.random((nsamples, nsamples))
+    a = (a * a.T) / 2
+    sample_names = ['sample_{}'.format(i) for i in range(nsamples)]
+
+    graph = MultiplexNet(adj_matrices=[a], node_labels=np.array(sample_names))
+    priors = np.zeros((nsamples, 2))
+    priors[:round(nsamples / 3), 0] = 1
+    priors[round(nsamples / 3): round(nsamples * 2 / 3), 1] = 1
+    subsample = 0.25
+    bin_size = round(nsamples * (1 - subsample))
+
+    s = SupervisedSumoNMF(graph=graph, nbins=RUN_DEFAULTS['n'], bin_size=bin_size, priors=priors)
+    assert s.bin_size == bin_size
+
+    bins = s.create_sample_bins()
+    counter = Counter(x for xs in bins for x in set(xs))
+    assert all([x in counter.keys() for x in range(12)])  # all samples represented
+
+    lab1 = list(range(0, round(nsamples / 3)))
+    lab2 = list(range(round(nsamples / 3), round(nsamples * 2 / 3)))
+    unlabelled = list(range(round(nsamples * 2 / 3), nsamples))
+    cl_size = round((nsamples / 3) * (1 - subsample))
+    for binx in bins:
+        assert sum([lab in binx for lab in lab1]) == cl_size
+        assert sum([lab in binx for lab in lab2]) == cl_size
+        assert sum([lab in binx for lab in unlabelled]) == cl_size
+
+    s.nbins = None
+    with pytest.raises(ValueError):
+        s.create_sample_bins()

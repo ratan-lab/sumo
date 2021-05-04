@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from logging import Logger
 from random import seed, shuffle
-from sumo.constants import CLUSTER_METHODS
+from sumo.constants import CLUSTER_METHODS, RUN_DEFAULTS
 from sumo.modes.run.utils import svdEM
 from sumo.network import MultiplexNet
 from sumo.utils import extract_max_value, extract_spectral, get_logger
@@ -80,22 +80,15 @@ class SumoSolver(ABC):
             raise ValueError("Unrecognized graph object")
 
         if bin_size is None:
-            bin_size = graph.sample_names.size
+            bin_size = round(graph.sample_names.size * (1 - RUN_DEFAULTS['subsample']))
 
         if nbins <= 0 or bin_size > graph.nodes:
             # This should never happen due to creation of solver objects in sumo 'run'
             raise ValueError("Incorrect number of bins or bin size")
 
         self.graph = graph
-
-        # create sample bins
-        sample_ids = list(range(self.graph.nodes))
-        shuffle(sample_ids)
-        self.bins = [sample_ids[i::nbins] for i in range(nbins)]
-        for i in range(len(self.bins)):
-            ms = bin_size - len(self.bins[i])
-            self.bins[i] = np.array(sorted(self.bins[i] + list(
-                np.random.choice(list(set(sample_ids) - set(self.bins[i])), size=ms, replace=False))))  # TODO: add test
+        self.bin_size = bin_size
+        self.nbins = nbins
 
         self.logger = get_logger()
 
@@ -105,7 +98,7 @@ class SumoSolver(ABC):
         """Run solver specific factorization"""
         raise NotImplementedError("Not implemented")
 
-    def calculate_avg_adjacency(self):
+    def calculate_avg_adjacency(self) -> np.ndarray:
         """ Creates average adjacency matrix """
         avg_adj = np.zeros((self.graph.nodes, self.graph.nodes))
         connections = self.graph.connections
@@ -120,3 +113,21 @@ class SumoSolver(ABC):
             avg_adj = svdEM(avg_adj)
 
         return avg_adj
+
+    def create_sample_bins(self) -> list:
+        """  Separate samples randomly into bins of set size, while making sure that each sample is allocated
+        in at least one bin.
+
+        Returns: list of arrays containing indices of samples allocated to the bin
+
+        """
+        if any([x is None for x in [self.graph, self.nbins, self.bin_size]]):
+            raise ValueError("Solver parameters not set!")
+        sample_ids = list(range(self.graph.nodes))
+        shuffle(sample_ids)
+        bins = [sample_ids[i::self.nbins] for i in range(self.nbins)]
+        for i in range(len(bins)):
+            ms = self.bin_size - len(bins[i])
+            bins[i] = np.array(sorted(bins[i] + list(
+                np.random.choice(list(set(sample_ids) - set(bins[i])), size=ms, replace=False))))  # TODO: add test
+        return bins
