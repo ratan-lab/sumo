@@ -2,6 +2,10 @@
 
 History
 =======
+0.2.7 (2021-06-27)
+------------------
+* Updated the function checking is feature matrix is standardized in sumo *prepare*. Now reporting a range of feature means and standard deviations.
+
 0.2.6 (2021-03-12)
 ------------------
 * Updated REs scaling for consensus matrix creation.
