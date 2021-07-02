@@ -147,9 +147,11 @@ class SumoPrepare(SumoMode):
             if ncat != [0, 1]:
                 standardized = is_standardized(f, axis=0, atol=self.atol)
                 if not standardized[0]:
-                    raise ValueError("Incorrect values in feature matrix (highest mean of feature: " +
-                                     "{}, highest std of feature: {}). ".format(standardized[1], standardized[2]) +
-                                     "Please, supply either binary dataset " +
+                    raise ValueError("Incorrect values in feature matrix. Mean of features in " +
+                                     "({},{}) ".format(round(standardized[1][0], 3), round(standardized[1][1], 3)) +
+                                     "range. Standard deviation of features in " +
+                                     "({}, {}) ".format(round(standardized[2][0], 3), round(standardized[2][1], 3)) +
+                                     "range. Please, supply either binary dataset " +
                                      "(0 or 1 feature values) or continuous values standardized feature-wise. " +
                                      "Alternatively for almost standardized continuous data, " +
                                      "increase '-atol' parameter value (currently {}).".format(self.atol))
