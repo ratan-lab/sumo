@@ -10,6 +10,6 @@ RUN apt-get install -y \
     python3-pip
 
 RUN pip3 install --upgrade cython
-RUN pip3 install python-sumo==0.2.4
+RUN pip3 install python-sumo==0.2.7
 
 CMD ["bash"]

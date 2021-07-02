@@ -2,7 +2,7 @@
 
 History
 =======
-0.2.7 (2021-??-??)
+0.2.7 (2021-06-27)
 ------------------
 * Add random seed parameter for sumo *run*.
 * Add more arrays in sumo_results.npz files:
@@ -12,6 +12,7 @@ History
 * Update plotting function and add 'steps' plot, produced when using the -DEBUG flag,
 * Remove incorrect assertion about Euclidean Distance being bound to [0,1] range.
 * Add entry point to run sumo directly from the repository (run.py).
+* Updated the function checking is feature matrix is standardized in sumo *prepare*. Now reporting a range of feature means and standard deviations.
 
 0.2.6 (2021-03-12)
 ------------------
