@@ -163,6 +163,7 @@ As presented in the directory structure above SUMO creates an .npz result file f
 Adding -log DEBUG flag when running SUMO 'run' mode, results in additional arrays (saved in .npz files) and plots displaying the number of iterations reached by sumo for each "k" (saved to 'plots' directory).
 
 Following additional arrays are added to each .npz file:
+
 * every weighted consensus matrix used for the calculation of stability metrics (arrays: 'pac_consensus_0', 'pac_consensus_1'...)
 * indices of solver runs used to create each consensus matrix (arrays: 'runs_0', 'runs_1', ...)
 * results of each factorization run:
