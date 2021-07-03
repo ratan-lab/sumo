@@ -4,6 +4,11 @@ History
 =======
 0.2.8 (2021-??-??)
 ------------------
+* Updated class structure, to allow for addition of new solvers.
+* Implemented supervised solver for sumo, which allows to include "a priori" knowledge about labels of fraction of samples to improve the factorization. This solver is automatically enabled when '-labels' parameter is used.
+
+0.2.7 (2021-07-02)
+------------------
 * Add random seed parameter for sumo *run*.
 * Add more arrays in sumo_results.npz files:
     - 'steps' array, with number of iterations/steps reached in each repetition of the factorization;
@@ -12,9 +17,6 @@ History
 * Update plotting function and add 'steps' plot, produced when using the -DEBUG flag,
 * Remove incorrect assertion about Euclidean Distance being bound to [0,1] range.
 * Add entry point to run sumo directly from the repository (run.py).
-
-0.2.7 (2021-06-27)
-------------------
 * Updated the function checking is feature matrix is standardized in sumo *prepare*. Now reporting a range of feature means and standard deviations.
 
 0.2.6 (2021-03-12)
