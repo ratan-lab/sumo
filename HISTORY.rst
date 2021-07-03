@@ -2,7 +2,7 @@
 
 History
 =======
-0.2.7 (2021-06-27)
+0.2.7 (2021-07-02)
 ------------------
 * Add random seed parameter for sumo *run*.
 * Add more arrays in sumo_results.npz files:
