@@ -1,6 +1,7 @@
 ## Python requirements for building documentation.
-##
+## Installation:
 ##     pip install --requirement=requirements.txt
-##
+## Building documentation:
+##     sphinx-build -b html doc doc/_build/html
 Sphinx>=1.3
 Pygments

@@ -1,9 +1,11 @@
 ## Python requirements for running tests.
-##
+## Installation:
 ##   python -m pip install --requirement=requirements.txt
-##
+## Running tests:
+##   pytest test
 pytest>4.0
-numpy>=1.16.5 
+numpy>=1.18.5
 pandas
 scikit-learn
 numba
+

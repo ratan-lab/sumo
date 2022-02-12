@@ -3,6 +3,7 @@ from sumo.modes.run.run import SumoRun
 from sumo.utils import save_arrays_to_npz
 import numpy as np
 import os
+import pandas as pd
 import pytest
 
 
@@ -32,6 +33,21 @@ def test_init(tmpdir):
     save_arrays_to_npz({'0': np.random.random((samples, samples)),
                         '1': np.random.random((samples, samples)),
                         'samples': np.array(sample_labels)}, fname)
+
+    # supervised sumo no labels file
+    labels_fname = os.path.join(tmpdir, "labels.tsv")
+    labels = np.array([sample_labels[0:2] + sample_labels[7:9], [1, 1, 2, 2]]).T
+    labels_df = pd.DataFrame(data=labels, columns=['sample', 'label'])
+
+    args = _get_args(fname, [2], outdir)
+    args['labels'] = labels_fname
+    with pytest.raises(FileNotFoundError):
+        SumoRun(**args)
+
+    labels_df.to_csv(labels_fname, sep="\t")
+    args['sparsity'] = [10]
+    args['n'] = 10  # makes test run quicker
+    SumoRun(**args)
 
     # incorrect number of repetitions
     args['n'] = -1
@@ -119,6 +135,20 @@ def test_run(tmpdir):
         sr = SumoRun(**args)
         sr.run()
 
+    # supervised sumo
+    labels_fname = os.path.join(tmpdir, "labels.tsv")
+    labels = np.array([sample_labels[0:2] + sample_labels[7:9], [1, 1, 2, 2]]).T
+    labels_df = pd.DataFrame(data=labels, columns=['sample', 'label'])
+    labels_df.to_csv(labels_fname, sep="\t")
+
+    args = _get_args(fname, [2], outdir)
+    args['labels'] = labels_fname
+    args['sparsity'] = [10]
+    args['n'] = 10  # makes test run quicker
+    sr = SumoRun(**args)
+    sr.run()
+
+    # unsupervised sumo
     args = _get_args(fname, [2], outdir)
     args['sparsity'] = [10]
     args['n'] = 10  # makes test run quicker
