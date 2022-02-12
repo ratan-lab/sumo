@@ -5,8 +5,8 @@ SUMO methodology
 * Louxin Zhang
 * Aakrosh Ratan (ratan@virginia.edu)
 
-SUMO paper
-----------
+Main SUMO paper: methodology and analysis
+-----------------------------------------
 * Karolina Sienkiewicz
 * Jinyu Chen
 * Ajay Chatrath
@@ -16,6 +16,12 @@ SUMO paper
 * Aakrosh Ratan
 
 Available `here <https://www.sciencedirect.com/science/article/pii/S2667237521002290>`_.
+
+SUMO Supervised Solver
+----------------------
+* Karolina Sienkiewicz
+* Akshith Doddi
+* Aakrosh Ratan
 
 SUMO software
 -------------
