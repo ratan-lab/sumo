@@ -5,7 +5,7 @@ History
 0.3.0 (2021-??-??)
 ------------------
 * Updated class structure, to allow for addition of new solvers.
-* Implemented a *supervised solver* for sumo, which allows to include "a priori" knowledge about labels of fraction of samples to improve the factorization. This solver is automatically enabled when '-labels' parameter is used.
+* Implemented a *supervised solver* for sumo, which allows to include "a priori" knowledge about labels of fraction of samples to improve the factorization results. This solver is automatically enabled when the '-labels' parameter is used.
 * Fixed error that prevented using sumo *interpret* with newer hyperopt versions (>0.2.5)
 
 0.2.7 (2021-07-02)

@@ -112,10 +112,10 @@ def add_run_command_options(subparsers):
 
     cluster_parser.add_argument('-labels', action='store', metavar="labels.tsv",
                                 type=str, required=False, default=RUN_DEFAULTS['labels'],
-                                help="optional path to .tsv file containg some of known sample labels to be included " +
-                                     "as prior knowledge during the factorization (inclusion of this parameter " +
-                                     "enables the 'supervised' mode of sumo), the file should contain sample names in" +
-                                     "'sample' and labels in 'label' column")
+                                help="optional path to .tsv file containing some of known sample labels to be " +
+                                     "included as prior knowledge during the factorization (inclusion of this " +
+                                     "parameter enables the 'supervised' mode of sumo), the file should contain " +
+                                     "sample names in 'sample' and labels in 'label' column")
     # TODO add supervised example to documentation
 
     cluster_parser.add_argument('-n', action='store',

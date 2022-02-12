@@ -37,7 +37,7 @@ read our `publication in CellReportsMethods <https://www.sciencedirect.com/scien
     Sienkiewicz, K., Chen, J., Chatrath, A., Lawson, J. T., Sheffield, N. C., Zhang, L., & Ratan, A. (2022). Detecting molecular subtypes from multi-omics datasets using SUMO. In Cell Reports Methods (Vol. 2, Issue 1, p. 100152). Elsevier BV. https://doi.org/10.1016/j.crmeth.2021.100152
 
 For practical details about **sumo** analysis pipeline, examples of downstream analysis and troubleshooting
-please refer to our published `STAR Protocol <https://www.sciencedirect.com/science/article/pii/S2666166721008169>`_ and/or `package documentation <https://python-sumo.readthedocs.io/en/latest/example.html>`_.
+please refer to our published `STAR Protocol <https://www.sciencedirect.com/science/article/pii/S2666166721008169>`_ and/or package documentation available at https://python-sumo.readthedocs.io.
 
 
 Installation
@@ -50,10 +50,6 @@ You can install **sumo** from PyPI, by executing command below. Please note that
 
 (March 2021): We have noted an installation issue with the *llvmlite* package (required for one of **sumo** dependencies). To avoid errors with installation, **upgrade pip to a >19.0 version**.
 
-Documentation
--------------
-The official documentation is available at https://python-sumo.readthedocs.io
-
 License
 -------
 
@@ -63,6 +59,8 @@ Usage
 -----
 
 **sumo** consists of four subroutines. A typical workflow includes running *prepare* mode for preparation of similarity matrices from feature matrices, followed by factorization of produced multiplex network (mode *run*). Third mode *evaluate* can be used for comparison of created cluster labels against biologically significant labels. A fourth mode *interpret* can be used to detect the importance of each feature in driving the classification.
+
+(February 2022) As of SUMO v3.0, semi-supervised classification of samples is now supported. This allows the inclusion of "a priori" knowledge about labels of fraction of samples to improve the factorization results. The supervised version of solver is automatically enabled in *sumo run*, when the '-labels' parameter is used.
 
 prepare
 ^^^^^^^
@@ -148,10 +146,10 @@ Cluster multiplex network using non-negative matrix tri-factorization to identif
       -sparsity SPARSITY    either one value or coma-delimited list of sparsity penalty
                             values for H matrix (sumo will try different values and select
                             the best results; default of [0.1])
-      -labels labels.tsv    optional path to .tsv file containg some of known sample labels
+      -labels labels.tsv    optional path to .tsv file containing some of known sample labels
                             to be included as prior knowledge during the factorization
                             (inclusion of this parameter enables the 'supervised' mode of
-                            sumo), the file should contain sample names in'sample' and labels
+                            sumo), the file should contain sample names in 'sample' and labels
                             in 'label' column
       -n N                  number of repetitions (default of 60)
       -method {max_value,spectral}
