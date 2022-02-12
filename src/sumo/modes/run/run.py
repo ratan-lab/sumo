@@ -2,13 +2,15 @@ from scipy.cluster.hierarchy import cophenet, linkage
 from scipy.spatial.distance import pdist
 from sumo.constants import RUN_ARGS, CLUSTER_METHODS, LOG_LEVELS
 from sumo.modes.mode import SumoMode
-from sumo.modes.run.solver import SumoNMF
+from sumo.modes.run.solvers.unsupervised_sumo import UnsupervisedSumoNMF
+from sumo.modes.run.solvers.supervised_sumo import SupervisedSumoNMF
 from sumo.network import MultiplexNet
 from sumo.utils import extract_ncut, load_npz, save_arrays_to_npz, setup_logger, docstring_formatter, \
     plot_heatmap_seaborn, plot_metric, close_logger
 import multiprocessing as mp
 import numpy as np
 import os
+import pandas as pd
 import shutil
 
 _sumo_run = None
@@ -59,10 +61,13 @@ class SumoRun(SumoMode):
 
         self.graph = None
         self.nmf = None
+        self.priors = None
 
-        # check positional arguments
+        # check arguments
         if not os.path.exists(self.infile):
             raise FileNotFoundError("Input file not found")
+        if self.labels is not None and not os.path.exists(self.labels):
+            raise FileNotFoundError("Labels file not found")
         if self.n < 1:
             raise ValueError("Incorrect value of 'n' parameter")
         if self.t < 1:
@@ -129,6 +134,30 @@ class SumoRun(SumoMode):
         if self.h_init is not None:
             if self.h_init >= len(adj_matrices) or self.h_init < 0:
                 raise ValueError("Incorrect value of h_init")
+            if self.labels is not None:
+                self.logger.warning("#Ignoring set h_init value (supervised mode enabled with '-labels' parameter)")
+
+        # read prior sample labels (if set with -labels param)
+        if self.labels is not None:
+            self.logger.info("#Loading sample labels file: {}".format(self.labels))
+            known_labels = pd.read_csv(self.labels, sep="\t")
+            if not all([coln in known_labels.columns for coln in ['sample', 'label']]):
+                raise ValueError("Incorrect structure of the labels file")
+            nsample_labels = known_labels.shape[0]
+            known_labels = known_labels[known_labels['sample'].isin(sample_names)]
+            if known_labels.shape[0] != nsample_labels:
+                self.logger.warning("- samples not available in the {} file: {}".format(self.infile, nsample_labels -
+                                                                                        known_labels.shape[0]))
+            labels_groups = np.unique(known_labels['label'].values)
+            self.logger.info(
+                "#Found {} unique sample labels for {}/{} samples".format(labels_groups.size, known_labels.shape[0],
+                                                                          sample_names.size))
+
+            self.priors = np.zeros((sample_names.size, labels_groups.size))
+            for label_idx in range(labels_groups.size):
+                label = labels_groups[label_idx]
+                selected_samples = known_labels[known_labels['label'] == label]['sample'].tolist()
+                self.priors[[sample in selected_samples for sample in sample_names], label_idx] = 1
 
         # create multilayer graph
         self.graph = MultiplexNet(adj_matrices=adj_matrices, node_labels=sample_names)
@@ -137,7 +166,12 @@ class SumoRun(SumoMode):
             "#Number of samples randomly removed in each run: {} out of {}".format(n_sub_samples, sample_names.size))
 
         # create solver
-        self.nmf = SumoNMF(graph=self.graph, nbins=self.n, bin_size=self.graph.nodes - n_sub_samples, rseed=self.seed)
+        if self.priors is None:
+            self.nmf = UnsupervisedSumoNMF(graph=self.graph, nbins=self.n, bin_size=self.graph.nodes - n_sub_samples,
+                                           rseed=self.seed)
+        else:
+            self.nmf = SupervisedSumoNMF(graph=self.graph, priors=self.priors, nbins=self.n,
+                                         bin_size=self.graph.nodes - n_sub_samples, rseed=self.seed)
 
         global _sumo_run
         _sumo_run = self  # this solves multiprocessing issue with pickling
@@ -265,10 +299,12 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
             "max_iter": sumo_run.max_iter,
             "tol": sumo_run.tol,
             "calc_cost": sumo_run.calc_cost,
-            "h_init": sumo_run.h_init,
             "logger_name": "eta{}_logger".format(sparsity),
             "bin_id": repeat
         }
+        if sumo_run.priors is None:
+            # unsupervised classification
+            opt_args["h_init"] = sumo_run.h_init
 
         result = sumo_run.nmf.factorize(**opt_args)
         # extract computed clusters
@@ -366,6 +402,8 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
         "samples": sumo_run.graph.sample_names,
         "config": conf_array
     })
+    if sumo_run.priors is not None:
+        out_arrays["priors"] = sumo_run.priors
 
     steps_reached = [results[i].steps for i in range(len(results))]
     maxiter_proc = round((sum([step == sumo_run.max_iter for step in steps_reached]) / len(steps_reached)) * 100, 3)
@@ -381,6 +419,7 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
             out_arrays["samples{}".format(i)] = results[i].graph.sample_names[results[i].sample_ids]
             for si in range(len(results[i].s)):
                 out_arrays["s{}{}".format(si, i)] = results[i].s[si]
+
         steps_plot_path = os.path.join(sumo_run.plot_dir, "steps_k{}.png".format(k))
         plot_metric(x=list(range(1, len(steps_reached) + 1)), y=[np.array(x) for x in steps_reached],
                     xlabel="factorization repetition", ylabel="number of iterations/steps",

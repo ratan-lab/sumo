@@ -20,7 +20,7 @@ _config = {
         "scikit-learn>=0.22",
         "scipy",
         "matplotlib",
-        "numpy>=1.16.5",
+        "numpy>=1.18.5",
         "pandas",
         "lightgbm",
         "hyperopt",

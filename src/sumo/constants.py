@@ -1,5 +1,5 @@
 # command_line
-__version__ = "0.2.7"
+__version__ = "0.3.0"
 SUMO_COMMANDS = ["prepare", "run", "evaluate", "interpret"]
 
 # prepare
@@ -40,7 +40,8 @@ RUN_DEFAULTS = {
     "t": 1,
     "subsample": 0.05,
     "rep": 5,
-    "seed": None
+    "seed": None,
+    "labels": None
 }
 RUN_ARGS = ["infile", "k", "outdir"] + list(RUN_DEFAULTS.keys())  # 3 positional args
 
