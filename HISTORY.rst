@@ -2,7 +2,7 @@
 
 History
 =======
-0.3.0 (2021-??-??)
+0.3.0 (2022-02-11)
 ------------------
 * Updated class structure, to allow for addition of new solvers.
 * Implemented a *supervised solver* for sumo, which allows to include "a priori" knowledge about labels of fraction of samples to improve the factorization results. This solver is automatically enabled when the '-labels' parameter is used.
