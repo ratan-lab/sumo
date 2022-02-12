@@ -211,7 +211,7 @@ class SumoInterpret(SumoMode):
         # find best parameters
         _ = fmin(fn=objective, space=space, algo=tpe.suggest,
                  max_evals=self.max_iter, trials=bayes_trials,
-                 rstate=np.random.RandomState(self.seed))
+                 rstate=np.random.default_rng(seed=self.seed))
         assert len(list(bayes_trials)) == self.max_iter
 
         bayes_trials_results = sorted(bayes_trials.results, key=lambda z: z['loss'])

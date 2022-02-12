@@ -32,11 +32,25 @@ SumoRun Class
 .. automodule:: sumo.modes.run.run
    :members:
 
-----------
-NMF Solver
-----------
+-----------
+NMF Solvers
+-----------
 
 .. automodule:: sumo.modes.run.solver
+   :members:
+
+~~~~~~~~~~~~~~~~~
+Unsupervised SUMO
+~~~~~~~~~~~~~~~~~
+
+.. automodule:: sumo.modes.run.solvers.unsupervised_sumo
+   :members:
+
+~~~~~~~~~~~~~~~
+Supervised SUMO
+~~~~~~~~~~~~~~~
+
+.. automodule:: sumo.modes.run.solvers.supervised_sumo
    :members:
 
 ========

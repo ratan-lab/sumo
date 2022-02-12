@@ -27,7 +27,7 @@ class SupervisedSumoNMF(SumoSolver):
 
     def _get_bins(self, label=None) -> list:
         """ Returns list of bins, each in form of a list containing sample indices, randomly sampled from
-        set of samples of given prior label. Mintains the ratio of labelled and unlabelled samples in the dataset. """
+        set of samples of given prior label. Maintains the ratio of labelled and unlabelled samples in the dataset. """
         # separate samples with given prior label between bins
         # (this make sure that all samples will be classified at least once)
         if label is not None:

@@ -37,3 +37,6 @@ nbproject/
 
 .DS_Store
 Thumbs.db
+
+# Data directory
+data/
