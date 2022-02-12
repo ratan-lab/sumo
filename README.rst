@@ -60,7 +60,7 @@ Usage
 
 **sumo** consists of four subroutines. A typical workflow includes running *prepare* mode for preparation of similarity matrices from feature matrices, followed by factorization of produced multiplex network (mode *run*). Third mode *evaluate* can be used for comparison of created cluster labels against biologically significant labels. A fourth mode *interpret* can be used to detect the importance of each feature in driving the classification.
 
-(February 2022) As of SUMO v3.0, semi-supervised classification of samples is now supported. This allows the inclusion of "a priori" knowledge about labels of fraction of samples to improve the factorization results. The supervised version of solver is automatically enabled in *sumo run*, when the '-labels' parameter is used.
+(February 2022) As of SUMO v0.3, a semi-supervised classification of samples is now supported. This allows the inclusion of "a priori" knowledge about labels of fraction of samples to improve the factorization results. The supervised version of solver is automatically enabled in *sumo run*, when the '-labels' parameter is used.
 
 prepare
 ^^^^^^^
