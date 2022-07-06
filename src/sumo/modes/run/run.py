@@ -409,7 +409,7 @@ def _run_factorization(sparsity: float, k: int, sumo_run: SumoRun):
     maxiter_proc = round((sum([step == sumo_run.max_iter for step in steps_reached]) / len(steps_reached)) * 100, 3)
     eta_logger.info("#Reached maximum number of iterations in {}% of runs".format(maxiter_proc))
     if maxiter_proc >= 90:
-        eta_logger.warning("Consider increasing -max_iter and deacreasing -tol to achieve better accuracy")
+        eta_logger.warning("Consider increasing -max_iter and decreasing -tol to achieve better accuracy")
     out_arrays['steps'] = np.array([steps_reached])
 
     if sumo_run.log == "DEBUG":
